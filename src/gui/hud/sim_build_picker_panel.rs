@@ -252,6 +252,7 @@ pub fn spawn_sim_build_picker_panel(
             Visibility::Hidden,
             ZIndex(940),
             SimBuildPickerPanelRoot,
+            crate::gui::hud::panel_drag::HudPanelDrag::default(),
             Name::new("sim_build_picker_bevy"),
         ))
         .with_children(|root| {
@@ -286,16 +287,19 @@ pub fn sync_sim_build_picker_panel_layout(
     tool: Res<ActiveBuildTool>,
     power_sheet: Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
-    mut root: Query<(&mut Node, &mut Visibility), With<SimBuildPickerPanelRoot>>,
+    mut root: Query<(&mut Node, &mut Visibility, Option<&crate::gui::hud::panel_drag::HudPanelDrag>), With<SimBuildPickerPanelRoot>>,
     mut title: Query<&mut Text, With<PickerTitle>>,
 ) {
-    let Ok((mut node, mut vis)) = root.single_mut() else {
+    let Ok((mut node, mut vis, drag)) = root.single_mut() else {
         return;
     };
     let tool_is_power = matches!(tool.tool, BuildTool::PowerLine(_));
+    // Roads / Rail: the road sheet carries the type list, so the catalog stays closed there.
+    let line_slot = matches!(picker.anchor_slot, ToolContext::Roads | ToolContext::Rail);
     let show = matches!(base.get(), BaseState::Simulation)
         && picker_visible_beside_power(picker.open, power_sheet.open, tool_is_power)
-        && strip.active != ToolContext::None;
+        && strip.active != ToolContext::None
+        && !line_slot;
     let want = if show { Visibility::Visible } else { Visibility::Hidden };
     if *vis != want {
         *vis = want;
@@ -309,7 +313,10 @@ pub fn sync_sim_build_picker_panel_layout(
     if !show {
         return;
     }
-    let anchor = build_rail_slot_anchor_xy(picker.anchor_slot, left_stack.collapsed);
+    let anchor = crate::gui::hud::panel_drag::HudPanelDrag::place(
+        build_rail_slot_anchor_xy(picker.anchor_slot, left_stack.collapsed),
+        drag,
+    );
     if node.left != Val::Px(anchor.x) {
         node.left = Val::Px(anchor.x);
     }

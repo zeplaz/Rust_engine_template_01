@@ -388,17 +388,46 @@ pub fn sync_road_visual_requests(
             x: seg.end.x.floor() as u32,
             z: seg.end.z.floor() as u32,
         };
-        let color = super::ghost_visual::road_segment_color(seg.valid);
+        // Ghost of the line between the points (and on to the cursor): the tiles it will take,
+        // green buildable, amber needs works, red blocked. Footprint ghost tiles draw in 2D and 3D.
+        let kind_col = if !seg.valid {
+            FootprintTileColorKind::Invalid
+        } else if seg.works {
+            FootprintTileColorKind::Risky
+        } else {
+            FootprintTileColorKind::Valid
+        };
         for t in build_site_tiles_between(a, b) {
-            requests.zone_tiles.push(ZoneTileRequest {
-                center: Vec3::new(t.x as f32 + 0.5, 0.0, t.z as f32 + 0.5),
-                color,
+            requests.footprint_tiles.push(FootprintTileRequest {
+                tile: IVec2::new(t.x as i32, t.z as i32),
+                color_kind: kind_col,
+                weight: 0.55,
+                fill_override: None,
             });
         }
     }
     let c = road_control_point_color();
     for p in &placement.control_points {
         requests.control_points.push((*p, c));
+    }
+    // Ghost tiles: where the next click lands (amber when it joins an existing line) and the
+    // points already placed, so the tool shows something before the first click and every bend.
+    let tile_of = |p: &Vec3| IVec2::new(p.x.floor() as i32, p.z.floor() as i32);
+    for p in &placement.control_points {
+        requests.footprint_tiles.push(FootprintTileRequest {
+            tile: tile_of(p),
+            color_kind: FootprintTileColorKind::Valid,
+            weight: 0.9,
+            fill_override: None,
+        });
+    }
+    if let Some(cur) = placement.cursor.as_ref() {
+        requests.footprint_tiles.push(FootprintTileRequest {
+            tile: tile_of(cur),
+            color_kind: if placement.cursor_joins_line { FootprintTileColorKind::Risky } else { FootprintTileColorKind::Valid },
+            weight: 1.0,
+            fill_override: None,
+        });
     }
 }
 

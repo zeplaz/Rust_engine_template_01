@@ -426,6 +426,7 @@ impl Plugin for SimulationShellPhase2Plugin {
             .add_systems(
                 Update,
                 (
+                    crate::gui::hud::panel_drag::drag_hud_panels_system,
                     crate::gui::hud::sim_build_picker_panel::sync_sim_build_picker_panel_layout,
                     crate::gui::hud::sim_build_picker_panel::rebuild_sim_build_picker_panel_list,
                     crate::gui::hud::sim_build_picker_panel::sync_sim_build_picker_panel_selection,
@@ -437,9 +438,14 @@ impl Plugin for SimulationShellPhase2Plugin {
             .add_systems(
                 Update,
                 (
-                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_road_sheet_bevy,
-                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_power_sheet_bevy,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_road_sheet_bevy
+                        .after(crate::gui::hud::panel_drag::drag_hud_panels_system),
+                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_power_sheet_bevy
+                        .after(crate::gui::hud::panel_drag::drag_hud_panels_system),
                     crate::gui::hud::sim_road_power_sheets_bevy::sim_road_sheet_actions,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sim_road_sheet_type_actions,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_road_sheet_type_list
+                        .after(crate::gui::hud::sim_road_power_sheets_bevy::sim_road_sheet_type_actions),
                     crate::gui::hud::sim_road_power_sheets_bevy::sim_power_sheet_actions,
                 )
                     .run_if(in_simulation_or_editor),

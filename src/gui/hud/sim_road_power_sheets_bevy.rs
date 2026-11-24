@@ -57,6 +57,75 @@ pub enum SimSheetStat {
 #[derive(Component)]
 pub struct SimRoadSheetBuild;
 
+/// Road sheet: one row of the line-type list.
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub struct SimRoadSheetType(pub BuildTool);
+
+/// Road sheet: fold / unfold the line-type list.
+#[derive(Component)]
+pub struct SimRoadSheetTypesToggle;
+
+/// Road sheet: the line-type list container.
+#[derive(Component)]
+pub struct SimRoadSheetTypeList;
+
+/// Line types the sheet lists (same set the build catalog offered).
+const LINE_TYPES: [(BuildTool, &str); 6] = [
+    (BuildTool::Road(crate::infrastructure::RoadTier::Dirt), "Dirt road · 35 km/h"),
+    (BuildTool::Road(crate::infrastructure::RoadTier::Gravel), "Gravel road · 55 km/h"),
+    (BuildTool::Road(crate::infrastructure::RoadTier::Paved), "Paved road · 80 km/h"),
+    (BuildTool::Road(crate::infrastructure::RoadTier::Concrete), "Concrete road · 90 km/h"),
+    (BuildTool::Road(crate::infrastructure::RoadTier::Motorway), "Motorway · 110 km/h, ramps only"),
+    (BuildTool::Rail(RailType::Standard), "Railway · standard gauge"),
+];
+
+/// Clicks on the line-type list and its fold toggle.
+pub fn sim_road_sheet_type_actions(
+    mut tool: ResMut<ActiveBuildTool>,
+    mut sheet: ResMut<SimRoadToolSheetState>,
+    types: Query<(&DeprecatedInteraction, &UiButton, &SimRoadSheetType), Changed<DeprecatedInteraction>>,
+    toggle: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetTypesToggle>)>,
+) {
+    for (i, b, t) in &types {
+        if ui_button_fired(i, b) && tool.tool != t.0 {
+            tool.clear_building_intent();
+            tool.tool = t.0;
+        }
+    }
+    for (i, b) in &toggle {
+        if ui_button_fired(i, b) {
+            sheet.types_open = !sheet.types_open;
+        }
+    }
+}
+
+/// Line-type list: folded or not, the armed type highlighted.
+pub fn sync_sim_road_sheet_type_list(
+    tool: Res<ActiveBuildTool>,
+    sheet: Res<SimRoadToolSheetState>,
+    mut list: Query<&mut Node, With<SimRoadSheetTypeList>>,
+    mut rows: Query<(&SimRoadSheetType, &mut UiButton)>,
+    mut toggle: Query<&mut ToggleState, With<SimRoadSheetTypesToggle>>,
+) {
+    let want = if sheet.types_open { Display::Flex } else { Display::None };
+    for mut n in &mut list {
+        if n.display != want {
+            n.display = want;
+        }
+    }
+    for (t, mut b) in &mut rows {
+        let sel = t.0 == tool.tool;
+        if b.selected != sel {
+            b.selected = sel;
+        }
+    }
+    for mut s in &mut toggle {
+        if s.0 != sheet.types_open {
+            s.0 = sheet.types_open;
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct SimRoadSheetCancel;
 
@@ -179,10 +248,33 @@ pub fn spawn_sim_road_power_sheets_bevy(
             Visibility::Hidden,
             ZIndex(945),
             SimRoadSheetRoot,
+            crate::gui::hud::panel_drag::HudPanelDrag::default(),
             Name::new("sim_road_sheet_bevy"),
         ))
         .with_children(|root| {
             spawn_header(root, &kit, "Road", SimRoadSheetTitle, None::<()>);
+            // Line type: a compact list that folds up (the Roads / Rail rail buttons open only this
+            // sheet; the big build catalog is not used for lines).
+            spawn_toggle(root, &kit, "Types", true, SimRoadSheetTypesToggle)
+                .insert(UiTooltip("Show or hide the road / rail type list".into()));
+            root.spawn((
+                Node { width: Val::Percent(100.0), flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() },
+                SimRoadSheetTypeList,
+            ))
+            .with_children(|list| {
+                for (choice, label) in LINE_TYPES {
+                    spawn_button(list, &kit, label, UiButton::default(), SimRoadSheetType(choice))
+                        .insert(Node {
+                            width: Val::Percent(100.0),
+                            min_height: Val::Px(ROW_H - 4.0),
+                            padding: UiRect::axes(Val::Px(GAP * 2.0), Val::Px(1.0)),
+                            border: UiRect::all(Val::Px(1.0)),
+                            justify_content: JustifyContent::FlexStart,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        });
+                }
+            });
             spawn_label_row(root, &kit, "Length", "0 m", SimSheetStat::Points);
             spawn_label_row(root, &kit, "Ok / works / blocked", "0 / 0 / 0", SimSheetStat::Valid);
             spawn_label_row(root, &kit, "Truck trip", "-", SimSheetStat::Cost);
@@ -230,6 +322,7 @@ pub fn spawn_sim_road_power_sheets_bevy(
             Visibility::Hidden,
             ZIndex(946),
             SimPowerSheetRoot,
+            crate::gui::hud::panel_drag::HudPanelDrag::default(),
             Name::new("sim_power_sheet_bevy"),
         ))
         .with_children(|root| {
@@ -291,13 +384,13 @@ fn set_text(text: &mut Text, next: &str) {
 
 pub fn sync_sim_road_sheet_bevy(
     base: Res<State<BaseState>>,
-    strip: Res<BuildStripState>,
+    (strip, picker): (Res<BuildStripState>, Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>),
     tool: Res<ActiveBuildTool>,
     mut road_sheet: ResMut<SimRoadToolSheetState>,
     placement: Res<ActiveRoadPlacement>,
     snap: Res<RoadSnapSettings>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
-    mut root_q: Query<(&mut Node, &mut Visibility), With<SimRoadSheetRoot>>,
+    mut root_q: Query<(&mut Node, &mut Visibility, Option<&crate::gui::hud::panel_drag::HudPanelDrag>), With<SimRoadSheetRoot>>,
     mut title_q: Query<&mut Text, (With<SimRoadSheetTitle>, Without<SimSheetStat>)>,
     mut stats_q: Query<(&SimSheetStat, &mut Text), Without<SimRoadSheetTitle>>,
     mut grid_q: Query<&mut ToggleState, (With<SimRoadSheetToggleGrid>, Without<SimRoadSheetToggleNode>)>,
@@ -305,8 +398,7 @@ pub fn sync_sim_road_sheet_bevy(
     mut build_q: Query<&mut UiButton, With<SimRoadSheetBuild>>,
 ) {
     road_sheet.sync_from_tool(tool.as_ref());
-    let _ = &strip;
-    let Ok((mut node, mut vis)) = root_q.single_mut() else {
+    let Ok((mut node, mut vis, drag)) = root_q.single_mut() else {
         return;
     };
     let show = SIM_ROAD_POWER_SHEETS_USE_BEVY
@@ -317,6 +409,11 @@ pub fn sync_sim_road_sheet_bevy(
     if *vis != want_vis {
         *vis = want_vis;
     }
+    // A hidden sheet keeps no rect (the pointer gate tests real rects).
+    let want_display = if show { Display::Flex } else { Display::None };
+    if node.display != want_display {
+        node.display = want_display;
+    }
     if !show {
         return;
     }
@@ -324,9 +421,13 @@ pub fn sync_sim_road_sheet_bevy(
         ToolContext::Rail => ToolContext::Rail,
         _ => ToolContext::Roads,
     };
-    let anchor = build_rail_slot_anchor_xy(slot, left_stack.collapsed);
-    if node.left != Val::Px(anchor.x) {
-        node.left = Val::Px(anchor.x);
+    let anchor = crate::gui::hud::panel_drag::HudPanelDrag::place(build_rail_slot_anchor_xy(slot, left_stack.collapsed), drag);
+    // Beside the build picker when it is open (both anchor at the same rail slot).
+    // (Once the player has moved the sheet, it stays where they put it.)
+    let _ = &picker;
+    let left = anchor.x;
+    if node.left != Val::Px(left) {
+        node.left = Val::Px(left);
     }
     if node.top != Val::Px(anchor.y) {
         node.top = Val::Px(anchor.y);
@@ -392,7 +493,7 @@ pub fn sync_sim_power_sheet_bevy(
     mut power_sheet: ResMut<SimPowerToolSheetState>,
     placement: Res<ActivePowerLinePlacement>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
-    mut root_q: Query<(&mut Node, &mut Visibility), With<SimPowerSheetRoot>>,
+    mut root_q: Query<(&mut Node, &mut Visibility, Option<&crate::gui::hud::panel_drag::HudPanelDrag>), With<SimPowerSheetRoot>>,
     mut title_q: Query<&mut Text, (With<SimPowerSheetTitle>, Without<SimPowerStat>)>,
     mut stats_q: Query<(&SimPowerStat, &mut Text), Without<SimPowerSheetTitle>>,
     mut voltage_btns: Query<(&SimPowerVoltagePick, &mut UiButton), Without<SimPowerModePick>>,
@@ -400,7 +501,7 @@ pub fn sync_sim_power_sheet_bevy(
     mut build_q: Query<&mut UiButton, (With<SimPowerSheetBuild>, Without<SimPowerVoltagePick>, Without<SimPowerModePick>)>,
 ) {
     power_sheet.sync_from_tool(tool.as_ref());
-    let Ok((mut node, mut vis)) = root_q.single_mut() else {
+    let Ok((mut node, mut vis, drag)) = root_q.single_mut() else {
         return;
     };
     let show = SIM_ROAD_POWER_SHEETS_USE_BEVY
@@ -414,7 +515,7 @@ pub fn sync_sim_power_sheet_bevy(
     if !show {
         return;
     }
-    let anchor = build_rail_slot_anchor_xy(ToolContext::Utilities, left_stack.collapsed);
+    let anchor = crate::gui::hud::panel_drag::HudPanelDrag::place(build_rail_slot_anchor_xy(ToolContext::Utilities, left_stack.collapsed), drag);
     if node.left != Val::Px(anchor.x) {
         node.left = Val::Px(anchor.x);
     }

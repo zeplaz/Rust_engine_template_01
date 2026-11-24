@@ -358,7 +358,20 @@ pub fn road_path_input_system(
         };
         return;
     }
-    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
+    let pointer = simulation_tool_pointer(pointer_gate.as_deref());
+    if pointer != SimulationToolPointer::Free {
+        if buttons.just_pressed(MouseButton::Left) {
+            let g = pointer_gate.as_deref();
+            bevy::log::info!(
+                target: "construction::corridor_tool",
+                ?pointer,
+                chrome_blocks = g.is_some_and(|g| g.chrome_blocks),
+                egui_blocks = g.is_some_and(|g| g.egui_blocks),
+                cursor_known = g.is_some_and(|g| g.cursor_known),
+                cursor = ?g.map(|g| g.cursor),
+                "line tool click ignored: pointer not on the map"
+            );
+        }
         return;
     }
     if buttons.just_pressed(MouseButton::Right) {
@@ -376,6 +389,9 @@ pub fn road_path_input_system(
         return;
     }
     let Some(cursor) = placement.cursor else {
+        if buttons.just_pressed(MouseButton::Left) {
+            bevy::log::info!(target: "construction::corridor_tool", "line tool click ignored: no map point under the cursor");
+        }
         return;
     };
     let c2 = Vec2::new(cursor.x, cursor.z);

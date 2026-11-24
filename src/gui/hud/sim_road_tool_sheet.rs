@@ -19,9 +19,17 @@ pub const ROAD_TOOL_SHEET_BLOCK_H_PX: f32 = 240.0;
 /// Sim uses rail-anchored sheet; editor keeps legacy floating window.
 pub const ROAD_POPUP_FLOATING_IN_SIM: bool = false;
 
-#[derive(Resource, Debug, Clone, Default)]
+#[derive(Resource, Debug, Clone)]
 pub struct SimRoadToolSheetState {
     pub open: bool,
+    /// The compact road-type list at the top of the sheet is unfolded.
+    pub types_open: bool,
+}
+
+impl Default for SimRoadToolSheetState {
+    fn default() -> Self {
+        Self { open: false, types_open: true }
+    }
 }
 
 impl SimRoadToolSheetState {

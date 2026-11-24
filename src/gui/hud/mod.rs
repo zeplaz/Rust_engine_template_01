@@ -32,6 +32,7 @@ pub mod debug_cursor_readout;
 pub mod simulation_shell_phase2;
 pub mod sim_hud_copy;
 pub mod sim_build_picker_sheet;
+pub mod panel_drag;
 pub mod sim_build_picker_panel;
 pub mod sim_road_power_sheets_bevy;
 pub mod sim_road_tool_sheet;

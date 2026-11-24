@@ -258,7 +258,11 @@ pub fn sync_active_build_tool_from_strip(
     if !strip.is_changed() {
         return;
     }
-    tool.tool = BuildTool::from_tool_context(strip.active);
+    // Keep a picked tool of the same rail slot (e.g. Paved road under Roads): only a slot change
+    // re-arms that slot's default tool.
+    if tool.tool.to_tool_context() != strip.active {
+        tool.tool = BuildTool::from_tool_context(strip.active);
+    }
     if strip.active != ToolContext::Civil {
         tool.residential_menu_open = false;
     }
@@ -275,7 +279,10 @@ pub fn apply_active_build_tool_to_strip(
         // Picker-only Military: strip stays Military while tool is None until rail deselect/Esc.
         BuildTool::None if strip.active == ToolContext::Military => {}
         other => {
-            strip.active = other.to_tool_context();
+            let ctx = other.to_tool_context();
+            if strip.active != ctx {
+                strip.active = ctx;
+            }
         }
     }
 }
