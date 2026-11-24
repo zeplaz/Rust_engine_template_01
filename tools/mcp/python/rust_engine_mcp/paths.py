@@ -25,9 +25,11 @@ def repo_root() -> Path:
         return Path(env).resolve()
     defaults = _load_json(_mcp_root() / "config.defaults.json")
     local = _load_json(_mcp_root() / "config.local.json")
-    raw = local.get("repo") or defaults.get("repo") or ""
-    if raw:
-        return Path(raw).resolve()
+    # The committed default is a Windows checkout path; on another machine (CI runner, other
+    # clone) it does not exist, so fall back to the repo this package lives in.
+    for raw in (local.get("repo"), defaults.get("repo")):
+        if raw and Path(raw).is_dir():
+            return Path(raw).resolve()
     return Path(__file__).resolve().parents[4]
 
 
