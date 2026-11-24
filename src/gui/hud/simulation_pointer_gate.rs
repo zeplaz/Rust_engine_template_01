@@ -12,7 +12,7 @@ use crate::engine::states::BaseState;
 
 use crate::gui::hud::panel_state::HudPanelState;
 use crate::gui::hud::simulation_shell_phase2::{
-    command_left_stack_footprint_px, sim_build_rail_submenu_block_rect, ContextTrayState,
+    command_left_stack_footprint_px, ContextTrayState,
     CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_PEEK_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX,
 };
 use crate::construction::{ActiveBuildTool, BuildStripState, BuildTool, ToolContext};
@@ -92,11 +92,6 @@ pub fn sync_simulation_map_pointer_gate_system(
     minimap: Res<MinimapShellState>,
     context_tray: Res<ContextTrayState>,
     base: Option<Res<State<BaseState>>>,
-    strip: Option<Res<BuildStripState>>,
-    tool: Option<Res<ActiveBuildTool>>,
-    picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
-    power_sheet: Option<Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>>,
-    road_sheet: Option<Res<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let Ok(w) = window.single() else {
@@ -133,19 +128,9 @@ pub fn sync_simulation_map_pointer_gate_system(
         .is_none_or(|state| matches!(state.get(), BaseState::Simulation));
     if in_simulation {
         gate.egui_blocks = false;
-        if open_play_sheet_holds_pointer(
-            cursor,
-            left_stack.collapsed,
-            strip.as_deref(),
-            tool.as_deref(),
-            picker.as_deref(),
-            power_sheet.as_deref(),
-            road_sheet.as_deref(),
-        ) {
-            gate.chrome_blocks = true;
-        }
-        // Floating Bevy panels (F1 / F3 / logistics / dev) are rect-tested in
-        // `apply_bevy_panel_pointer_blocks_system` (`PointerGateSet::Block`).
+        // Every Bevy panel (build picker, road / power sheets, F1 / F3 / logistics) is tested by
+        // its real on-screen rect in `apply_bevy_panel_pointer_blocks_system`
+        // (`PointerGateSet::Block`): fixed boxes went stale once panels grow, hide or are dragged.
     } else if gate.egui_blocks {
         gate.chrome_blocks = true;
     }
@@ -276,6 +261,7 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::front_controls::FrontSelectionPanelRoot>,
     With<crate::gui::hud::sim_build_picker_panel::SimBuildPickerPanelRoot>,
     With<crate::gui::hud::sim_road_power_sheets_bevy::SimRoadSheetRoot>,
+    With<crate::gui::hud::sim_road_power_sheets_bevy::SimPowerSheetRoot>,
 )>;
 
 /// True when `physical_cursor` (window physical px — the space `ComputedNode` /
@@ -295,7 +281,7 @@ pub fn cursor_over_ui_node(
 /// Runs in [`PointerGateSet::Block`] (after the gate sync, before consumers).
 pub fn apply_bevy_panel_pointer_blocks_system(
     window: Query<&Window, With<PrimaryWindow>>,
-    panels: Query<(&ComputedNode, &UiGlobalTransform), PointerBlockingPanelRoots>,
+    panels: Query<(&ComputedNode, &UiGlobalTransform, Option<&InheritedVisibility>), PointerBlockingPanelRoots>,
     fresh_panels: Query<&ComputedNode, (PointerBlockingPanelRoots, Added<Node>)>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
@@ -318,7 +304,8 @@ pub fn apply_bevy_panel_pointer_blocks_system(
     };
     let over_panel = panels
         .iter()
-        .any(|(node, tf)| cursor_over_ui_node(node, tf, physical));
+        // A hidden panel (still laid out) never blocks the map.
+        .any(|(node, tf, vis)| vis.is_none_or(|v| v.get()) && cursor_over_ui_node(node, tf, physical));
     if !over_panel {
         return;
     }
@@ -350,64 +337,6 @@ pub fn simulation_tool_pointer(gate: Option<&SimulationMapPointerGate>) -> Simul
     }
 }
 
-/// Open Bevy picker / power / road sheet. The map commit path stays held while
-/// the cursor is on that sheet. Editor egui still uses the finalize pass.
-fn open_play_sheet_holds_pointer(
-    cursor: Vec2,
-    left_stack_collapsed: bool,
-    strip: Option<&BuildStripState>,
-    tool: Option<&ActiveBuildTool>,
-    picker: Option<&crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
-    power_sheet: Option<&crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
-    road_sheet: Option<&crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
-) -> bool {
-    let pt = bevy::prelude::Vec2::new(cursor.x, cursor.y);
-    let tool = tool.map(|t| t.tool);
-    let power_open = power_sheet.is_some_and(|s| s.open)
-        && matches!(tool, Some(BuildTool::PowerLine(_)));
-    if let Some(picker) = picker {
-        let strip_live = strip.is_some_and(|s| s.active != ToolContext::None);
-        if picker.open && strip_live && !power_open {
-            if sim_build_rail_submenu_block_rect(picker, left_stack_collapsed).contains(pt) {
-                return true;
-            }
-        }
-    }
-    if power_open {
-        let anchor = crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy(
-            ToolContext::Utilities,
-            left_stack_collapsed,
-        );
-        let rect = bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(
-                crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_W_PX,
-                crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_BLOCK_H_PX,
-            ),);
-        if rect.contains(pt) {
-            return true;
-        }
-    }
-    let road_open = road_sheet.is_some_and(|s| s.open)
-        && tool.is_some_and(|t| crate::construction::corridor_tool_kind(t).is_some());
-    if road_open {
-        let slot = strip.map(|s| s.active).unwrap_or(ToolContext::Roads);
-        let anchor = crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy(
-            if slot == ToolContext::Rail {
-                ToolContext::Rail
-            } else {
-                ToolContext::Roads
-            },
-            left_stack_collapsed,
-        );
-        let rect = bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(
-                crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_W_PX,
-                crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_BLOCK_H_PX,
-            ),);
-        if rect.contains(pt) {
-            return true;
-        }
-    }
-    false
-}
 
 /// After egui HUD: block map picks / hide unified cursor when floating panels capture the pointer.
 

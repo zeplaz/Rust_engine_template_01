@@ -105,18 +105,6 @@ pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
     }
 }
 
-/// Screen rect for build picker sheet (pointer gate hit test).
-#[must_use]
-pub fn sim_build_rail_submenu_block_rect(
-    picker: &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState,
-    left_stack_collapsed: bool,
-) -> bevy::prelude::Rect {
-    crate::gui::hud::sim_build_picker_sheet::sim_build_picker_sheet_rect(
-        picker,
-        left_stack_collapsed,
-    )
-}
-
 /// P3 — map viewport inset frame.
 pub const MAP_FRAME_INSET_PX: f32 = 4.0;
 
