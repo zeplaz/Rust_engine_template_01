@@ -127,6 +127,15 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.add_plugins(ballistics::BallisticsPlugin);
+        // What the combat systems read / write but other domains own: declared here so the plugin
+        // stands on its own (registering an existing resource or message is a no-op).
+        app.init_resource::<crate::construction::BlastCraterBook>()
+            .init_resource::<crate::systems::weather::AirOpsTuning>()
+            .init_resource::<crate::systems::weather::WeatherPollingStations>()
+            .init_resource::<crate::systems::weather::WeatherPollSiteBook>()
+            .init_resource::<crate::audio::AudioOneShotQueue>()
+            .init_resource::<crate::research::ResearchCapabilityBook>()
+            .add_message::<crate::economy::logistics::orders::plugin::LogisticsOrderRequest>();
         app.init_resource::<BallisticPresentFrame>()
             .init_resource::<ballistic_present::BallisticImpactRing>()
             .add_systems(

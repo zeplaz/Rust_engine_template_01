@@ -153,10 +153,17 @@ mod rnd10_pso_tests {
         for (file, func) in queue_sites() {
             let (_, src) = all.iter().find(|(f, _)| *f == file).unwrap();
             let c = compact(src);
-            assert!(
-                c.contains(&format!("add_systems(RenderStartup,{func})")),
-                "{file}: `{func}` not registered on RenderStartup"
-            );
+            // `add_systems(RenderStartup, init_x)` or a tuple `add_systems(RenderStartup, (init_x, init_y))`.
+            let on_startup = c.match_indices("add_systems(RenderStartup,").any(|(i, m)| {
+                let rest = &c[i + m.len()..];
+                let args = if let Some(tuple) = rest.strip_prefix('(') {
+                    tuple.split(')').next().unwrap_or("")
+                } else {
+                    rest.split(')').next().unwrap_or("")
+                };
+                args.split(',').any(|a| a == func.as_str())
+            });
+            assert!(on_startup, "{file}: `{func}` not registered on RenderStartup");
             // Defn + registration only: no per-frame schedule, no direct call from a pass.
             let refs = c.matches(func.as_str()).count();
             assert_eq!(

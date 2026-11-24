@@ -115,7 +115,8 @@ pub fn activate_industrial_facilities_system(
     mut commands: Commands,
     // Bevy 0.20: skip when registries absent (minimal test worlds).
     If(registry): If<Res<BuildingDefinitionRegistry>>,
-    If(mfg_blueprints): If<Res<ManufacturingBlueprintRegistry>>,
+    // Only the manufacturing node needs blueprints; every other building activates without them.
+    mfg_blueprints: Option<Res<ManufacturingBlueprintRegistry>>,
     plants: Option<
         Res<crate::entities::production::power::plant_registry::PlantDefinitionRegistry>,
     >,
@@ -174,8 +175,9 @@ pub fn activate_industrial_facilities_system(
         if crate::entities::production::core::catalog_id_allows_manufacturing_node(
             def_ref.catalog_id.as_str(),
         ) {
-            if let Some((mfg, buffers)) =
-                manufacturing_bundle_for_catalog(def_ref.catalog_id.as_str(), mfg_blueprints.as_ref())
+            if let Some((mfg, buffers)) = mfg_blueprints
+                .as_deref()
+                .and_then(|bp| manufacturing_bundle_for_catalog(def_ref.catalog_id.as_str(), bp))
             {
                 entity_cmds.insert(mfg);
                 if let Some(buf) = buffers {
@@ -266,6 +268,13 @@ mod tests {
     #[test]
     fn operational_missile_body_plant_gets_mfg_and_buffers_no_flow() {
         let mut app = app_with_registry();
+        // The plant is research-gated (`manuf.cruise_line`): locked, it stays off.
+        let mut book = crate::research::ResearchCapabilityBook::default();
+        app.insert_resource(book.clone());
+        let locked = run_activation(&mut app, "missile_body_plant");
+        assert!(app.world().get::<IndustrialFacilityActivated>(locked).is_none(), "locked research keeps it off");
+        book.unlock("manuf.cruise_line");
+        app.insert_resource(book);
         let e = run_activation(&mut app, "missile_body_plant");
         let node = app
             .world()

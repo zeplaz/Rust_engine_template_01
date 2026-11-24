@@ -293,6 +293,8 @@ impl EngineLaunchArgs {
             // PLAYTEST-QUADRANT-WORLD-001: Standard 512² world; NW fire · NE build order · SE rain · SW reserved.
             "playquad" | "quadrant" | "quad" => {
                 args.test_scene = TestScene::PlayQuad;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
             }
             // PLAN-DAM-FLOOD-BENCHMARK-v1 DF-1 harness.
             "dam" | "damflood" => {

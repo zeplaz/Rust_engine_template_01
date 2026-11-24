@@ -837,7 +837,9 @@ mod tests {
 
         f.revision = f.revision.wrapping_add(1);
         assert!(frame.rebuild(Some(&f), &stack, 2_000_000, &t), "weather revision rebuilds");
-        assert_eq!(frame.stats().weather_resamples, 3);
+        // One resample for the first build, one for this weather revision (sim time alone no
+        // longer re-samples since 90012715).
+        assert_eq!(frame.stats().weather_resamples, 2);
         assert!(frame.stats().builds > builds);
         assert!(frame.revision() > rev);
         assert_eq!(frame.stats().legacy_weather_direct_reads, 0);

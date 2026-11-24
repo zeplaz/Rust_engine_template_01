@@ -92,7 +92,7 @@ pub fn register_water_field_draw(app: &mut App) {
         )
         .add_systems(
             Core2d,
-            water_field_draw_pass.in_set(Core2dOverlaySet::WaterSurface),
+            water_field_draw_pass.in_set(Core2dOverlaySet::WaterField),
         );
 }
 

@@ -10,8 +10,9 @@
 //!
 //! The book's *sorted submission* of geometry (painter / front-to-back) maps here to a
 //! **fixed layer table** — not a runtime BVH. Map overlays are few, opaque-or-additive
-//! passes with a known composite contract: water → particles → tile debug → terrain →
-//! weather precip → **fire sparks last** (additive sparks vanish if buried).
+//! passes with a known composite contract: water surface → flood field → particles → tile debug →
+//! weather precip → **fire sparks last** (additive sparks vanish if buried). (The per-tile terrain
+//! layer left with GS-03: terrain draws from the world bake texture, not a Core2d overlay.)
 //!
 //! Contract:
 //! - [`CORE2D_OVERLAY_DRAW_ORDER`] is the sole authority for relative draw order.
@@ -53,10 +54,10 @@ pub fn core2d_overlay_pipeline_hdr_index(target_format: TextureFormat) -> usize 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Core2dOverlaySet {
     WaterSurface,
+    /// DF-3 — live water field (sim depth / flow) over the static water surface.
+    WaterField,
     WaterParticleRaster,
     TileDebug,
-    /// Terrain atlas quads — before fire so sparks composite on top.
-    TerrainInstanced,
     /// EFFECTS-SYSTEM ES-5-002 — precip streaks under sparks.
     WeatherPrecipRaster,
     /// P2-FIRE-SPARK-010 — additive sparks end the overlay chain (visible on RTT).
@@ -71,9 +72,9 @@ impl Core2dOverlaySet {
     pub const fn draw_rank(self) -> u8 {
         match self {
             Self::WaterSurface => 0,
-            Self::WaterParticleRaster => 1,
-            Self::TileDebug => 2,
-            Self::TerrainInstanced => 3,
+            Self::WaterField => 1,
+            Self::WaterParticleRaster => 2,
+            Self::TileDebug => 3,
             Self::WeatherPrecipRaster => 4,
             Self::FireParticleRaster => 5,
         }
@@ -86,9 +87,9 @@ impl Core2dOverlaySet {
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::WaterSurface => "WaterSurface",
+            Self::WaterField => "WaterField",
             Self::WaterParticleRaster => "WaterParticleRaster",
             Self::TileDebug => "TileDebug",
-            Self::TerrainInstanced => "TerrainInstanced",
             Self::WeatherPrecipRaster => "WeatherPrecipRaster",
             Self::FireParticleRaster => "FireParticleRaster",
         }
@@ -101,9 +102,9 @@ impl Core2dOverlaySet {
 #[allow(dead_code)] // RND-03 order contract; read by the tripwire tests
 pub const CORE2D_OVERLAY_DRAW_ORDER: [Core2dOverlaySet; CORE2D_OVERLAY_LAYER_COUNT] = [
     Core2dOverlaySet::WaterSurface,
+    Core2dOverlaySet::WaterField,
     Core2dOverlaySet::WaterParticleRaster,
     Core2dOverlaySet::TileDebug,
-    Core2dOverlaySet::TerrainInstanced,
     Core2dOverlaySet::WeatherPrecipRaster,
     Core2dOverlaySet::FireParticleRaster,
 ];
@@ -120,9 +121,9 @@ impl Plugin for Core2dOverlayOrderPlugin {
             Core2d,
             (
                 Core2dOverlaySet::WaterSurface,
+                Core2dOverlaySet::WaterField,
                 Core2dOverlaySet::WaterParticleRaster,
                 Core2dOverlaySet::TileDebug,
-                Core2dOverlaySet::TerrainInstanced,
                 Core2dOverlaySet::WeatherPrecipRaster,
                 Core2dOverlaySet::FireParticleRaster,
             )
@@ -321,18 +322,18 @@ mod rnd03_overlay_order_tests {
     }
 
     #[test]
-    fn rnd03_fire_rank_is_strictly_above_weather_and_terrain() {
+    fn rnd03_fire_rank_is_strictly_above_weather_and_water() {
         assert!(
             Core2dOverlaySet::FireParticleRaster.draw_rank()
                 > Core2dOverlaySet::WeatherPrecipRaster.draw_rank()
         );
         assert!(
-            Core2dOverlaySet::FireParticleRaster.draw_rank()
-                > Core2dOverlaySet::TerrainInstanced.draw_rank()
-        );
-        assert!(
             Core2dOverlaySet::WeatherPrecipRaster.draw_rank()
-                > Core2dOverlaySet::TerrainInstanced.draw_rank()
+                > Core2dOverlaySet::WaterField.draw_rank()
+        );
+        // The live flood field draws over the static water surface.
+        assert!(
+            Core2dOverlaySet::WaterField.draw_rank() > Core2dOverlaySet::WaterSurface.draw_rank()
         );
     }
 

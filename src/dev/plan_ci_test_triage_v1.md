@@ -1,6 +1,6 @@
 # PLAN-CI-TEST-TRIAGE-v1 — the 18 failing lib tests: broken feature or stale test
 
-Status: **OPEN** (2026-11-24). CI (`.github/workflows/ci.yml`) has been red since at least
+Status: **DONE in code** (2026-11-24): all 7 fixes applied, `cargo test --lib` 2 347 passed / 0 failed, `-D warnings` clean; CI run on push pending. CI (`.github/workflows/ci.yml`) has been red since at least
 2026-11-15. Step 1 (`cargo rustc --lib -- -D warnings`, STAB-CI-001) is fixed (f87a4c1c); step 4
 (`cargo test -p proc_A_dine01 --lib`) fails on the 18 tests below. None were caused by the roads
 work (checked against the commit before it). Each was traced to its root cause; two causes were
@@ -29,6 +29,16 @@ brittle tests (T-2, T-5, T-6, T-7). No test is useless: each guards a behaviour 
 3. T-7 (combat plugin declares its resources).
 4. T-4 (draw-order contract: new layer or explicit after; update `CORE2D_OVERLAY_DRAW_ORDER` + count).
 5. Run `cargo test -p proc_A_dine01 --lib` (expect 0 failures), push, watch CI to green.
+
+## Applied (2026-11-24)
+
+- T-3: `playquad` arm restored (`DemoOpen`, stay open).
+- T-1: blueprint registry is `Option` in `activate_industrial_facilities_system`; only the manufacturing node needs it.
+- T-2: missile plant test unlocks `manuf.cruise_line` and also checks locked → stays off.
+- T-5: RND-10 test accepts a tuple `add_systems(RenderStartup, (…))`.
+- T-6: expects 2 resamples.
+- T-7: `CombatPlugin` declares `BlastCraterBook`, `AirOpsTuning`, `WeatherPollingStations`, `WeatherPollSiteBook`, `AudioOneShotQueue`, `ResearchCapabilityBook`, `LogisticsOrderRequest` (all no-ops when the owner already added them; loaded values still win: air-ops tuning is inserted at startup).
+- T-4: new `Core2dOverlaySet::WaterField` layer after `WaterSurface` for the DF-3 field pass. Fixing it exposed a second gap the test had hidden: `TerrainInstanced` had no pass since GS-03 deleted the per-tile terrain draw (terrain is the world bake texture) — the empty layer is removed from the contract.
 
 ## Done when
 
