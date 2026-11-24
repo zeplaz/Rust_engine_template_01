@@ -1,6 +1,5 @@
 //! Shared POD for material-index bake / stamp feeds (GS-03: drawn instanced path deleted).
 
-use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
 
 /// One world tile material index for GPU bake control / stamp feeds.

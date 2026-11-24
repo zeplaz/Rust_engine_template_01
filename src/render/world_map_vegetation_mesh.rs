@@ -60,7 +60,7 @@ pub(crate) struct WorldMapVegetationLayer;
 /// GPU-C — last built plant instances (flat layer). Frustum cull feeds mesh rebuild / future GPU draw.
 #[derive(Resource, Debug, Default, Clone)]
 pub struct VegetationInstanceFrame {
-    pub instances: Vec<VegInstance>,
+    pub(crate) instances: Vec<VegInstance>,
     pub symbols: u32,
     pub revision: u64,
     /// BOOK-S3 / RND-02 — last frustum sphere cull counters.
@@ -363,32 +363,6 @@ impl VegGeometry {
         self.positions.push([x, y, 0.0]);
         self.colors.push(c);
         i
-    }
-
-    fn polygon(&mut self, cx: f32, cy: f32, r: f32, sides: u32, c: [f32; 4]) {
-        let first = self.positions.len() as u32;
-        for i in 0..sides {
-            let a = std::f32::consts::TAU * (i as f32 / sides as f32) + 0.4;
-            self.vertex(cx + a.cos() * r, cy + a.sin() * r, c);
-        }
-        for i in 1..sides.saturating_sub(1) {
-            self.indices.extend_from_slice(&[first, first + i, first + i + 1]);
-        }
-    }
-
-    fn hex(&mut self, cx: f32, cy: f32, r: f32, c: [f32; 4]) {
-        self.polygon(cx, cy, r, 6, c);
-    }
-
-    fn diamond(&mut self, cx: f32, cy: f32, r: f32, c: [f32; 4]) {
-        self.polygon(cx, cy, r, 4, c);
-    }
-
-    fn tri(&mut self, cx: f32, cy: f32, r: f32, c: [f32; 4]) {
-        let a = self.vertex(cx, cy + r, c);
-        let b = self.vertex(cx - r * 0.87, cy - r * 0.5, c);
-        let d = self.vertex(cx + r * 0.87, cy - r * 0.5, c);
-        self.indices.extend_from_slice(&[a, b, d]);
     }
 
     fn rect(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, c: [f32; 4]) {
@@ -866,7 +840,7 @@ pub(crate) fn geometry_from_veg_instances(
 
 /// Sphere radius proxy for a veg crown (half-step).
 #[inline]
-fn veg_instance_radius(inst: &VegInstance, lod: VegLod) -> f32 {
+fn veg_instance_radius(_inst: &VegInstance, lod: VegLod) -> f32 {
     let step = lod.step_tiles().max(1) as f32;
     (step * 0.95).max(0.8)
 }

@@ -70,16 +70,19 @@ pub struct AtmosphereDirtyRegionQueue {
 }
 
 /// EXEC-02: fixed per-tick cap on dirty regions drained into the partial upload plan.
+#[cfg(test)] // only tests use it today
 pub const ATMOSPHERE_PARTIAL_REGION_BUDGET: usize = 8;
 
 /// EXEC-02: resumable index into [`AtmosphereDirtyRegionQueue::regions`].
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct AtmosphereIncrementalCursor {
+    #[cfg_attr(not(test), allow(dead_code))] // read by the EXEC-02 budgeted drain (tests only so far)
     pub next_index: usize,
 }
 
 /// EXEC-02: take up to `budget` regions starting at `cursor`, wrapping when exhausted.
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn take_budgeted_dirty_regions(
     regions: &[AtmosphereDirtyRegion],
     cursor: &mut AtmosphereIncrementalCursor,

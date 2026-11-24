@@ -7,6 +7,7 @@ use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
+#[cfg(test)]
 use crate::gui::style::{
     blend_heatmap_linear, default_heatmap_ramp_linear, sample_heatmap_ramp_linear,
 };
@@ -80,6 +81,7 @@ pub fn project_ecology_overlay_rows(
 
 /// Map a scalar field pair (base / overlay) through the shared heat ramp; blend in **linear** space (RND-20).
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn blend_domain_overlay_scalar_linear(
     base_scalar: f32,
     overlay_scalar: f32,
@@ -96,6 +98,7 @@ pub fn blend_domain_overlay_scalar_linear(
 
 /// Pack a scalar into the RGB leg of a domain row (alpha holds overlay strength).
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn scalar_to_domain_overlay_rgb(scalar: f32) -> Vec3 {
     let ramp = default_heatmap_ramp_linear();
     let rgb = sample_heatmap_ramp_linear(&ramp, scalar.clamp(0.0, 1.0));

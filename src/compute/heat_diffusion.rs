@@ -148,8 +148,6 @@ pub(crate) fn chunk_key(chunk: IVec2) -> i64 {
 
 #[inline]
 #[must_use]
-
-#[must_use]
 pub fn eligible_fire_rows<'a>(
     fire: &'a FireSimulationSnapshot,
     lod_map: &'a WorldLodMap,

@@ -32,6 +32,7 @@ use bevy::render::RenderApp;
 pub const CORE2D_OVERLAY_SDR_FORMAT: TextureFormat = TextureFormat::Rgba8UnormSrgb;
 
 /// Locked Core2d overlay layer count (must match [`CORE2D_OVERLAY_DRAW_ORDER`]).
+#[allow(dead_code)] // RND-03 order contract; read by the tripwire tests
 pub const CORE2D_OVERLAY_LAYER_COUNT: usize = 6;
 
 /// Index into `[sdr, hdr]` overlay pipeline tables (`0` = SDR, `1` = HDR float).
@@ -66,6 +67,7 @@ impl Core2dOverlaySet {
     /// Painter's rank: `0` draws first (under); max draws last (on top).
     #[inline]
     #[must_use]
+    #[allow(dead_code)] // RND-03 order contract; read by the tripwire tests
     pub const fn draw_rank(self) -> u8 {
         match self {
             Self::WaterSurface => 0,
@@ -80,6 +82,7 @@ impl Core2dOverlaySet {
     /// Stable debug / tripwire name (matches enum variant spelling).
     #[inline]
     #[must_use]
+    #[allow(dead_code)] // RND-03 order contract; read by the tripwire tests
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::WaterSurface => "WaterSurface",
@@ -95,6 +98,7 @@ impl Core2dOverlaySet {
 /// Sole draw-order authority: back → front (index 0 under, last on top).
 ///
 /// RND-03: geometry sorting without a runtime spatial tree — fixed submission order.
+#[allow(dead_code)] // RND-03 order contract; read by the tripwire tests
 pub const CORE2D_OVERLAY_DRAW_ORDER: [Core2dOverlaySet; CORE2D_OVERLAY_LAYER_COUNT] = [
     Core2dOverlaySet::WaterSurface,
     Core2dOverlaySet::WaterParticleRaster,

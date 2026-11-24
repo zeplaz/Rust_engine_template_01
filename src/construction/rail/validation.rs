@@ -51,32 +51,6 @@ pub fn validate_rail_segment(
     }
 }
 
-#[must_use]
-pub fn segment_slope_ok(start: Vec3, end: Vec3, max_slope: f32) -> bool {
-    let dx = (end.x - start.x).abs().max(0.5);
-    let dz = (end.z - start.z).abs().max(0.5);
-    let horiz = (dx * dx + dz * dz).sqrt();
-    let rise = (end.y - start.y).abs();
-    horiz <= 0.0 || rise / horiz <= max_slope
-}
-
-#[must_use]
-pub fn turn_radius_ok(prev: Vec3, corner: Vec3, next: Vec3, min_radius: f32) -> bool {
-    let v1 = Vec2::new(corner.x - prev.x, corner.z - prev.z);
-    let v2 = Vec2::new(next.x - corner.x, next.z - corner.z);
-    if v1.length_squared() < 0.01 || v2.length_squared() < 0.01 {
-        return true;
-    }
-    let dot = v1.normalize().dot(v2.normalize()).clamp(-1.0, 1.0);
-    let angle = dot.acos();
-    if angle < 0.15 {
-        return true;
-    }
-    let chord = (prev - next).xz().length();
-    let radius = chord / (2.0 * (angle / 2.0).sin().max(0.01));
-    radius >= min_radius
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

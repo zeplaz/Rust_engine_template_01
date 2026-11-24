@@ -26,7 +26,9 @@ use serde::{Deserialize, Serialize};
 use super::resources::SiteId;
 use super::tile_occupation::{TileOccupationBook, TILE_OCCUPATION_OVERLAP_EPSILON};
 
+#[allow(dead_code)] // CQ-07 cutover flags: dormant until voxel occupation goes default-on
 pub const VOXEL_OCCUPATION_MIRROR_ENV: &str = "RUST_ENGINE_VOXEL_OCCUPATION_MIRROR";
+#[allow(dead_code)] // CQ-07 cutover flags: dormant until voxel occupation goes default-on
 pub const VOXEL_OCCUPATION_COMMIT_ENV: &str = "RUST_ENGINE_VOXEL_OCCUPATION_COMMIT";
 pub const VOXEL_OCCUPATION_SNAPSHOT_SCHEMA_V1: u32 = 1;
 
@@ -50,6 +52,7 @@ impl Default for VoxelOccupationConfig {
 
 /// Default **off**; only `"1"|"true"|"on"|"yes"` enables (CQ-07).
 #[must_use]
+#[allow(dead_code)] // CQ-07 cutover flags: dormant until voxel occupation goes default-on
 pub fn env_flag_default_off(key: &str) -> bool {
     match std::env::var(key) {
         Ok(v) if matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "on" | "yes") => true,
@@ -58,11 +61,13 @@ pub fn env_flag_default_off(key: &str) -> bool {
 }
 
 #[must_use]
+#[allow(dead_code)] // CQ-07 cutover flags: dormant until voxel occupation goes default-on
 pub fn env_mirror_enabled() -> bool {
     env_flag_default_off(VOXEL_OCCUPATION_MIRROR_ENV)
 }
 
 #[must_use]
+#[allow(dead_code)] // CQ-07 cutover flags: dormant until voxel occupation goes default-on
 pub fn env_commit_enabled() -> bool {
     env_flag_default_off(VOXEL_OCCUPATION_COMMIT_ENV)
 }

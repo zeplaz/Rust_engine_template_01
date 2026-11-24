@@ -12,6 +12,7 @@ use bevy::prelude::*;
 pub const FIRE_PARTICLE_WGSL: &str = "shaders/fire/fire_particle.wgsl";
 pub const FIRE_SPARK_COMPUTE_WGSL: &str = "shaders/fire/fire_spark_compute.wgsl";
 /// ES-4 deferred — do not `AssetServer::load` until smoke volume composite is production.
+#[cfg(test)] // only tests use it today
 pub const SMOKE_VOLUME_WGSL: &str = "shaders/fire/smoke_volume.wgsl";
 
 #[derive(Resource, Debug)]

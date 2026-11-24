@@ -39,7 +39,7 @@ pub fn cascade_destroyed_load_bearing(
 
 /// Presentation cascade — runs when mask + dam/site roles are present.
 pub fn cascade_mask_from_roles_system(
-    mut mask: Option<ResMut<DestructionMaskBook>>,
+    mask: Option<ResMut<DestructionMaskBook>>,
     q: Query<(&SiteFootprint, &SiteStructuralRoles)>,
 ) {
     let Some(mut mask) = mask else {

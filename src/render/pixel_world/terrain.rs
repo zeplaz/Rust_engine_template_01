@@ -147,7 +147,7 @@ pub(crate) fn build_terrain_chunk(field: &PixelWorldTerrainField, cx: u32, cy: u
         field.index(x, y).map_or(floor, |i| field.ground[i])
     };
     let mut g = MeshBuf::default();
-    let mut wtr = MeshBuf::default();
+    let wtr = MeshBuf::default();
     let white = [1.0, 1.0, 1.0, 1.0];
     let wall = [WALL_SHADE, WALL_SHADE, WALL_SHADE, 1.0];
 

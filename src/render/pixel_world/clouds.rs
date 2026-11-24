@@ -170,6 +170,7 @@ pub(crate) fn build_cloud_mesh_from_offsets(
 }
 
 /// Advect the puffs and build the sheet mesh. Empty when the sky is clear.
+#[cfg(test)] // only tests use it today
 pub(crate) fn build_cloud_mesh(offsets: &mut [Vec2], input: &CloudDeckInput, cam: &PixelWorldCameraFrame) -> MeshBuf {
     advect_cloud_puff_offsets(offsets, input);
     build_cloud_mesh_from_offsets(offsets, input, cam)

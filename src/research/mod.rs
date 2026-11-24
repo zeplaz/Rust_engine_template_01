@@ -28,6 +28,7 @@ pub mod ids {
 #[derive(Debug, Clone, Deserialize)]
 struct CapabilitiesFile {
     #[serde(default)]
+    #[allow(dead_code)] // file-format tag, parsed for validation only
     schema_version: u32,
     #[serde(default)]
     capabilities: Vec<CapabilityDefRon>,

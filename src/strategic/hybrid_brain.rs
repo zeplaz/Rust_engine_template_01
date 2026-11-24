@@ -300,6 +300,7 @@ pub fn resolve_world_state_from_masses(m: &HybridResolutionMasses, roll: f32) ->
 /// DEC-06: ordinal index for Markov rows (stable order).
 #[inline]
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn world_event_markov_index(ev: WorldEvent) -> usize {
     match ev {
         WorldEvent::WarBreakout => 0,
@@ -312,6 +313,7 @@ pub fn world_event_markov_index(ev: WorldEvent) -> usize {
 
 #[inline]
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn world_event_from_markov_index(i: usize) -> WorldEvent {
     match i {
         0 => WorldEvent::WarBreakout,
@@ -324,6 +326,7 @@ pub fn world_event_from_markov_index(i: usize) -> WorldEvent {
 
 /// DEC-06: row-stochastic transition from `from` biased by current resolution masses.
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn markov_transition_row(from: WorldEvent, m: &HybridResolutionMasses) -> [f32; 5] {
     let base = [
         m.p_war.max(0.0),
@@ -349,6 +352,7 @@ pub fn markov_transition_row(from: WorldEvent, m: &HybridResolutionMasses) -> [f
 
 /// DEC-06: one Markov step — sample next [`WorldEvent`] from `from` given masses + roll.
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn markov_step_world_event(from: WorldEvent, m: &HybridResolutionMasses, roll: f32) -> WorldEvent {
     let row = markov_transition_row(from, m);
     let roll = roll.clamp(0.0, 1.0);

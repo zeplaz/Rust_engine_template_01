@@ -136,7 +136,6 @@ fn quantize_fire_f32(v: f32) -> u32 {
     (v.clamp(0.0, 1.0) * 10_000.0).round() as u32
 }
 
-#[must_use]
 type FireCaptureItem<'a> = (
     &'a Chunk,
     &'a ChunkSurfaceFire,

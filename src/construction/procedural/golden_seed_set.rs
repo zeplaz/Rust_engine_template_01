@@ -5,6 +5,7 @@
 //! **MATH-02**: committed [`GoldenSeedEntry::seed`] values are *roots*. Derive subsystem /
 //! stream seeds with [`derive_golden_stream_seed`] — never `wrapping_add` offsets in call order.
 
+#[cfg(test)]
 use crate::ai::faction::rng::derive_keyed_seed;
 use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
@@ -94,6 +95,7 @@ pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
 
 /// MATH-02: order-independent stream seed from a golden root + key (does not change hash roots).
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn derive_golden_stream_seed(entry: &GoldenSeedEntry, stream_key: u64) -> u64 {
     derive_keyed_seed(entry.seed, stream_key)
 }

@@ -38,6 +38,7 @@ pub const MOISTURE_BLOCKS_SPREAD: f32 = 0.72;
 
 /// Chunk rain at or above this stops neighbor deposits. It does not refill fuel.
 /// Legacy 0..1 intensity; prefer [`rain_mm_h_blocks_neighbor_spread`] when mm/h is available.
+#[cfg(test)] // only tests use it today
 pub const RAIN_BLOCKS_SPREAD: f32 = 0.85;
 
 /// Rain rate (mm/h) at or above which surface deposits stop.
@@ -325,6 +326,7 @@ pub fn spread_allowed(snow_depth: f32, dest_moisture: f32) -> bool {
 
 /// Heavy rain stops neighbor spread (legacy 0..1 intensity). Light rain does not. Fuel is untouched.
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn rain_blocks_neighbor_spread(rain_intensity: f32) -> bool {
     rain_intensity >= RAIN_BLOCKS_SPREAD
 }

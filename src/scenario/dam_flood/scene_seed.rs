@@ -5,7 +5,7 @@
 use bevy::math::IVec2;
 use bevy::prelude::*;
 
-use crate::combat::{BallisticFlightBook, StrikeOrder, StrikeOrderQueue};
+use crate::combat::BallisticFlightBook;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::systems::ecology::{
     effective_fuel_moisture01, ChunkCellFuelMoisture, ChunkCellStand, StandBurnConfig, StandKind,
@@ -17,7 +17,6 @@ use crate::systems::water::{
     SlowDomainElapsedSecs, SurfaceWaterBaseflow, SurfaceWaterField,
 };
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 use super::DamFloodStage;
 

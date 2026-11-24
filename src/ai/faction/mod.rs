@@ -633,7 +633,7 @@ pub fn faction_ai_tick_system(
                 .max(1)
                 .saturating_mul(interval_mul),
         );
-        behaviour_log.maybe_push(FactionBehaviourChangeRecord::from_choice(now, slot, previous, &choice));
+        let _ = behaviour_log.maybe_push(FactionBehaviourChangeRecord::from_choice(now, slot, previous, &choice));
         log.push(FactionAiDecisionRecord {
             sim_tick: now,
             slot,

@@ -100,7 +100,6 @@ pub const DEFAULT_LAYER_COLLIDES_WITH: [u32; CollisionLayer::COUNT as usize] = {
     const T: u32 = CollisionLayer::Terrain.bit();
     const S: u32 = CollisionLayer::Solid.bit();
     const O: u32 = CollisionLayer::Soft.bit();
-    const F: u32 = CollisionLayer::Fluid.bit();
     const V: u32 = CollisionLayer::Vegetation.bit();
     const L: u32 = CollisionLayer::Loose.bit();
     const U: u32 = CollisionLayer::Structure.bit();

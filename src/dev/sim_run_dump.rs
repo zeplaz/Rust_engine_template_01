@@ -75,7 +75,7 @@ pub(crate) const TERRITORY_CONTROL_MIN: f32 = 0.5;
 
 /// first / last / min / max of one counter across the run.
 #[derive(Clone, Copy, Debug, Default)]
-struct Series {
+pub(crate) struct Series {
     first: Option<f64>,
     last: f64,
     min: f64,
@@ -111,7 +111,7 @@ pub(crate) struct AiTally {
 }
 
 #[derive(Resource, Debug)]
-pub(crate) struct SimRunDumpState {
+pub struct SimRunDumpState {
     pub(crate) last_tick: u64,
     pub(crate) series: BTreeMap<&'static str, Series>,
     pub(crate) territory_first: BTreeMap<u8, u32>,

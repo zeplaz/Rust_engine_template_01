@@ -75,9 +75,11 @@ pub fn rtt_sprite_trace_enabled() -> bool {
 pub const DEFAULT_VFX_CAPTURE_FRAME: u32 = 240;
 
 /// PlayQuad wet-rain + PixelWorld acceptance needs frames past [`PLAYQUAD_RAIN_DELAY_HINT`].
+#[cfg(test)] // only tests use it today
 pub const PLAYQUAD_RAIN_DELAY_HINT: u32 = 1800;
 
 /// Recommended capture frame for PlayQuad voxel weather/massing stills.
+#[cfg(test)] // only tests use it today
 pub const PLAYQUAD_VOXEL_CAPTURE_FRAME: u32 = 2000;
 
 #[must_use]
@@ -105,6 +107,7 @@ pub fn vfx_capture_presentation_from_env() -> VfxCapturePresentation {
 }
 
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn recommended_capture_frame_for_scene(scene_cli: &str) -> u32 {
     let s = scene_cli.trim().to_ascii_lowercase();
     if matches!(s.as_str(), "playquad" | "quadrant" | "quad") {

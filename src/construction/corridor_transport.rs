@@ -4,22 +4,8 @@ use bevy::prelude::*;
 
 use crate::strategic::BuildSiteTile;
 use crate::systems::transport::{
-    CorridorClass, TransportConstructionRecord, TransportEdgeDirectory, TransportEdgeId,
+    TransportConstructionRecord, TransportEdgeDirectory, TransportEdgeId,
 };
-
-/// Active rail profile id for corridor execute (INFRA-E2-004).
-#[derive(Resource, Debug, Clone)]
-pub struct RailProfileSelection {
-    pub profile_id: String,
-}
-
-impl Default for RailProfileSelection {
-    fn default() -> Self {
-        Self {
-            profile_id: "default_rail".into(),
-        }
-    }
-}
 
 /// View binding: sim path markers reference authoritative transport edge ids.
 #[derive(Component, Debug, Clone, Copy)]
@@ -66,44 +52,6 @@ pub fn planned_construction_record(edge_id: TransportEdgeId) -> TransportConstru
     }
 }
 
-/// Patch rail corridor metadata after tile-marker bake (profile picker + train agents).
-pub fn apply_rail_profile_to_edge(
-    directory: &mut TransportEdgeDirectory,
-    edge_id: TransportEdgeId,
-    profile_id: &str,
-    allowed_agents: &[String],
-) {
-    if let Some(meta) = directory.by_edge.get_mut(&edge_id) {
-        meta.profile = profile_id.into();
-        meta.corridor_class = CorridorClass::Rail;
-        meta.allowed_agents = if allowed_agents.is_empty() {
-            vec!["train".into()]
-        } else {
-            allowed_agents.to_vec()
-        };
-    }
-}
-
-/// Resolve rail profile from registry selection (falls back to default train agents).
-pub fn apply_selected_rail_profile_to_edge(
-    directory: &mut TransportEdgeDirectory,
-    edge_id: TransportEdgeId,
-    selection: &RailProfileSelection,
-    registry: Option<&crate::infrastructure::ProfileRegistry>,
-) {
-    let (profile_id, agents) = registry
-        .and_then(|r| r.resolve(&selection.profile_id))
-        .map(|kind| {
-            let agents = match &kind {
-                crate::infrastructure::CorridorProfileKind::Rail(p) => p.allowed_agents.clone(),
-                _ => vec!["train".into()],
-            };
-            (selection.profile_id.clone(), agents)
-        })
-        .unwrap_or_else(|| (selection.profile_id.clone(), vec!["train".into()]));
-    apply_rail_profile_to_edge(directory, edge_id, &profile_id, &agents);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,19 +92,24 @@ mod tests {
     }
 
     #[test]
-    fn infra_e2_004_rail_profile_train_agents() {
+    fn infra_e2_004_rail_edges_carry_train_agents_from_the_network_bake() {
+        use crate::construction::corridor_network::{CorridorKind, CorridorNetwork};
+        let mut net = CorridorNetwork::default();
+        net.add_segment(
+            CorridorKind::Rail { profile: "default_rail".into() },
+            BuildSiteTile { x: 1, z: 1 },
+            BuildSiteTile { x: 6, z: 1 },
+        )
+        .expect("rail line");
+        let snap = net.bake_snapshot(10.25);
+        let mut topo = TransportTopology::default();
+        let mut field = TransportFieldStore::default();
         let mut dir = TransportEdgeDirectory::default();
-        dir.by_edge.insert(
-            TransportEdgeId(0),
-            crate::systems::transport::TransportEdgeMeta::default(),
-        );
-        let selection = RailProfileSelection {
-            profile_id: "default_rail".into(),
-        };
-        apply_selected_rail_profile_to_edge(&mut dir, TransportEdgeId(0), &selection, None);
-        let meta = &dir.by_edge[&TransportEdgeId(0)];
-        assert_eq!(meta.profile, "default_rail");
-        assert_eq!(meta.corridor_class, CorridorClass::Rail);
-        assert_eq!(meta.allowed_agents, vec!["train".to_string()]);
+        hydrate_transport_from_snapshot(&mut topo, &mut field, &mut dir, &snap).unwrap();
+        assert!(!dir.by_edge.is_empty());
+        for meta in dir.by_edge.values() {
+            assert!(meta.allowed_agents.iter().any(|a| a == "train"), "{:?}", meta.allowed_agents);
+            assert_eq!(meta.corridor_class, crate::systems::transport::CorridorClass::Rail);
+        }
     }
 }

@@ -26,6 +26,7 @@ pub struct DecisionScoreComponents {
 /// DEC-05: triangular membership of `x` in [lo, peak, hi] → degree in [0, 1].
 #[inline]
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn fuzzy_degree(x: f32, lo: f32, peak: f32, hi: f32) -> f32 {
     if !(lo < peak && peak < hi) {
         return 0.0;
@@ -46,6 +47,7 @@ pub fn fuzzy_degree(x: f32, lo: f32, peak: f32, hi: f32) -> f32 {
 /// Soft AND (product t-norm).
 #[inline]
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn fuzzy_and(a: f32, b: f32) -> f32 {
     (a.clamp(0.0, 1.0) * b.clamp(0.0, 1.0)).clamp(0.0, 1.0)
 }
@@ -53,6 +55,7 @@ pub fn fuzzy_and(a: f32, b: f32) -> f32 {
 /// Soft OR (probabilistic sum).
 #[inline]
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn fuzzy_or(a: f32, b: f32) -> f32 {
     let a = a.clamp(0.0, 1.0);
     let b = b.clamp(0.0, 1.0);
@@ -61,6 +64,7 @@ pub fn fuzzy_or(a: f32, b: f32) -> f32 {
 
 /// DEC-05: compose channels as fuzzy degrees then soft-OR (no hard cutoffs).
 #[must_use]
+#[cfg(test)] // only tests use it today
 pub fn compose_decision_score_fuzzy(c: &DecisionScoreComponents) -> f32 {
     let channels = [
         fuzzy_degree(c.base_traits, -0.05, 0.15, 0.45),

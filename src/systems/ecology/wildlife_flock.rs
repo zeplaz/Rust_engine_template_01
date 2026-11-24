@@ -77,7 +77,7 @@ pub fn spawn_wildlife_agents(seed: u64, count: u32, origin: Vec2) -> Vec<Wildlif
     for i in 0..n {
         let s = derive_keyed_seed(seed, STREAM_SPAWN ^ u64::from(i));
         let px = derive_keyed_seed(s, STREAM_POS);
-        let py = derive_keyed_seed(s, STREAM_POS ^ 1);
+        let _py = derive_keyed_seed(s, STREAM_POS ^ 1);
         let vx = derive_keyed_seed(s, STREAM_VEL);
         let vy = derive_keyed_seed(s, STREAM_VEL ^ 1);
         let angle = (i as f32) * (std::f32::consts::TAU / n as f32);

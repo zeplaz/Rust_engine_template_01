@@ -510,10 +510,10 @@ pub(crate) struct WorldGenShellPointerInputs<'w, 's> {
 /// Preview viewport request, pan/zoom, image + inset placement.
 pub(crate) fn sync_world_gen_shell_viewport(
     gate: Res<WorldGenShellGate>,
-    mut sources: WorldGenShellPreviewSources,
-    mut viewport: WorldGenShellViewportWrites,
-    mut surface: WorldGenShellSurfaceQueries,
-    mut pointer_in: WorldGenShellPointerInputs,
+    sources: WorldGenShellPreviewSources,
+    viewport: WorldGenShellViewportWrites,
+    surface: WorldGenShellSurfaceQueries,
+    pointer_in: WorldGenShellPointerInputs,
 ) {
     if !gate.show {
         return;

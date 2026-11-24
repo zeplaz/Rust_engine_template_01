@@ -34,10 +34,13 @@ use crate::engine::states::BaseState;
 use crate::gui::tactical::map_camera::MainWorldCamera;
 use crate::gui::tactical::sim_map_rtt::SimulationMapTexture;
 use crate::render::probes::vfx_capture_env::{
-    vfx_capture_enabled, vfx_capture_frame, DEFAULT_VFX_CAPTURE_FRAME,
+    vfx_capture_enabled, vfx_capture_frame,
 };
+#[cfg(test)]
+use crate::render::probes::vfx_capture_env::DEFAULT_VFX_CAPTURE_FRAME;
 
 /// Default: fire the capture batch this many frames after entering [`BaseState::Simulation`].
+#[cfg(test)] // only tests use it today
 const CAPTURE_AT_FRAME: u32 = DEFAULT_VFX_CAPTURE_FRAME;
 
 /// Capture frame — sole authority [`vfx_capture_frame`] (DBG-04 env contract).

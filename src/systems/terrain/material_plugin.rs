@@ -8,7 +8,7 @@ use bevy::prelude::*;
 
 use crate::terrain::generation::passes::{
     apply_agent_overlay, apply_agent_overlay_into_book, apply_hydrology_chunk, apply_threshold_tags,
-    classify_cells, classify_cells_with, fill_fields, materialize,
+    classify_cells_with, fill_fields, materialize,
 };
 use crate::terrain::TerrainAnalysisBook;
 #[cfg(feature = "dev_tools")]

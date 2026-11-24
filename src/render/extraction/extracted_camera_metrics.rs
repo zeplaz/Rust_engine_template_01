@@ -65,6 +65,7 @@ impl ExtractedCameraMetrics {
             translation.y,
             MAIN_WORLD_CAMERA_Z,
         ));
+        #[allow(deprecated)] // glam 0.30 renames it; same right-handed [0, 1] depth projection.
         let proj = Mat4::orthographic_rh(-fw * 0.5, fw * 0.5, -fh * 0.5, fh * 0.5, 0.0, 2000.0);
         proj * view
     }

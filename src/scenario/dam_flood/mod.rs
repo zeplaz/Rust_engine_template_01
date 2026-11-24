@@ -25,7 +25,6 @@ pub use scene_seed::{
 
 use bevy::prelude::*;
 
-use crate::strategic::ConstructionSite;
 
 /// Benchmark narrative stage (counts-only dump). Sole writer: scenario / harness ops.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, Reflect)]
