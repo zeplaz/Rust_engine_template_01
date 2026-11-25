@@ -1492,3 +1492,126 @@ fn rd7_done_when_rail_beats_trucks_per_unit_over_150_tiles() {
     let by_road = ticks_to_deliver(false);
     assert!(by_rail * 3 < by_road, "rail {by_rail} ticks vs trucks {by_road} ticks for 1200 t over 150 tiles");
 }
+
+fn two_yards_with_trains(trains_at_a: u32, trains_at_b: u32) -> (LogisticsOrderSim, RoadAndRail) {
+    let mut sim = LogisticsOrderSim::new(cfg());
+    for (id, name) in [(SiteId(1), "Yard A"), (SiteId(2), "Yard B")] {
+        ok(sim.apply(LogisticsOrderCommand::RegisterSite { site: id, name: name.into() }));
+    }
+    let mut rail = BTreeMap::new();
+    rail.insert((SiteId(1), SiteId(2)), 2400.0);
+    rail.insert((SiteId(2), SiteId(1)), 2400.0);
+    let travel = RoadAndRail { road: Distances::default(), rail };
+    for (home, n) in [(SiteId(1), trains_at_a), (SiteId(2), trains_at_b)] {
+        for _ in 0..n {
+            ok(sim.apply(LogisticsOrderCommand::AddTrain { owner: OwnerId::PLAYER, home, wagons: 4, wagon_capacity: 50, speed_mps: 20.0 }));
+        }
+    }
+    (sim, travel)
+}
+
+fn yard_run(sim: &mut LogisticsOrderSim, source: u32, sink: u32, qty: u32) {
+    ok(sim.apply(LogisticsOrderCommand::SetStock { site: SiteId(source), cargo: CargoKind::new("Gravel"), on_hand: qty }));
+    ok(sim.apply(LogisticsOrderCommand::CreateOneOffRun {
+        owner: OwnerId::PLAYER,
+        source: SiteId(source),
+        sink: SiteId(sink),
+        cargo: CargoKind::new("Gravel"),
+        quantity: qty,
+        priority: Priority::Normal,
+        vehicle_cap: None,
+    }));
+}
+
+/// RD-7 signals: two trains loading at opposite ends of a single track never meet on it; one waits
+/// in its yard (held at the signal) until the other has arrived.
+#[test]
+fn rd7_opposing_trains_never_share_the_single_track() {
+    let (mut sim, travel) = two_yards_with_trains(1, 1);
+    yard_run(&mut sim, 1, 2, 200);
+    yard_run(&mut sim, 2, 1, 200);
+    let mut held = false;
+    for _ in 0..2000 {
+        sim.tick(&travel);
+        let hauling: Vec<(SiteId, SiteId)> = sim
+            .vehicles
+            .values()
+            .filter_map(|v| match (&v.phase, &v.assignment) {
+                (VehiclePhase::Hauling(_), Some(a)) => Some((a.source, a.sink)),
+                _ => None,
+            })
+            .collect();
+        assert!(hauling.len() <= 1, "head-on on the single track: {hauling:?}");
+        held |= sim.vehicles.values().any(|v| v.signal_hold);
+    }
+    assert!(held, "one train had to wait at the signal");
+    for site in [1, 2] {
+        assert_eq!(sim.stock.get(SiteId(site), &CargoKind::new("Gravel")).on_hand, 200, "both runs arrive");
+    }
+}
+
+/// RD-7 signals: trains following each other leave at least a headway apart.
+#[test]
+fn rd7_following_trains_keep_a_headway() {
+    let (mut sim, travel) = two_yards_with_trains(2, 0);
+    yard_run(&mut sim, 1, 2, 400);
+    let headway = sim.config.rail_headway_ticks;
+    let mut departures: Vec<u64> = Vec::new();
+    let mut was_hauling = std::collections::BTreeSet::new();
+    for _ in 0..2000 {
+        sim.tick(&travel);
+        for v in sim.vehicles.values() {
+            let hauling = matches!(v.phase, VehiclePhase::Hauling(_));
+            if hauling && was_hauling.insert(v.id) {
+                departures.push(sim.tick);
+            }
+            if !hauling {
+                was_hauling.remove(&v.id);
+            }
+        }
+    }
+    assert!(departures.len() >= 2, "{departures:?}");
+    assert!(departures[1] - departures[0] >= u64::from(headway), "{departures:?} headway {headway}");
+}
+
+#[test]
+fn rail_routes_share_track_by_their_line_stretches() {
+    use crate::economy::logistics::orders::travel::rail_routes_conflict;
+    use bevy::math::Vec2;
+    let ab = [Vec2::new(0.5, 0.5), Vec2::new(2.5, 0.5), Vec2::new(10.5, 0.5), Vec2::new(18.5, 0.5), Vec2::new(20.5, 0.5)];
+    let mut ba = ab;
+    ba.reverse();
+    assert_eq!(rail_routes_conflict(&ab, &ab), Some(true));
+    assert_eq!(rail_routes_conflict(&ab, &ba), Some(false));
+    let other = [Vec2::new(0.5, 9.5), Vec2::new(2.5, 9.5), Vec2::new(10.5, 9.5), Vec2::new(20.5, 9.5)];
+    assert_eq!(rail_routes_conflict(&ab, &other), None);
+}
+
+/// RD-7: a yard builds a train from its own stock (all-or-nothing debit).
+#[test]
+fn rd7_a_yard_builds_a_train_from_its_stock() {
+    let rail = crate::infrastructure::road_tier_table().rail.clone();
+    let cost: Vec<(CargoKind, u32)> = rail.train_cost().into_iter().map(|(t, n)| (CargoKind::new(t), n)).collect();
+    let mut sim = LogisticsOrderSim::new(cfg());
+    ok(sim.apply(LogisticsOrderCommand::RegisterSite { site: SiteId(1), name: "Yard".into() }));
+    let build = |sim: &mut LogisticsOrderSim| {
+        sim.apply(LogisticsOrderCommand::BuildTrain {
+            owner: OwnerId::PLAYER,
+            home: SiteId(1),
+            wagons: rail.build_wagons,
+            wagon_capacity: rail.wagon_capacity,
+            speed_mps: rail.speed_mps(),
+            cost: cost.clone(),
+        })
+    };
+    assert!(matches!(build(&mut sim), CommandOutcome::Rejected(_)), "no materials, no train");
+    for (c, n) in &cost {
+        ok(sim.apply(LogisticsOrderCommand::SetStock { site: SiteId(1), cargo: c.clone(), on_hand: *n + 5 }));
+    }
+    let CommandOutcome::CreatedVehicle(id) = ok(build(&mut sim)) else { panic!("built") };
+    assert!(sim.vehicles[&id].mode.is_rail());
+    assert_eq!(sim.vehicles[&id].capacity_units, u32::from(rail.build_wagons) * rail.wagon_capacity);
+    for (c, _) in &cost {
+        assert_eq!(sim.stock.get(SiteId(1), c).on_hand, 5, "{} debited", c.0);
+    }
+}

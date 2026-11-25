@@ -15,6 +15,8 @@ use crate::systems::navigation::{point_along_polyline, truck_leg_key, RoadVehicl
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TruckPresentation {
     pub vehicle_id: VehicleId,
+    /// Wagons behind the engine for a train (RD-7); 0 for a truck.
+    pub wagons: u8,
 }
 
 #[derive(Resource, Default)]
@@ -143,7 +145,13 @@ pub fn sync_truck_presentation(
             };
             let e = commands
                 .spawn((
-                    TruckPresentation { vehicle_id: *id },
+                    TruckPresentation {
+                        vehicle_id: *id,
+                        wagons: match v.mode {
+                            crate::economy::logistics::orders::model::VehicleMode::Rail { wagons } => wagons,
+                            crate::economy::logistics::orders::model::VehicleMode::Road => 0,
+                        },
+                    },
                     Transform::from_xyz(xz.x, xz.y, 2.0),
                     Sprite {
                         color,

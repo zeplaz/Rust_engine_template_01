@@ -57,13 +57,15 @@ pub struct RoadFlowBook {
     pub peak_vc: f32,
     pub peak_edges: usize,
     buckets: HashMap<TransportEdgeId, u16>,
+    /// Level-crossing delay as a time multiplier per road edge (RD-7).
+    pub crossing_mul: HashMap<TransportEdgeId, f32>,
 }
 
 impl RoadFlowBook {
     /// Travel-time multiplier on `id` (1 = free flow).
     #[must_use]
     pub fn time_mul(&self, id: TransportEdgeId) -> f32 {
-        self.by_edge.get(&id).map_or(1.0, |f| bpr_time_mul(f.vc()))
+        self.by_edge.get(&id).map_or(1.0, |f| bpr_time_mul(f.vc())) * self.crossing_mul.get(&id).copied().unwrap_or(1.0)
     }
 
     /// Highest volume / capacity on any edge (dump).
@@ -94,6 +96,7 @@ pub fn publish_road_flow_system(
     sim: Option<Res<LogisticsOrderSimRes>>,
     legs: Option<Res<SiteLegRouteBook>>,
     directory: Option<Res<TransportEdgeDirectory>>,
+    crossings: Option<Res<super::level_crossings::LevelCrossingBook>>,
     mut book: ResMut<RoadFlowBook>,
     mut index: Local<EdgeIndex>,
     mut frames: Local<u32>,
@@ -102,7 +105,8 @@ pub fn publish_road_flow_system(
         return;
     };
     *frames += 1;
-    if *frames < REFRESH_FRAMES && !legs.is_changed() {
+    let crossings_changed = crossings.as_ref().is_some_and(|c| c.is_changed());
+    if *frames < REFRESH_FRAMES && !legs.is_changed() && !crossings_changed {
         return;
     }
     *frames = 0;
@@ -140,11 +144,32 @@ pub fn publish_road_flow_system(
             }
         }
     }
-    let buckets: HashMap<TransportEdgeId, u16> = by_edge
+    // RD-7 level crossings: delay over the edge's free-flow time, as a multiplier.
+    let crossing_mul: HashMap<TransportEdgeId, f32> = crossings
+        .as_deref()
+        .map(|c| {
+            c.by_edge
+                .iter()
+                .filter_map(|(id, x)| {
+                    let m = directory.by_edge.get(id)?;
+                    let (a, b) = (parse_tile(&m.head_key)?, parse_tile(&m.tail_key)?);
+                    let speed = crate::infrastructure::road_profile_speed_mps(&m.profile)?.max(0.1);
+                    let free_s = (a.as_vec2().distance(b.as_vec2()) * crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY / speed).max(1.0);
+                    Some((*id, 1.0 + x.delay_s / free_s))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut buckets: HashMap<TransportEdgeId, u16> = by_edge
         .iter()
         .map(|(id, f)| (*id, (bpr_time_mul(f.vc()) * 4.0).round() as u16))
         .filter(|(_, b)| *b > 4)
         .collect();
+    for (id, m) in &crossing_mul {
+        let b = buckets.entry(*id).or_insert(4);
+        *b = b.saturating_add(((m - 1.0) * 4.0).round() as u16);
+    }
+    book.crossing_mul = crossing_mul;
     if buckets != book.buckets {
         book.buckets = buckets;
         book.revision = book.revision.wrapping_add(1);

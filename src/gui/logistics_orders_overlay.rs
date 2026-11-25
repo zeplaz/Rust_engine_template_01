@@ -187,6 +187,7 @@ mod tests {
                 order(3, false, OrderStatus::Completed),
             ],
             vehicles: vec![VehicleRow {
+                rail: false,
                 id: VehicleId(1),
                 owner: OwnerId::PLAYER,
                 class_mask: CargoClassMask::FREIGHT,

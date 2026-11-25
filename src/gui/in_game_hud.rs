@@ -208,6 +208,10 @@ impl Plugin for InGameHudPlugin {
                     crate::gui::hud::plant_info_card::sync_facility_info_card_system,
                     crate::gui::hud::panel_drag::place_hud_cards_system
                         .after(crate::gui::hud::panel_drag::drag_hud_panels_system),
+                    // RD-7: freight-yard section (trains, materials, Build train).
+                    crate::gui::hud::yard_card_section::sync_yard_card_section_system
+                        .after(crate::gui::hud::plant_info_card::sync_facility_info_card_system),
+                    crate::gui::hud::yard_card_section::yard_build_train_button_system,
                     crate::gui::hud::road_info_card::sync_road_report_system,
                     crate::gui::hud::road_info_card::sync_road_info_card_system
                         .after(crate::gui::hud::road_info_card::sync_road_report_system),

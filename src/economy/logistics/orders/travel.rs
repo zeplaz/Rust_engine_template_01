@@ -80,6 +80,29 @@ pub struct SiteRailLegBook {
     pub revision: u64,
 }
 
+/// Do two rail routes run over the same track? Compares their line stretches (sidings — the first
+/// and last stretch — are yard tracks, not the line). `Some(true)` the first shared stretch is
+/// run the same way, `Some(false)` head-on, `None` no shared stretch.
+#[must_use]
+pub fn rail_routes_conflict(a: &[bevy::math::Vec2], b: &[bevy::math::Vec2]) -> Option<bool> {
+    let line = |p: &[bevy::math::Vec2]| -> Vec<(bevy::math::IVec2, bevy::math::IVec2)> {
+        if p.len() < 4 {
+            return Vec::new();
+        }
+        p[1..p.len() - 1].windows(2).map(|w| (w[0].floor().as_ivec2(), w[1].floor().as_ivec2())).collect()
+    };
+    let lb = line(b);
+    for (u, v) in line(a) {
+        if lb.contains(&(u, v)) {
+            return Some(true);
+        }
+        if lb.contains(&(v, u)) {
+            return Some(false);
+        }
+    }
+    None
+}
+
 /// Order-sim travel over planned legs: a planned pair takes the time of the route actually driven
 /// (built roads at their tier speed, the rest off-road); an unplanned pair falls back to the
 /// straight line × detour at off-road speed until the planner gets to it.
@@ -102,6 +125,13 @@ impl TravelModel for RoutedTravel<'_> {
             _ => self.base.distance_m(from, to)? * self.base.detour.max(1.0) / speed_mps.min(self.offroad_mps).max(0.1),
         };
         Some((secs / self.base.seconds_per_tick.max(1e-3)).ceil().max(1.0) as u32)
+    }
+
+    fn rail_conflict(&self, a: (SiteId, SiteId), b: (SiteId, SiteId)) -> Option<bool> {
+        let (Some(ra), Some(rb)) = (self.rail.legs.get(&a), self.rail.legs.get(&b)) else {
+            return None;
+        };
+        rail_routes_conflict(&ra.route.points, &rb.route.points)
     }
 
     fn rail_travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {

@@ -327,6 +327,10 @@ pub struct Vehicle {
     /// Road (trucks) unless a train.
     #[serde(default)]
     pub mode: VehicleMode,
+    /// A loaded train held at its yard by the signals (opposing train on the single track, or
+    /// the one ahead not a headway clear yet).
+    #[serde(default)]
+    pub signal_hold: bool,
 }
 
 impl Vehicle {

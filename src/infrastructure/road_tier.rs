@@ -157,11 +157,33 @@ pub struct RailTuning {
     pub yard_reach_tiles: f32,
     /// Hauls shorter than this (tiles, straight line) stay on the road.
     pub intermodal_min_tiles: f32,
+    /// Wagons in a train a yard builds.
+    pub build_wagons: u8,
+    /// Steel per wagon and Machinery for the engine when a yard builds a train.
+    pub steel_per_wagon: u32,
+    pub engine_machinery: u32,
+    /// Sim seconds between two trains one faction builds automatically.
+    pub build_interval_s: u64,
+    /// Level crossing: seconds a truck waits at the barrier, plus this per train running the line.
+    pub crossing_base_s: f32,
+    pub crossing_per_train_s: f32,
 }
 
 impl Default for RailTuning {
     fn default() -> Self {
-        Self { speed_kmh: 80.0, siding_kmh: 15.0, wagon_capacity: 50, yard_reach_tiles: 10.0, intermodal_min_tiles: 60.0 }
+        Self {
+            speed_kmh: 80.0,
+            siding_kmh: 15.0,
+            wagon_capacity: 50,
+            yard_reach_tiles: 10.0,
+            intermodal_min_tiles: 60.0,
+            build_wagons: 12,
+            steel_per_wagon: 10,
+            engine_machinery: 30,
+            build_interval_s: 600,
+            crossing_base_s: 12.0,
+            crossing_per_train_s: 25.0,
+        }
     }
 }
 
@@ -174,6 +196,12 @@ impl RailTuning {
     #[must_use]
     pub fn siding_mps(&self) -> f32 {
         self.siding_kmh / 3.6
+    }
+
+    /// Materials one built train costs (cargo, units).
+    #[must_use]
+    pub fn train_cost(&self) -> Vec<(&'static str, u32)> {
+        vec![("Steel", self.steel_per_wagon * u32::from(self.build_wagons)), ("Machinery", self.engine_machinery)]
     }
 }
 

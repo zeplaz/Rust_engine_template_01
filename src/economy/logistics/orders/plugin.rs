@@ -472,6 +472,7 @@ impl Plugin for LogisticsOrdersPlugin {
                     super::auto_supply::unattended_player_auto_supply_system,
                     super::auto_supply::auto_supply_unserved_system,
                     super::fleet_growth::grow_depot_fleets_system,
+                    super::fleet_growth::grow_yard_trains_system,
                 )
                     .chain()
                     .in_set(LogisticsOrdersSet::Snapshot),

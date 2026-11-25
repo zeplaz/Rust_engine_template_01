@@ -22,6 +22,18 @@ pub trait TravelModel {
         let _ = (from, to, speed_mps);
         None
     }
+
+    /// Do two rail trips share track? `Some(true)` same direction, `Some(false)` head-on, `None`
+    /// no shared track. Default: the same pair, or the same pair reversed.
+    fn rail_conflict(&self, a: (SiteId, SiteId), b: (SiteId, SiteId)) -> Option<bool> {
+        if a == b {
+            Some(true)
+        } else if a == (b.1, b.0) {
+            Some(false)
+        } else {
+            None
+        }
+    }
 }
 
 /// Travel ticks for a vehicle of `mode` (rail vehicles only move on rail).
@@ -34,6 +46,10 @@ fn mode_travel_ticks(travel: &dyn TravelModel, mode: VehicleMode, from: SiteId, 
 }
 
 /// Tunables. Defaults assume one sim tick per simulated second.
+fn default_rail_headway_ticks() -> u32 {
+    60
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SimConfig {
     pub load_ticks: u32,
@@ -47,6 +63,10 @@ pub struct SimConfig {
     pub starving_bonus: u32,
     /// How long finished orders stay listed before pruning.
     pub keep_finished_ticks: u64,
+    /// RD-7 signals: ticks a train must be ahead before the next one may follow it onto the
+    /// same track (block headway).
+    #[serde(default = "default_rail_headway_ticks")]
+    pub rail_headway_ticks: u32,
     pub max_events: usize,
 }
 
@@ -60,6 +80,7 @@ impl Default for SimConfig {
             aging_cap: 150,
             starving_bonus: 120,
             keep_finished_ticks: 600,
+            rail_headway_ticks: default_rail_headway_ticks(),
             max_events: 64,
         }
     }
@@ -89,6 +110,16 @@ pub enum LogisticsOrderCommand {
         home: SiteId,
         class_mask: CargoClassMask,
         capacity_units: u32,
+        speed_mps: f32,
+        cost: Vec<(CargoKind, u32)>,
+    },
+    /// A yard builds a train from its own stock (RD-7): `cost` is debited atomically (all or
+    /// nothing), then the train joins the owner's fleet at `home` like [`Self::AddTrain`].
+    BuildTrain {
+        owner: OwnerId,
+        home: SiteId,
+        wagons: u8,
+        wagon_capacity: u32,
         speed_mps: f32,
         cost: Vec<(CargoKind, u32)>,
     },
@@ -417,6 +448,18 @@ impl LogisticsOrderSim {
                     speed_mps,
                 })
             }
+            C::BuildTrain { owner, home, wagons, wagon_capacity, speed_mps, cost } => {
+                if !self.sites.contains_key(&home) {
+                    return CommandOutcome::Rejected(format!("train home {} unknown", home.0));
+                }
+                if let Some((cargo, need)) = cost.iter().find(|(cargo, need)| self.stock.get(home, cargo).available() < *need) {
+                    return CommandOutcome::Rejected(format!("yard {} lacks {} {} to build a train", home.0, need, cargo.0));
+                }
+                for (cargo, need) in &cost {
+                    self.stock.entry_mut(home, cargo).on_hand -= *need;
+                }
+                self.apply_inner(C::AddTrain { owner, home, wagons, wagon_capacity, speed_mps })
+            }
             C::AddTrain { owner, home, wagons, wagon_capacity, speed_mps } => {
                 if wagons == 0 || wagon_capacity == 0 {
                     return CommandOutcome::Rejected("train needs wagons".into());
@@ -463,6 +506,7 @@ impl LogisticsOrderSim {
                         phase: VehiclePhase::Idle,
                         assignment: None,
                         mode: VehicleMode::Road,
+                        signal_hold: false,
                     },
                 );
                 CommandOutcome::CreatedVehicle(id)
@@ -839,6 +883,15 @@ impl LogisticsOrderSim {
                 v.phase = VehiclePhase::Loading(Leg::new(load_ticks * handling));
             }
             VehiclePhase::Loading(_) => {
+                // RD-7 signals: a loaded train leaves only onto clear track.
+                if mode.is_rail() && self.rail_blocked(vid, (a.source, a.sink), travel) {
+                    let v = self.vehicles.get_mut(&vid).expect("listed");
+                    v.phase = VehiclePhase::Loading(Leg::new(1));
+                    v.signal_hold = true;
+                    return;
+                }
+                let v = self.vehicles.get_mut(&vid).expect("listed");
+                v.signal_hold = false;
                 let mul = if self.weather_haul_mul <= 0.0 {
                     1.0
                 } else {
@@ -1114,6 +1167,9 @@ impl LogisticsOrderSim {
                 ) else {
                     continue;
                 };
+                if dead > 0 && self.rail_blocked(vid, (at, source), travel) {
+                    continue;
+                }
                 let per_unit = (u64::from(dead) + u64::from(trip)) * 1000 / u64::from(v.capacity_units.max(1));
                 if best_rail.is_none_or(|(bp, bid, _, _)| (per_unit, vid) < (bp, bid)) {
                     best_rail = Some((per_unit, vid, at, dead));
@@ -1129,6 +1185,25 @@ impl LogisticsOrderSim {
             (Some((rail_pu, vid, at, dead)), road) if road.is_none_or(|r| rail_pu < r) => Some((at, vid, dead)),
             _ => best.map(|(dead, vid, at)| (at, vid, dead)),
         }
+    }
+
+    /// RD-7 signals: may train `vid` start the rail trip `pair` now? Blocked by any other train on
+    /// shared track coming the other way, or going the same way less than a headway ahead.
+    /// Yards are where trains pass each other.
+    fn rail_blocked(&self, vid: VehicleId, pair: (SiteId, SiteId), travel: &dyn TravelModel) -> bool {
+        let headway = self.config.rail_headway_ticks;
+        self.vehicles.values().filter(|o| o.id != vid && o.mode.is_rail()).any(|o| {
+            let (other, leg) = match (&o.phase, &o.assignment) {
+                (VehiclePhase::Hauling(l), Some(a)) => ((a.source, a.sink), l),
+                (VehiclePhase::ToPickup(l), Some(a)) => ((o.at, a.source), l),
+                _ => return false,
+            };
+            match travel.rail_conflict(pair, other) {
+                Some(false) => true,
+                Some(true) => leg.total.saturating_sub(leg.remaining) < headway,
+                None => false,
+            }
+        })
     }
 
     fn allocate(&mut self, travel: &dyn TravelModel) {

@@ -221,6 +221,37 @@ pub fn click_pick_vehicle_system(
     }
 }
 
+/// Click near a freight yard that is not a building (scenario yards): focus it (buildings allowed).
+/// Runs after the footprint pick, which clears the focus on a miss.
+pub fn click_pick_yard_system(
+    buttons: Res<ButtonInput<MouseButton>>,
+    cursor: Res<FrontMapCursor>,
+    filter: Res<SelectionFilter>,
+    gate: Option<Res<SimulationMapPointerGate>>,
+    yards: Query<(Entity, &crate::economy::logistics::orders::LogisticsOrderSite, &Transform), Without<ConstructionSite>>,
+    mut focus: ResMut<HudLogisticsFocus>,
+) {
+    if !buttons.just_released(MouseButton::Left) || !cursor.free || !filter.buildings() || focus.tracked_entity.is_some() {
+        return;
+    }
+    if simulation_tool_pointer(gate.as_deref()) != SimulationToolPointer::Free {
+        return;
+    }
+    let Some(at) = cursor.xy else {
+        return;
+    };
+    let hit = yards
+        .iter()
+        .filter(|(_, s, _)| s.role == crate::economy::logistics::orders::snapshot::SiteRole::Yard)
+        .map(|(e, _, tf)| (e, Vec2::new(tf.translation.x, tf.translation.z) / TILE_METRES_GAMEPLAY))
+        .filter(|(_, p)| p.distance(at) <= 2.5)
+        .min_by(|a, b| a.1.distance(at).total_cmp(&b.1.distance(at)))
+        .map(|(e, _)| e);
+    if hit.is_some() {
+        focus.tracked_entity = hit;
+    }
+}
+
 /// Does a click at `tile` focus a site? (buildings allowed, tile inside a footprint)
 #[must_use]
 pub fn site_click_allowed(filter: SelectionFilter, sites: &[(Entity, &SiteFootprint)], tile: IVec2) -> bool {
@@ -324,6 +355,7 @@ mod tests {
         init_ok(box_select_sites_system);
         init_ok(box_select_vehicles_system);
         init_ok(click_pick_vehicle_system);
+        init_ok(click_pick_yard_system);
         init_ok(spawn_selection_filter_strip_system);
         init_ok(selection_filter_strip_system);
         init_ok(crate::gui::hud::vehicle_info_card::sync_vehicle_info_card_system);

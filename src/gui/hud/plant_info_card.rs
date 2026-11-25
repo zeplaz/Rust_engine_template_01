@@ -48,6 +48,7 @@ pub fn sync_facility_info_card_system(
         Option<&FacilityInputs>,
     )>,
     player_owner: Option<Res<DamFloodPlayerOwner>>,
+    other_sites: Query<&crate::economy::logistics::orders::LogisticsOrderSite, Without<ConstructionSite>>,
     roots: Query<Entity, With<FacilityInfoCardRoot>>,
     mut texts: Query<&mut Text, With<FacilityInfoCardText>>,
     style: (Option<Res<UiPalette>>, Option<Res<CmdUiMonoFont>>, Res<HudCardPlacements>),
@@ -74,6 +75,12 @@ pub fn sync_facility_info_card_system(
                 }
             }
             lines
+        })
+        // Logistics sites that are not buildings (a scenario's freight yards, depots): a title
+        // line so the card (and its yard / depot section) shows for them too.
+        .or_else(|| {
+            let s = other_sites.get(focus.tracked_entity?).ok()?;
+            Some(vec![format!("{} — {}", s.name, s.role.label())])
         })
         .unwrap_or_default();
 

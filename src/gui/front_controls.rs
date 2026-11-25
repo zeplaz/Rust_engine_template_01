@@ -808,6 +808,7 @@ impl Plugin for FrontControlsPlugin {
                     crate::gui::selection_filter::click_pick_vehicle_system,
                     crate::gui::hud::site_map_pick::clear_formation_selection_when_build_armed,
                     crate::gui::hud::site_map_pick::map_pick_site_focus_system,
+                    crate::gui::selection_filter::click_pick_yard_system,
                     crate::gui::hud::road_info_card::map_pick_road_focus_system,
                     front_key_commands_system,
                     crate::gui::drone_mission_chrome::drone_mission_hotkey_system,

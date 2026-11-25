@@ -209,6 +209,8 @@ pub struct VehicleRow {
     pub from: SiteId,
     pub to: SiteId,
     pub fraction: f32,
+    /// A train (RD-7).
+    pub rail: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -403,6 +405,7 @@ pub fn build_snapshot_with_forecast(
             from,
             to,
             fraction,
+            rail: v.mode.is_rail(),
         });
     }
     snap.fleets = fleets.into_values().collect();

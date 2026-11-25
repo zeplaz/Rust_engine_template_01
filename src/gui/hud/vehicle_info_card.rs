@@ -23,6 +23,7 @@ pub fn vehicle_card_lines(v: &Vehicle, site_name: &dyn Fn(u32) -> String, select
     let doing = match &v.phase {
         VehiclePhase::Idle => "idle".to_string(),
         VehiclePhase::ToPickup(l) => format!("driving to pick up ({:.0} %)", l.fraction() * 100.0),
+        VehiclePhase::Loading(_) if v.signal_hold => "loaded, held at the signal (track ahead occupied)".to_string(),
         VehiclePhase::Loading(_) => "loading".to_string(),
         VehiclePhase::Hauling(l) => format!("hauling ({:.0} %)", l.fraction() * 100.0),
         VehiclePhase::Unloading(_) => "unloading".to_string(),
@@ -137,6 +138,7 @@ mod tests {
             phase: VehiclePhase::Hauling(Leg::new(10)),
             assignment: Some(Assignment { order: OrderId(3), source: SiteId(1), sink: SiteId(2), cargo: CargoKind::new("Gravel"), load: 40 }),
             mode: Default::default(),
+            signal_hold: false,
         };
         let name = |id: u32| if id == 1 { "HQ".to_string() } else { "Works 2".to_string() };
         let text = vehicle_card_lines(&v, &name, 3).join("\n");

@@ -20,6 +20,7 @@ use super::model::{CargoClassMask, CargoKind, OrderStatus, OwnerId, WaitReason};
 use super::plugin::{LogisticsOrderRequest, LogisticsOrdersSnapshotRes};
 use super::sim::LogisticsOrderCommand;
 use super::snapshot::{LogisticsOrdersSnapshot, SiteRole};
+use super::model::SiteId;
 
 /// One buildable vehicle: what it carries and what it costs (tonnes from the depot's stock).
 #[derive(Clone, Debug, PartialEq)]
@@ -191,6 +192,61 @@ pub fn grow_depot_fleets_system(
                 .iter()
                 .map(|(tag, n)| (CargoKind::new(*tag), *n))
                 .collect(),
+        }));
+        last_build.insert(owner, snap.tick);
+    }
+}
+
+/// Does `owner` need another train? Yes when a yard → yard order waits for a vehicle and every
+/// train the owner has is busy (or it has none).
+#[must_use]
+pub fn owner_needs_a_train(snap: &LogisticsOrdersSnapshot, owner: OwnerId) -> Option<SiteId> {
+    let yard = |id: SiteId| snap.site(id).is_some_and(|s| s.role == SiteRole::Yard);
+    let waiting = snap.orders.iter().find(|o| {
+        o.owner == owner
+            && yard(o.source)
+            && yard(o.sink)
+            && matches!(o.status, OrderStatus::Waiting(WaitReason::NoVehicles | WaitReason::NoCompatibleVehicle))
+    })?;
+    let trains: Vec<_> = snap.vehicles.iter().filter(|v| v.owner == owner && v.rail).collect();
+    (trains.is_empty() || trains.iter().all(|v| v.order.is_some())).then_some(waiting.source)
+}
+
+/// Automated factions: a yard holding the materials builds a train when trains are short
+/// (at most one per faction per `rail.build_interval_s`). The player builds from the yard's card.
+pub fn grow_yard_trains_system(
+    auto: Res<AutoSupplyPolicy>,
+    snapshot: Res<LogisticsOrdersSnapshotRes>,
+    mut requests: MessageWriter<LogisticsOrderRequest>,
+    mut last_build: Local<BTreeMap<OwnerId, u64>>,
+) {
+    let snap = &snapshot.0;
+    let rail = &crate::infrastructure::road_tier_table().rail;
+    let mut owners: Vec<OwnerId> = snap.sites.iter().filter(|s| s.role == SiteRole::Yard).map(|s| s.owner).collect();
+    owners.sort();
+    owners.dedup();
+    for owner in owners.into_iter().filter(|o| auto.enabled(*o)) {
+        if last_build.get(&owner).is_some_and(|t| snap.tick < t + rail.build_interval_s) {
+            continue;
+        }
+        let Some(wanted_at) = owner_needs_a_train(snap, owner) else {
+            continue;
+        };
+        let cost = rail.train_cost();
+        let has = |y: &&crate::economy::logistics::orders::snapshot::SiteRow| {
+            cost.iter().all(|(tag, n)| y.stock.iter().find(|r| r.cargo == *tag).is_some_and(|r| r.on_hand.saturating_sub(r.reserved_out) >= *n))
+        };
+        // The yard the train is wanted at, else any yard of the owner with the materials.
+        let Some(yard) = snap.site(wanted_at).filter(has).or_else(|| snap.sites_of(owner, SiteRole::Yard).find(has)) else {
+            continue;
+        };
+        requests.write(LogisticsOrderRequest(LogisticsOrderCommand::BuildTrain {
+            owner,
+            home: yard.id,
+            wagons: rail.build_wagons,
+            wagon_capacity: rail.wagon_capacity,
+            speed_mps: rail.speed_mps(),
+            cost: cost.iter().map(|(t, n)| (CargoKind::new(*t), *n)).collect(),
         }));
         last_build.insert(owner, snap.tick);
     }

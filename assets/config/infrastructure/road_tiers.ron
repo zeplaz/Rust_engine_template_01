@@ -34,6 +34,15 @@
         wagon_capacity: 50,
         yard_reach_tiles: 10.0,
         intermodal_min_tiles: 60.0,
+        // A yard builds a train of `build_wagons` from its stock: steel per wagon + engine
+        // machinery; automated factions build at most one per `build_interval_s` sim seconds.
+        build_wagons: 12,
+        steel_per_wagon: 10,
+        engine_machinery: 30,
+        build_interval_s: 600,
+        // Level crossings: a truck's wait at the barrier, plus this per train running the line.
+        crossing_base_s: 12.0,
+        crossing_per_train_s: 25.0,
     ),
     // Railway bill per metre: ballast, rails, sleepers.
     rail_materials_per_m: [("Gravel", 1.0), ("Steel", 0.25), ("Timber", 0.3)],
