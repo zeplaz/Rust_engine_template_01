@@ -38,6 +38,7 @@ mod splash;
 mod ui_gates;
 pub mod drone_mission_chrome;
 pub mod front_controls;
+pub mod selection_filter;
 mod input_bindings;
 mod input_frame;
 pub mod input_pick;

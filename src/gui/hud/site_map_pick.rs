@@ -42,6 +42,7 @@ pub fn map_pick_site_focus_system(
     sites: Query<(Entity, &SiteFootprint), With<ConstructionSite>>,
     mut focus: ResMut<HudLogisticsFocus>,
     gate: Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
+    filter: Option<Res<crate::gui::selection_filter::SelectionFilter>>,
 ) {
     if !buttons.just_released(MouseButton::Left) {
         return;
@@ -64,8 +65,10 @@ pub fn map_pick_site_focus_system(
     };
     let tile = IVec2::new(xy.x.floor() as i32, xy.y.floor() as i32);
     let list: Vec<(Entity, &SiteFootprint)> = sites.iter().collect();
-    // Hit → focus that site (any faction). Miss → clear so cards dismiss.
-    focus.tracked_entity = pick_construction_site_at_tile(&list, tile);
+    // Hit → focus that site (any faction) when the selection filter takes buildings.
+    // Miss (or buildings filtered out) → clear so cards dismiss.
+    let takes_buildings = filter.as_deref().is_none_or(|f| f.buildings());
+    focus.tracked_entity = takes_buildings.then(|| pick_construction_site_at_tile(&list, tile)).flatten();
 }
 
 /// Clear formation selection when a place/demolish tool is armed (mode arbitration).

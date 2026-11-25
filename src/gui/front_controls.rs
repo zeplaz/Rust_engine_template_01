@@ -130,6 +130,9 @@ pub struct FrontDragBox {
     pub start: Option<Vec2>,
     pub end: Option<Vec2>,
     pub px_per_tile: f32,
+    /// The box finished this frame: `(lo, hi, shift-extend)` in tiles. Set on release, cleared
+    /// next frame; read by the other selectors (`gui::selection_filter`).
+    pub completed: Option<(Vec2, Vec2, bool)>,
 }
 
 impl FrontDragBox {
@@ -395,6 +398,7 @@ pub fn front_mouse_system(
         .collect();
     selected.set(live);
 
+    drag.completed = None;
     let blocked = tool_blocks(&tool);
     let shift = shift_down(&keys);
     let drone_draw =
@@ -412,6 +416,7 @@ pub fn front_mouse_system(
                         start: Some(at),
                         end: Some(at),
                         px_per_tile: cursor.px_per_tile,
+                        completed: None,
                     };
                 }
             }
@@ -427,6 +432,7 @@ pub fn front_mouse_system(
                 let all: Vec<(Entity, Formation)> =
                     formations.iter().map(|(e, f)| (e, f.clone())).collect();
                 if let Some((lo, hi)) = d.rect() {
+                    drag.completed = Some((lo, hi, shift));
                     let mut v = formations_in_box(&all, lo, hi);
                     if shift {
                         v.extend(selected.0.iter().copied());
@@ -795,6 +801,11 @@ impl Plugin for FrontControlsPlugin {
                     update_front_map_cursor_system,
                     crate::gui::drone_mission_chrome::drone_ao_draw_system,
                     front_mouse_system,
+                    // What clicks / boxes select (all / buildings / civilian / military).
+                    crate::gui::selection_filter::apply_selection_filter_to_formations_system,
+                    crate::gui::selection_filter::box_select_sites_system,
+                    crate::gui::selection_filter::box_select_vehicles_system,
+                    crate::gui::selection_filter::click_pick_vehicle_system,
                     crate::gui::hud::site_map_pick::clear_formation_selection_when_build_armed,
                     crate::gui::hud::site_map_pick::map_pick_site_focus_system,
                     crate::gui::hud::road_info_card::map_pick_road_focus_system,
@@ -807,7 +818,23 @@ impl Plugin for FrontControlsPlugin {
                     .in_set(FrontControlsSet)
                     .after(PointerGateSet::Publish),
             )
-            .add_systems(Update, sync_front_selection_panel.after(FrontControlsSet));
+            .add_systems(Update, sync_front_selection_panel.after(FrontControlsSet))
+            .init_resource::<crate::gui::selection_filter::SelectionFilter>()
+            .init_resource::<crate::gui::selection_filter::SelectedSites>()
+            .init_resource::<crate::gui::selection_filter::SelectedVehicles>()
+            .init_resource::<crate::gui::selection_filter::HudVehicleFocus>()
+            .init_resource::<crate::gui::hud::panel_drag::HudCardPlacements>()
+            .add_systems(
+                Update,
+                (
+                    crate::gui::selection_filter::cycle_selection_filter_system,
+                    crate::gui::selection_filter::spawn_selection_filter_strip_system,
+                    crate::gui::selection_filter::selection_filter_strip_system,
+                    crate::gui::hud::vehicle_info_card::sync_vehicle_info_card_system,
+                )
+                    .before(FrontControlsSet)
+                    .run_if(crate::gui::ui_gates::in_simulation_or_editor),
+            );
     }
 }
 

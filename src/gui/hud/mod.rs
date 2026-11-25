@@ -15,6 +15,7 @@ pub mod shell_framework;
 pub mod plant_info_card;
 pub mod site_map_pick;
 pub mod road_info_card;
+pub mod vehicle_info_card;
 pub mod sim_hud_esc_cascade;
 pub mod minimap_topology_legend;
 pub mod tool_help;

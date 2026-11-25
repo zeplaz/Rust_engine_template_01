@@ -206,6 +206,8 @@ pub struct InputBindings {
     pub pixel_world_rotate_left: KeyCode,
     /// Voxel world view: turn the camera a quarter right (default E). PixelWorld3D only.
     pub pixel_world_rotate_right: KeyCode,
+    /// Cycle what clicks / box-drags select: all → buildings → civilian → military (default F4).
+    pub selection_filter_cycle: KeyCode,
 
     // --- Front controls (`gui::front_controls`): fronts, formations, orders ---
     /// Hold the selected formation(s) in place (front controls).
@@ -267,6 +269,7 @@ impl Default for InputBindings {
             toggle_world_presentation: KeyCode::KeyV,
             pixel_world_rotate_left: KeyCode::KeyQ,
             pixel_world_rotate_right: KeyCode::KeyE,
+            selection_filter_cycle: KeyCode::F4,
             front_hold: KeyCode::KeyH,
             front_fortify: KeyCode::KeyF,
             front_cycle_selection: KeyCode::Tab,
