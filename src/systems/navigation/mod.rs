@@ -4,6 +4,7 @@ mod logistics_floodfill;
 mod path_concerns;
 mod motion;
 mod nav;
+pub mod offroad_speed;
 mod potental_feild_nav;
 mod road_vehicles_motion;
 pub(crate) use road_vehicles_motion::vehicle_leg_pair;
@@ -20,7 +21,8 @@ pub use motion::*;
 pub use nav::*;
 pub use potental_feild_nav::*;
 pub use road_vehicles_motion::{
-    filter_vehicle_steering_output, plan_site_leg_routes_system, smooth_vehicle_tile_path,
+    filter_vehicle_steering_output, offroad_route, plan_site_leg_routes_system, plan_truck_tile_waypoints,
+    smooth_vehicle_tile_path,
     sync_truck_motion_waypoints_system,
     point_along_polyline, truck_leg_key, LogisticsGridPathScratch, RoadVehicleKinematics,
     TruckLegPlanner, TruckMotionLeg, VehicleMotionLimits,

@@ -188,7 +188,13 @@ fn concern_for_sink(
     }
 }
 
+/// Tiles the cross-country search may stray outside the leg's bounding box (to get round a lake
+/// or a ridge).
+const CROSS_COUNTRY_MARGIN_TILES: i32 = 24;
+
 /// Cross-country waypoint polyline for a truck leg; positions in **tile units**, cell centres out.
+/// With an off-road speed field (RD-2) the search minimises time over it (walls avoided, slow
+/// ground skirted when that is quicker); without one every tile is open ground.
 #[must_use]
 pub fn plan_truck_tile_waypoints(
     scratch: &mut LogisticsNodeArray,
@@ -197,13 +203,17 @@ pub fn plan_truck_tile_waypoints(
     concern: LogisticsPathConcern,
     forecast: Option<&LogisticsCostForecastBook>,
     depart_tick: u64,
+    field: Option<&super::offroad_speed::OffroadSpeedField>,
 ) -> Vec<Vec2> {
     let (sx, sy) = xz_to_grid(from_xz);
     let (gx, gy) = xz_to_grid(to_xz);
-    let min_x = sx.min(gx);
-    let max_x = sx.max(gx);
-    let min_y = sy.min(gy);
-    let max_y = sy.max(gy);
+    let field = field.filter(|f| !f.is_empty());
+    let margin = if field.is_some() { CROSS_COUNTRY_MARGIN_TILES } else { 0 };
+    let (map_w, map_h) = field.map_or((i32::MAX, i32::MAX), |f| (f.width as i32, f.height as i32));
+    let min_x = (sx.min(gx) - margin).max(0).min(sx.min(gx));
+    let max_x = (sx.max(gx) + margin).min(map_w - 1).max(sx.max(gx));
+    let min_y = (sy.min(gy) - margin).max(0).min(sy.min(gy));
+    let max_y = (sy.max(gy) + margin).min(map_h - 1).max(sy.max(gy));
     let width = max_x - min_x + 1;
     let height = max_y - min_y + 1;
     if width <= 0 || height <= 0 {
@@ -211,7 +221,9 @@ pub fn plan_truck_tile_waypoints(
     }
     let start = (sx - min_x, sy - min_y);
     let goal = (gx - min_x, gy - min_y);
-    let mut tile = |_lx: i32, _ly: i32| LogisticsTile::default();
+    let mut tile = |lx: i32, ly: i32| {
+        field.map_or_else(LogisticsTile::default, |f| f.logistics_tile(IVec2::new(lx + min_x, ly + min_y)))
+    };
     let raw_path = logistics_grid_path(
         width,
         height,
@@ -260,6 +272,8 @@ pub struct TruckLegPlanner<'w> {
     scratch: ResMut<'w, LogisticsGridPathScratch>,
     forecast: Option<Res<'w, LogisticsCostForecastBook>>,
     roads: TruckRoadNetwork<'w>,
+    /// RD-2 off-road speed per tile (cross-country path, its time, and road ramps).
+    offroad: Option<Res<'w, super::offroad_speed::OffroadSpeedField>>,
 }
 
 /// Site pairs (re)planned per frame at most; the rest wait (unplanned pairs use the off-road estimate).
@@ -280,19 +294,36 @@ fn plan_leg_route(
     depart_tick: u64,
 ) -> TruckRoute {
     let forecast = planner.forecast.as_deref();
+    let field = planner.offroad.as_deref();
     let offroad = crate::infrastructure::road_tier_table().offroad_speed_mps();
-    let mut pts = plan_truck_tile_waypoints(&mut planner.scratch.nodes, from_t, to_t, concern, forecast, depart_tick);
+    let mut pts =
+        plan_truck_tile_waypoints(&mut planner.scratch.nodes, from_t, to_t, concern, forecast, depart_tick, field);
     if pts.len() < 2 {
         pts = vec![from_t, to_t];
     }
     let last = pts.len() - 1;
     pts[0] = from_t;
     pts[last] = to_t;
-    let cross_country = TruckRoute::uniform(pts, offroad);
-    match planner.roads.route(forecast, depart_tick, from_t, to_t, PLAN_REF_TRUCK_MPS) {
+    let cross_country = offroad_route(pts, offroad, field);
+    match planner.roads.route(forecast, depart_tick, from_t, to_t, PLAN_REF_TRUCK_MPS, field) {
         Some(road) if road.time_s(PLAN_REF_TRUCK_MPS) < cross_country.time_s(PLAN_REF_TRUCK_MPS) => road,
         _ => cross_country,
     }
+}
+
+/// An off-road polyline timed over the speed field: each stretch capped at the off-road speed ×
+/// its mean multiplier. A stretch through a wall (no way round found) crawls at the slowest
+/// passable speed so the trip time stays finite (the road route wins when there is one).
+#[must_use]
+pub fn offroad_route(points: Vec<Vec2>, offroad_mps: f32, field: Option<&super::offroad_speed::OffroadSpeedField>) -> TruckRoute {
+    let caps = points
+        .windows(2)
+        .map(|w| {
+            let m = field.map_or(1.0, |f| f.line_mul(w[0], w[1]));
+            offroad_mps * m.max(super::offroad_speed::MIN_PASSABLE_MUL)
+        })
+        .collect();
+    TruckRoute { points, caps_mps: caps }
 }
 
 /// Site pair a vehicle's current or next leg drives, if it is moving or about to.

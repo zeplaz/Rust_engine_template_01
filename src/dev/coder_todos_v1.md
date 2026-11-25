@@ -20,7 +20,7 @@ In code: road tiers, congestion (BPR), bridges (type pick, flood scour/collapse,
 |:---|:---|:---|
 | Hands-on check of the line tool | operator | RMB click vs pan, curves, G assist, T bridge type, ghosts along the line, cursor alignment, merged type list, panel drag, 2D bridge marks, materials row |
 | Capture congestion and grading | coder | `road_flow.peak_vc` and grading volume in a dam-scene dump; a narrow road with many trucks |
-| RD-2 → RD-5 → RD-7 | coder | off-road speed field, worn tracks, rail freight |
+| RD-7 rail freight | coder | yards, trains in the order sim, intermodal legs, rail look (RD-2 off-road field and RD-5 worn tracks done 11-24) |
 | B-3 bridge repair (with D-7), overpass deck model | coder | after the phase order above |
 
 ### 2. Ref-books residual — [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md)

@@ -958,39 +958,13 @@ pub fn flush_sim_run_dump(
         .cloned()
         .unwrap_or_else(|| json!({}));
     let obj = body.as_object_mut().expect("envelope object");
-    for key in [
-        "construction",
-        "dam_site",
-        "dam_flood_history",
-        "roads",
-        "corridor_works",
-        "road_flow",
-        "voxel_camera",
-        "vegetation",
-        "canopy",
-        "economy",
-        "logistics",
-        "ai",
-        "combat",
-        "fire",
-        "fire_chain",
-        "weather",
-        "fidelity",
-        "atmosphere",
-        "presentation",
-        "occupation",
-    ] {
-        if let Some(v) = sections.get(key).cloned() {
-            obj.insert(key.into(), v);
+    // Every section the per-domain dump systems wrote (a fixed key list here silently dropped new
+    // sections). A null dam_flood section (no dam in the scene) is left out.
+    for (key, v) in &sections.sections {
+        if *key == "envelope" || (*key == "dam_flood" && v.is_null()) {
+            continue;
         }
-    }
-    if let Some(q) = sections.get("quadrants").cloned() {
-        obj.insert("quadrants".into(), q);
-    }
-    if let Some(d) = sections.get("dam_flood").cloned() {
-        if !d.is_null() {
-            obj.insert("dam_flood".into(), d);
-        }
+        obj.insert((*key).into(), v.clone());
     }
     obj.insert("perf".into(), state.perf_json(hitch.as_deref()));
     obj.insert("history".into(), Value::Array(state.history.clone()));

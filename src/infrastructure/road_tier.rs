@@ -98,12 +98,77 @@ impl RoadTierSpec {
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct RoadTierTable {
     pub schema_version: u32,
-    /// Cross-country truck speed (km/h) until the off-road speed field (RD-2) lands.
+    /// Cross-country truck speed (km/h) on open dry ground; the off-road speed field (RD-2)
+    /// scales it per tile.
     pub offroad_speed_kmh: f32,
+    /// RD-2 off-road field tuning (fords, rubble, mud, snow).
+    #[serde(default)]
+    pub offroad: OffroadTuning,
+    /// RD-5 worn tracks (wear, fade, forming).
+    #[serde(default)]
+    pub worn_tracks: WornTrackTuning,
     pub tiers: Vec<RoadTierSpec>,
     /// Materials per metre of railway (ballast, rails, sleepers).
     #[serde(default = "default_rail_materials")]
     pub rail_materials_per_m: Vec<(String, f32)>,
+}
+
+/// RD-2: how water, rubble and wetness slow a wheeled vehicle off the road network
+/// (land and slope come from the `wheeled_logistics` mobility profile).
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct OffroadTuning {
+    /// Water deeper than this (m) is a wall off-road.
+    pub ford_max_m: f32,
+    /// Water shallower than this (m) is just wet ground.
+    pub wet_m: f32,
+    /// Speed multiplier fording shallow water.
+    pub ford_mul: f32,
+    /// Speed multiplier over rubble / crater tiles.
+    pub rubble_mul: f32,
+    /// Soil moisture (0..1) where mud starts; full mud at 1.
+    pub mud_from_moisture: f32,
+    /// Speed lost in full mud (0..1).
+    pub mud_slow: f32,
+    /// Speed lost under full snow cover (0..1).
+    pub snow_slow: f32,
+}
+
+impl Default for OffroadTuning {
+    fn default() -> Self {
+        Self { ford_max_m: 0.5, wet_m: 0.05, ford_mul: 0.35, rubble_mul: 0.3, mud_from_moisture: 0.6, mud_slow: 0.6, snow_slow: 0.5 }
+    }
+}
+
+/// RD-5: how traffic wears tracks into the ground.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct WornTrackTuning {
+    /// Passes a tile needs before it counts as worn.
+    pub passes_to_form: f32,
+    /// Wear halves after this many sim seconds without traffic.
+    pub half_life_s: f32,
+    /// Shortest connected worn run (tiles) that becomes a track.
+    pub min_run_tiles: usize,
+    /// Wear a moving formation leaves on its tile per second, by class.
+    pub infantry_per_s: f32,
+    pub light_per_s: f32,
+    pub wheeled_per_s: f32,
+    pub tracked_per_s: f32,
+}
+
+impl Default for WornTrackTuning {
+    fn default() -> Self {
+        Self {
+            passes_to_form: 30.0,
+            half_life_s: 3600.0,
+            min_run_tiles: 6,
+            infantry_per_s: 0.05,
+            light_per_s: 0.2,
+            wheeled_per_s: 0.5,
+            tracked_per_s: 1.5,
+        }
+    }
 }
 
 fn default_rail_materials() -> Vec<(String, f32)> {
@@ -157,6 +222,8 @@ fn default_table() -> &'static RoadTierTable {
     DEFAULT.get_or_init(|| RoadTierTable {
         schema_version: 1,
         offroad_speed_kmh: 18.0,
+        offroad: OffroadTuning::default(),
+        worn_tracks: WornTrackTuning::default(),
         rail_materials_per_m: default_rail_materials(),
         tiers: vec![
             row(RoadTier::Track, 25.0, 1, 40.0, 0.4, 0.3),

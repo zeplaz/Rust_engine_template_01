@@ -3,8 +3,29 @@
 // bill per metre (cargo, units; taken from stock when the player builds). First pass; tune here.
 (
     schema_version: 1,
-    // Cross-country truck speed until the off-road speed field (RD-2) lands.
+    // Cross-country truck speed on open dry ground; the RD-2 off-road field scales it per tile
+    // (land + slope from the `wheeled_logistics` mobility profile, then the tuning below).
     offroad_speed_kmh: 18.0,
+    offroad: (
+        ford_max_m: 0.5,        // deeper water is a wall off-road
+        wet_m: 0.05,            // shallower is just wet ground
+        ford_mul: 0.35,         // fording shallow water
+        rubble_mul: 0.3,        // rubble / crater tiles
+        mud_from_moisture: 0.6, // soil moisture where mud starts
+        mud_slow: 0.6,          // speed lost in full mud
+        snow_slow: 0.5,         // speed lost under full snow
+    ),
+    // RD-5 worn tracks: passes a tile needs, fade half-life (sim s), shortest run that becomes a
+    // Track road, and the wear a moving formation leaves per second by class.
+    worn_tracks: (
+        passes_to_form: 30.0,
+        half_life_s: 3600.0,
+        min_run_tiles: 6,
+        infantry_per_s: 0.05,
+        light_per_s: 0.2,
+        wheeled_per_s: 0.5,
+        tracked_per_s: 1.5,
+    ),
     // Railway bill per metre: ballast, rails, sleepers.
     rail_materials_per_m: [("Gravel", 1.0), ("Steel", 0.25), ("Timber", 0.3)],
     tiers: [

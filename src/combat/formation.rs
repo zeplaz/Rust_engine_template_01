@@ -191,30 +191,56 @@ pub fn formation_supply_system(
     }
 }
 
+/// Next tile toward `target`: the dominant axis first, the other axis when that tile is a wall in
+/// the off-road field (RD-2); `None` when both are walls (the formation holds).
+#[must_use]
+pub fn next_formation_step(
+    tile: IVec2,
+    target: IVec2,
+    field: Option<&crate::systems::navigation::offroad_speed::OffroadSpeedField>,
+) -> Option<IVec2> {
+    let d = target - tile;
+    let x = (d.x != 0).then(|| tile + IVec2::new(d.x.signum(), 0));
+    let y = (d.y != 0).then(|| tile + IVec2::new(0, d.y.signum()));
+    let order = if d.x.abs() >= d.y.abs() { [x, y] } else { [y, x] };
+    let open = |t: IVec2| field.is_none_or(|f| f.mul_at(t) > 0.0);
+    order.into_iter().flatten().find(|t| open(*t))
+}
+
 /// Move formations along the tile grid toward their target (dominant axis first), slowed by overlay
-/// mobility cost. Engaged non-retreating formations hold their ground and fight.
+/// mobility cost (weather, logistics) and the RD-2 off-road field (land, slope, water, rubble);
+/// they step round a wall tile and hold when boxed in. Engaged non-retreating formations hold
+/// their ground and fight.
 pub fn advance_formations_system(
     clock: Res<CombatClock>,
     balance: Res<FrontBalance>,
     overlays: Query<&ChunkStrategicOverlay>,
+    offroad: Option<Res<crate::systems::navigation::offroad_speed::OffroadSpeedField>>,
     mut formations: Query<&mut Formation>,
 ) {
     if clock.dt_s <= 0.0 {
         return;
     }
     let idx = OverlayIndex::new(overlays.iter());
+    let field = offroad.as_deref().filter(|f| !f.is_empty());
     for mut f in &mut formations {
         let Some(target) = f.target else { continue };
         if f.engaged && f.posture != Posture::Retreat {
             continue;
         }
         let mobility = idx.cell(f.tile).map_or(0.0, |(ov, i)| ov.mobility_cost[i]);
+        let ground = field.map_or(1.0, |fl| {
+            fl.mul_at(f.tile).max(crate::systems::navigation::offroad_speed::MIN_PASSABLE_MUL)
+        });
         let tiles_per_s = balance.unit(f.kind).speed_mps / balance.tile_size_m().max(f32::EPSILON);
-        f.move_progress += tiles_per_s * clock.dt_s / (1.0 + balance.combat.mobility_slow_k * mobility);
+        f.move_progress += ground * tiles_per_s * clock.dt_s / (1.0 + balance.combat.mobility_slow_k * mobility);
         while f.move_progress >= 1.0 && f.tile != target {
+            let Some(next) = next_formation_step(f.tile, target, field) else {
+                f.move_progress = 0.0;
+                break;
+            };
             f.move_progress -= 1.0;
-            let d = target - f.tile;
-            f.tile += if d.x.abs() >= d.y.abs() { IVec2::new(d.x.signum(), 0) } else { IVec2::new(0, d.y.signum()) };
+            f.tile = next;
             f.dug_in = 0.0;
         }
         if f.tile == target {

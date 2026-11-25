@@ -587,6 +587,7 @@ impl TruckRoadNetwork<'_> {
         from: Vec2,
         to: Vec2,
         ref_speed_mps: f32,
+        offroad_field: Option<&crate::systems::navigation::offroad_speed::OffroadSpeedField>,
     ) -> Option<TruckRoute> {
         let (nav, directory) = (self.nav.as_deref()?, self.directory.as_deref()?);
         truck_road_route(
@@ -602,6 +603,7 @@ impl TruckRoadNetwork<'_> {
                 bridges: self.blocks.bridges.as_deref(),
                 flow: self.blocks.flow.as_deref(),
                 depart_tick,
+                offroad_field,
             },
             from,
             to,
@@ -623,6 +625,8 @@ pub struct RoadRouteWorld<'a> {
     pub bridges: Option<&'a crate::construction::bridges::BridgeBook>,
     pub flow: Option<&'a super::road_flow::RoadFlowBook>,
     pub depart_tick: u64,
+    /// RD-2: off-road speed per tile (ramp time and walls between a leg end and a road node).
+    pub offroad_field: Option<&'a crate::systems::navigation::offroad_speed::OffroadSpeedField>,
 }
 
 /// Road nodes within this many tiles of a leg end are tried as on/off ramps (nodes sit every
@@ -722,7 +726,8 @@ fn chain_edge_nodes(
 /// Fastest way over the built roads from `from` to `to` (tile units, cell = floor) for a truck of
 /// `ref_speed_mps`: off-road ramp to a road node near `from`, the transport graph's route (flooded
 /// and rubble edges are walls), off-road ramp from a node near `to`. Ramps are straight × winding
-/// at the off-road speed. `None` when no road joins both ends within [`ROAD_JOIN_TILES`].
+/// at the off-road speed × the RD-2 field's mean multiplier along them (a ramp through a wall —
+/// river, cliff — is not taken). `None` when no road joins both ends within [`ROAD_JOIN_TILES`].
 /// The caller compares this with the all off-road route by time.
 #[must_use]
 pub fn truck_road_route(world: &RoadRouteWorld, from: Vec2, to: Vec2, ref_speed_mps: f32) -> Option<TruckRoute> {
@@ -774,16 +779,23 @@ pub fn truck_road_route(world: &RoadRouteWorld, from: Vec2, to: Vec2, ref_speed_
             let Some((road, road_caps)) = chain_edge_nodes(&directory, a, b, &edges, offroad, world.flow) else {
                 continue;
             };
-            // Ramps: winding off-road, expressed as a slower cap on the straight stretch.
-            let ramp_cap = offroad / OFFROAD_WINDING;
+            // Ramps: winding off-road over the speed field, a slower cap on the straight stretch.
+            let (Some(&on), Some(&off)) = (road.first(), road.last()) else {
+                continue;
+            };
+            let ramp = |a: Vec2, b: Vec2| world.offroad_field.map_or(1.0, |f| f.line_mul(a, b)) * offroad / OFFROAD_WINDING;
+            let (cap_in, cap_out) = (ramp(from, on), ramp(off, to));
+            if cap_in <= 0.0 || cap_out <= 0.0 {
+                continue;
+            }
             let mut points = Vec::with_capacity(road.len() + 2);
             let mut caps = Vec::with_capacity(road.len() + 1);
             points.push(from);
-            caps.push(ramp_cap);
+            caps.push(cap_in);
             points.extend(road);
             caps.extend(road_caps);
             points.push(to);
-            caps.push(ramp_cap);
+            caps.push(cap_out);
             let route = TruckRoute { points, caps_mps: caps };
             let t = route.time_s(ref_speed_mps);
             if best.as_ref().is_none_or(|(bt, _)| t < *bt) {

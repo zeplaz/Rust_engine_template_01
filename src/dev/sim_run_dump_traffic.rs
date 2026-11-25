@@ -36,6 +36,62 @@ pub fn dump_corridor_works_section(arm: Res<SimDumpArm>, works: Option<Res<Corri
     );
 }
 
+/// Writes the `offroad_field` section (RD-2): map size, wall tiles, mean speed multiplier.
+pub fn dump_offroad_field_section(
+    arm: Res<SimDumpArm>,
+    field: Option<Res<crate::systems::navigation::offroad_speed::OffroadSpeedField>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let Some(field) = field else {
+        return;
+    };
+    let passable: Vec<f32> = field.mul.iter().copied().filter(|m| *m > 0.0).collect();
+    let mean = if passable.is_empty() { 0.0 } else { passable.iter().sum::<f32>() / passable.len() as f32 };
+    let slow = passable.iter().filter(|m| **m < 0.5).count();
+    dump.put_value(
+        "offroad_field",
+        json!({
+            "width": field.width,
+            "height": field.height,
+            "walls": field.walls,
+            "slow_tiles": slow,
+            "mean_mul": mean,
+            "revision": field.revision,
+            "rebuilds": field.rebuilds,
+        }),
+    );
+}
+
+/// Writes the `track_wear` section (RD-5): worn tiles, the most-worn tile, tracks formed.
+pub fn dump_track_wear_section(
+    arm: Res<SimDumpArm>,
+    book: Option<Res<crate::economy::logistics::track_wear::TrackWearBook>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let Some(book) = book else {
+        return;
+    };
+    let peak = book.wear.values().copied().fold(0.0_f32, f32::max);
+    let to_form = crate::infrastructure::road_tier_table().worn_tracks.passes_to_form;
+    dump.put_value(
+        "track_wear",
+        json!({
+            "worn_tiles": book.wear.len(),
+            "at_threshold": book.wear.values().filter(|w| **w >= to_form).count(),
+            "peak_passes": peak,
+            "passes_to_form": to_form,
+            "tracks_formed": book.tracks_formed,
+            "formed_tiles": book.formed.len(),
+        }),
+    );
+}
+
 /// Writes the `road_flow` section.
 pub fn dump_road_flow_section(arm: Res<SimDumpArm>, flow: Option<Res<RoadFlowBook>>, mut dump: ResMut<SimRunDump>) {
     if !arm.due {

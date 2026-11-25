@@ -381,6 +381,8 @@ impl Plugin for SimRunDumpPlugin {
                         super::sim_run_dump_roads::dump_roads_section,
                         super::sim_run_dump_traffic::dump_corridor_works_section,
                         super::sim_run_dump_traffic::dump_road_flow_section,
+                        super::sim_run_dump_traffic::dump_offroad_field_section,
+                        super::sim_run_dump_traffic::dump_track_wear_section,
                     )
                         .in_set(SimDumpSet)
                         .after(arm_sim_dump),
