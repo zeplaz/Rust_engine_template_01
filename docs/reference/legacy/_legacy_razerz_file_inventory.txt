@@ -79,7 +79,7 @@ engine_openGL\oubaoun_razzwer\fresh_history_manual.txt
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.mtl
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.obj
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.ply
-engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\redacted drawing screenshot.bmp
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\reference drawing screenshot.bmp
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\orgburo header white.bmp
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\column6.obj
 engine_openGL\oubaoun_razzwer\NEIL_IMPORT\mountain.obj
@@ -175,7 +175,7 @@ engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\load_list.xml
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.mtl
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.obj
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.ply
-engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\redacted drawing screenshot.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\reference drawing screenshot.bmp
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\orgburo header white.bmp
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\column6.obj
 engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\dog.obj

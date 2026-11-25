@@ -23,8 +23,11 @@ import csv, json, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-BOOK_DIR = os.environ.get("REF_BOOKS_DIR", r"$REF_BOOKS_DIR")
-LEGACY_LOOKUP_DIR = os.environ.get("REF_BOOKS_LEGACY_LOOKUP_DIR", r"$REF_BOOKS_DIR\lookup")
+# Books live outside the repo: set REF_BOOKS_DIR (and optionally REF_BOOKS_LEGACY_LOOKUP_DIR).
+BOOK_DIR = os.environ.get("REF_BOOKS_DIR", "")
+LEGACY_LOOKUP_DIR = os.environ.get(
+    "REF_BOOKS_LEGACY_LOOKUP_DIR", os.path.join(BOOK_DIR, "lookup") if BOOK_DIR else ""
+)
 CACHE_DIR = os.path.join(REPO, "debug_runs", "ref_books_cache")
 ADOPTION_PATH = os.path.join(HERE, "adoption.tsv")
 # UNWIRED = code exists but no production caller (review 2026-11-16); ADOPTED requires a prod caller.

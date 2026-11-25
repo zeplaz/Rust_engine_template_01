@@ -77,7 +77,12 @@ COMMAND_GROUPS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = 
     (
         "grammar",
         "Building grammar, kits, city, build-quality (BQ)",
-        ("designer-grammar-quality-loop", "single-archetype-ratio-guard", "warehouse-track-guard"),
+        (
+            "designer-grammar-quality-loop",
+            "single-archetype-ratio-guard",
+            "warehouse-track-guard",
+            "generate-and-test-report",
+        ),
         (
             "grammar-",
             "building-",
@@ -100,6 +105,8 @@ COMMAND_GROUPS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = 
         ("landscape-", "veg-", "reaction-", "terrain-"),
     ),
     ("power", "Power utility / nuclear batches", (), ("pwr-",)),
+    ("studio", "Artist Studio task bus + dashboards", (), ("studio-task-", "studio-dash-")),
+    ("books", "Reference-book index lookup", ("ref-lookup",), ()),
     ("dmcp", "Designer-MCP lane witnesses", (), ("dmcp-",)),
 )
 

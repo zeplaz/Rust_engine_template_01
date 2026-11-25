@@ -31,3 +31,7 @@
 # Python bytecode (MCP toolchain)
 **/__pycache__/
 *.pyc
+# Local editor state and build logs (machine paths)
+*.tiled-session
+buildlog.txt
+.spyproject/

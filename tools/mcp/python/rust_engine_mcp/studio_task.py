@@ -12,6 +12,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import jsonschema
+
 from . import blender_runner
 from .paths import jobs_root, repo_root, resolve_under_root
 from .schemas import (
@@ -77,8 +79,8 @@ def list_tasks(*, limit: int = 50) -> list[dict[str, Any]]:
             data = json.loads(path.read_text(encoding="utf-8"))
             validate_studio_task(data)
             rows.append((float(data.get("updated_at") or 0), data))
-        except (OSError, json.JSONDecodeError, Exception):
-            continue
+        except (OSError, json.JSONDecodeError, jsonschema.ValidationError):
+            continue  # unreadable or invalid task file: skip it, other errors surface
     rows.sort(key=lambda t: t[0], reverse=True)
     return [d for _, d in rows[: max(1, limit)]]
 
@@ -247,10 +249,6 @@ def escalate_from_param_frame(
         "frame_id": frame.get("frame_id"),
         "source_task_id": task_id,
         "children": children,
-        "ref_books_dual_cite": {
-            "new_rows": ["IO-09"],
-            "legacy_keywords": ["pipeline_app_layer", "asset_pipeline"],
-        },
     }
     return out
 

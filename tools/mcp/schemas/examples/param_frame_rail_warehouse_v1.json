@@ -5,10 +5,6 @@
   "seed": 1,
   "presentation_only": true,
   "sim_occupation": false,
-  "ref_books_dual_cite": {
-    "new_rows": ["IO-09", "ECS-15", "PCG-06"],
-    "legacy_keywords": ["asset_pipeline", "shape_grammars", "ai_tools"]
-  },
   "grammar_chain": [
     {
       "step": "archetype",
@@ -54,7 +50,7 @@
     "footprint_hint_tiles": [[0, 0], [4, 0]]
   },
   "escalate": {
-    "massing_preview_path": "tools/mcp/schemas/examples/massing_preview_pilot_rail_warehouse_v1.json",
+    "massing_preview_path": "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json",
     "assembly_snapshot_path": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json"
   },
   "note": "S0 ParamFrame — Studio edits this JSON; bpy optional via escalate hints."

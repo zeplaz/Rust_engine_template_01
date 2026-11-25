@@ -1,7 +1,7 @@
 # Verify rust-engine-art MCP wiring (Windows)
 $ErrorActionPreference = "Stop"
 
-$Repo = if ($env:RUST_ENGINE_REPO) { $env:RUST_ENGINE_REPO } else { "<repo>" }
+$Repo = if ($env:RUST_ENGINE_REPO) { $env:RUST_ENGINE_REPO } else { (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path }
 $Py = if ($env:RUST_ENGINE_PYTHON) { $env:RUST_ENGINE_PYTHON } else { "python" }
 $CursorDir = Join-Path $env:USERPROFILE ".cursor"
 $McpJson = Join-Path $CursorDir "mcp.json"

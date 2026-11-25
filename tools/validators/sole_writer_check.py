@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""E1 / CONC-03 — report ResMut<Name> / &mut Name outside the owner prefix (report-only)."""
+"""E1 / CONC-03 — report ResMut<Name> / &mut Name outside the owner prefix.
+
+Report by default; `--fail` exits 1 on violations not in `knowledge/sole_writer_baseline.txt`
+(CI runs it that way); `--write-baseline` refreshes that file.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +11,11 @@ import re
 import sys
 from pathlib import Path
 
+import baseline
+
 _REPO = Path(__file__).resolve().parents[2]
 _TSV = Path(__file__).resolve().parent / "knowledge" / "sole_writers.tsv"
+_BASELINE = Path(__file__).resolve().parent / "knowledge" / "sole_writer_baseline.txt"
 _SRC = _REPO / "src"
 
 _RESMUT = re.compile(r"ResMut\s*<\s*([A-Za-z0-9_:]+)\s*>")
@@ -105,8 +112,6 @@ def scan_file(path: Path, owners: list[tuple[str, str]]) -> list[str]:
 
 
 def main() -> int:
-    # CQ-78: default report-only; `--fail` exits non-zero when violations exist.
-    fail = "--fail" in sys.argv
     owners = load_owners()
     all_v: list[str] = []
     for path in sorted(_SRC.rglob("*.rs")):
@@ -114,9 +119,9 @@ def main() -> int:
     print(f"{len(owners)} resources, {len(all_v)} violations")
     for v in all_v:
         print(v)
-    if fail and all_v:
-        return 1
-    return 0
+    # Key without the line number: "path  message".
+    keys = [re.sub(r":\d+  ", "  ", v, count=1) for v in all_v]
+    return baseline.gate(sys.argv, keys, _BASELINE, "sole_writer_check known violations (CQ-78)")
 
 
 if __name__ == "__main__":

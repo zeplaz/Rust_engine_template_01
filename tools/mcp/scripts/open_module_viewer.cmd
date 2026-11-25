@@ -5,8 +5,8 @@ setlocal EnableExtensions
 set "REPO=%~dp0..\..\.."
 for %%I in ("%REPO%") do set "REPO=%%~fI"
 
-set "PY=python"
-if not exist "%PY%" set "PY=python"
+set "PY=%RUST_ENGINE_PYTHON%"
+if not defined RUST_ENGINE_PYTHON set "PY=python"
 
 set "RUST_ENGINE_REPO=%REPO%"
 

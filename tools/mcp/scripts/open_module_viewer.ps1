@@ -3,11 +3,7 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
-$Py = "python"
-if (-not (Test-Path -LiteralPath $Py)) {
-    Write-Warning "Python 3.13 not found - falling back to python (may lack jsonschema)."
-    $Py = "python"
-}
+$Py = if ($env:RUST_ENGINE_PYTHON) { $env:RUST_ENGINE_PYTHON } else { "python" }
 
 $env:RUST_ENGINE_REPO = $Repo
 

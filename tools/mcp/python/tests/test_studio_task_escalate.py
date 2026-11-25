@@ -26,8 +26,7 @@ def test_escalate_hint_payloads_validate_against_job_schemas() -> None:
     assembly = repo_root() / escalate["assembly_snapshot_path"]
     validate_massing_preview(json.loads(massing.read_text(encoding="utf-8")))
     validate_assembly_snapshot(json.loads(assembly.read_text(encoding="utf-8")))
-    cite = frame.get("ref_books_dual_cite") or {}
-    assert "IO-09" in cite.get("new_rows", [])
+    assert "ref_books_dual_cite" not in frame
 
 
 def test_escalate_from_param_frame_enqueues_children(tmp_path, monkeypatch) -> None:
@@ -42,10 +41,7 @@ def test_escalate_from_param_frame_enqueues_children(tmp_path, monkeypatch) -> N
     assert parent["status"] == "queued"
     result = studio_task.escalate_from_param_frame(task_id="pf_escalate_parent")
     assert result["source_task_id"] == "pf_escalate_parent"
-    assert result["ref_books_dual_cite"]["legacy_keywords"] == [
-        "pipeline_app_layer",
-        "asset_pipeline",
-    ]
+    assert "ref_books_dual_cite" not in result
     kinds = {c["kind"] for c in result["children"]}
     assert kinds == {"massing_export", "assembly_build"}
     for child in result["children"]:

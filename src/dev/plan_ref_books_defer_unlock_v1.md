@@ -26,7 +26,7 @@
 | PCG-07 | ADOPTED | UNWIRED | road skeleton no production caller | CQ-57g |
 | TAC-05 | ADOPTED | PARTIAL | decide consumer real; fort path passes `None` (`fortification.rs:157`) | CQ-58 |
 | RND-07 | DEFER (HOLD) | DEFER (no evidence) | "profile run" was a unit test on `Stage6VirtualizationFrame::default()` (all zeros); verdict code is test-shaped | CQ-31 |
-| PCG-03 / TAC-05 "user world-look sign-off" | — | unverified | no record in repo; erosion also loses mass (`erosion.rs:66-67,91-92`) | CQ-04, CQ-84 |
+| PCG-03 / TAC-05 "user world-look sign-off" | — | **retracted** (CQ-84, 2026-11-24) | no record exists, so no sign-off is claimed. PCG-03 stays DEFER until a sign-off is recorded in this plan; TAC-05 is ADOPTED on its production caller only. Erosion mass fixed (CQ-04, `9a26d6d5`) | CQ-04, CQ-84 |
 
 **Close again only when:** each row above has a production caller `file:line` (or a real profile from a play run for RND-07). Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
@@ -159,7 +159,7 @@ PARTIAL ≠ broken. Unlock only via [`plan_dense_heat_wgsl_v1.md`](plan_dense_he
 | Id | Trigger | Files | Accept | Unlocks |
 |:---|:---|:---|:---|:---|
 | **RND-06-LOD-SEAM** | Capture shows LOD cracks | `render/layer_mesh.rs` · `pixel_world/terrain.rs` | before/after capture + `--lib rnd06` | **RND-06** |
-| **RND-07-VT-RESIDENCY** | Profiler: atlas memory bottleneck | `stage6_virtualization.rs` · `profile_atlas_memory` | **HOLD** 2026-11-16 — `rnd07_atlas_memory_profile` → `debug_runs/rnd07/atlas_memory_profile.json` (`bottleneck_proven=false`) | **RND-07** |
+| **RND-07-VT-RESIDENCY** | Profiler: atlas memory bottleneck | `stage6_virtualization.rs` · `profile_atlas_memory` | **DEFER** — the 2026-11-16 "profile" was a unit test on zeros; verdict code deleted (CQ-31). Needs a real play-run profile. (was: `rnd07_atlas_memory_profile` → gitignored JSON; `bottleneck_proven=false`) | **RND-07** |
 
 ---
 

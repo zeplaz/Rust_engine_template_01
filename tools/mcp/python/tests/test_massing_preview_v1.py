@@ -9,7 +9,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 
-from rust_engine_mcp.paths import schemas_dir
+from rust_engine_mcp.paths import repo_root, schemas_dir
 from rust_engine_mcp.schemas import validate_massing_preview
 
 APS_PARENT = Path(__file__).resolve().parents[2]
@@ -129,7 +129,7 @@ def test_studio_dash_renders_massing_qc() -> None:
     assert str(data["seed"]) in html
 
 
-PILOT_EXAMPLE = schemas_dir() / "examples" / "massing_preview_pilot_rail_warehouse_v1.json"
+PILOT_EXAMPLE = repo_root() / "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
 
 
 def test_pilot_example_schema_and_lineage() -> None:

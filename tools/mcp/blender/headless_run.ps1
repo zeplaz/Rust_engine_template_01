@@ -18,9 +18,10 @@ if (-not $BlenderExe) {
     }
 }
 if (-not $BlenderExe) {
-    $BlenderExe = "blender"
+    $cmd = Get-Command blender -ErrorAction SilentlyContinue
+    if ($cmd) { $BlenderExe = $cmd.Source }
 }
-if (-not (Test-Path $BlenderExe)) {
+if (-not $BlenderExe -or -not (Test-Path $BlenderExe)) {
     throw "Blender not found at $BlenderExe — set BLENDER_EXE."
 }
 $RunScript = Join-Path $PSScriptRoot "scripts\run_job.py"

@@ -41,7 +41,6 @@ def massing_qc_view(data: dict[str, Any]) -> dict[str, Any]:
         "material_strategy": data.get("material_strategy"),
         "grammar_rule_chain": chain,
         "param_frame_id": data.get("param_frame_id"),
-        "ref_books_dual_cite": data.get("ref_books_dual_cite"),
         "floors_histogram": hist,
         "metrics": {
             "column_count": len(cols),

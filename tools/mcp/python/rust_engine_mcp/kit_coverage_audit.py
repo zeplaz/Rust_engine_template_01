@@ -233,7 +233,8 @@ def write_apsr_q2_witness(*, repo: Path | None = None) -> dict[str, Any]:
     )
 
 
-PCG_06_STAGING_REL = "assets/staging/reports/pcg_06_grammar_rule_coverage.json"
+# Generated, local-only (gitignored): regenerate with `grammar-rule-coverage-report --write` (CQ-78).
+PCG_06_REPORT_REL = "debug_runs/reports/pcg_06_grammar_rule_coverage.json"
 PCG_06_TASK_ID = "PCG-06-GRAMMAR-RULE-COVERAGE-001"
 DESIGNER_ACTION_NEVER_FIRE = "Raise weight, add trigger, or retire rule (report only — do not auto-delete)."
 DESIGNER_ACTION_TERMINAL_GAP = "Add kit module to style pack or remove terminal from grammar."
@@ -515,8 +516,8 @@ def write_pcg06_grammar_rule_coverage_report(
 ) -> dict[str, Any]:
     root = repo or repo_root()
     body = run_grammar_rule_coverage_report(entries=entries, repo=root)
-    out = root / PCG_06_STAGING_REL
+    out = root / PCG_06_REPORT_REL
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
-    body["written"] = PCG_06_STAGING_REL
+    body["written"] = PCG_06_REPORT_REL
     return body

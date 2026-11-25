@@ -1,0 +1,109 @@
+# determinism_lint known hits (CQ-78)
+# Regenerate: python tools/validators/<script>.py --write-baseline
+hash_iter	src/combat/formation.rs	let any = self.by_chunk.values().next()?;
+hash_iter	src/combat/fortification.rs	rows.extend(fp.tiles.iter().map(|t| (*t, slot, kind)));
+hash_iter	src/combat/front.rs	let contested_cells = cells.iter().filter(|c| c.contested).count() as u32;
+hash_iter	src/combat/front.rs	let mut tiles: Vec<(i32, i32)> = owners.keys().copied().collect();
+hash_iter	src/combat/front.rs	self.segments.iter().map(|s| s.cells.len()).sum()
+hash_iter	src/construction/bridges.rs	let live: HashSet<u32> = network.segments.iter().map(|s| s.id).collect();
+hash_iter	src/construction/corridor_network.rs	for (i, e) in edges.iter().enumerate() {
+hash_iter	src/construction/corridor_network.rs	for (i, e) in edges.iter().enumerate() {
+hash_iter	src/construction/corridor_network.rs	for (si, s) in self.segments.iter().enumerate() {
+hash_iter	src/construction/corridor_network.rs	self.segments.iter().flat_map(|s| s.nodes.iter().copied())
+hash_iter	src/construction/procedural/types.rs	self.packs.values()
+hash_iter	src/construction/procedural/types.rs	self.packs.values().flat_map(|pack| pack.module_ids())
+hash_iter	src/construction/procedural/types.rs	self.slots.values().map(|s| s.as_str())
+hash_iter	src/construction/weighted_footprint.rs	self.weights.iter().map(|(_, w)| *w).sum()
+hash_iter	src/economy/logistics/district_scope.rs	let active_chunks: HashSet<ChunkCellKey> = portals.iter().map(|p| p.anchor).collect();
+hash_iter	src/economy/logistics/road_flow.rs	book.peak_vc = book.peak_vc.max(by_edge.values().map(EdgeFlow::vc).fold(0.0, f32::max));
+hash_iter	src/economy/logistics/road_flow.rs	self.by_edge.values().map(EdgeFlow::vc).fold(0.0, f32::max)
+hash_iter	src/economy/logistics/routes.rs	let live: HashSet<_> = directory.by_edge.keys().copied().collect();
+hash_iter	src/economy/resource_flow.rs	for chain_id in active_chains.keys() {
+hash_iter	src/strategic/construction_book.rs	let mut edge_ids: Vec<_> = book.rows.keys().copied().collect();
+hash_iter	src/strategic/settlement/block_rollout.rs	for eval in eval_book.by_block.values() {
+hash_iter	src/strategic/settlement/district.rs	let mut keys: Vec<_> = districts.keys().cloned().collect();
+hash_iter	src/strategic/settlement/town.rs	for town in towns.towns.values() {
+hash_iter	src/strategic/settlement/town.rs	if !book.towns.values().any(|town| is_water(town.center_tile)) {
+hash_iter	src/strategic/settlement/town.rs	if blocked.iter().any(|placed| *placed == center || towns_need_separation(*placed, center)) {
+hash_iter	src/strategic/settlement/town.rs	if blocked.iter().any(|placed| towns_need_separation(*placed, cell)) {
+hash_iter	src/strategic/settlement/town.rs	let blocked: Vec<_> = towns.towns.values().map(|town| town.center_tile).collect();
+hash_iter	src/strategic/settlement/town.rs	let generated = towns.towns.keys().any(|id| id.0.starts_with("gen-"));
+hash_iter	src/strategic/settlement/town.rs	let live: Vec<_> = towns.towns.keys().cloned().collect();
+hash_iter	src/strategic/settlement/town.rs	let mut ids: Vec<_> = book.towns.keys().cloned().collect();
+hash_iter	src/strategic/settlement/town.rs	let mut ids: Vec<_> = towns.towns.keys().cloned().collect();
+hash_iter	src/strategic/settlement/town.rs	let mut keys: Vec<_> = book.towns.keys().cloned().collect();
+hash_iter	src/strategic/settlement/town.rs	while blocked.iter().any(|p| towns_need_separation(*p, c)) && guard < 128 {
+hash_iter	src/strategic/settlement/town_rollup.rs	let housing = district_rollups.values().map(|r| r.housing).sum::<u32>();
+hash_iter	src/strategic/settlement/town_rollup.rs	let jobs = district_rollups.values().map(|r| r.jobs).sum::<u32>();
+hash_iter	src/strategic/shot_pulse.rs	let node_pos: HashMap<u64, Vec2> = utility.nodes.iter().map(|n| (n.id, n.position)).collect();
+hash_iter	src/strategic/site/systems.rs	let affected: HashSet<IVec2> = coords.iter().copied().collect();
+hash_iter	src/strategic/site/tile_occupation.rs	self.by_site.iter()
+hash_iter	src/strategic/site/tile_occupation.rs	self.by_site.iter().find_map(|(site_id, weights)| {
+hash_iter	src/strategic/site/tile_occupation.rs	self.by_tile.iter()
+hash_iter	src/strategic/transport_bridge.rs	for (&eid, meta) in directory.by_edge.iter() {
+hash_iter	src/strategic/transport_bridge.rs	for (&eid, meta) in directory.by_edge.iter() {
+hash_iter	src/strategic/transport_bridge.rs	for st in fields.by_edge.values() {
+hash_iter	src/strategic/transport_bridge.rs	let active: HashSet<TransportEdgeId> = directory.by_edge.keys().copied().collect();
+hash_iter	src/systems/atmosphere/field_page_residency.rs	for page in self.pages.values() {
+hash_iter	src/systems/atmosphere/field_page_residency.rs	let mut pages: Vec<_> = self.pages.values().collect();
+hash_iter	src/systems/atmosphere/incremental_schedule.rs	self.cells.values().sum::<f32>() / self.cells.len() as f32
+hash_iter	src/systems/ecology/landscape_grammar.rs	let preset_ids: HashSet<&str> = flat.iter().map(|n| n.preset_id.as_str()).collect();
+hash_iter	src/systems/fire/chunk_fire_overlay.rs	let by_coord: HashMap<IVec2, Entity> = q.iter().map(|(e, c, ..)| (c.coord, e)).collect();
+hash_iter	src/systems/terrain/material_plugin.rs	let coords = all_chunks.iter().map(|c| c.coord);
+hash_iter	src/systems/terrain/material_plugin.rs	let coords = chunks.iter().map(|c| c.coord);
+hash_iter	src/systems/terrain/material_plugin.rs	let coords = chunks.iter().map(|c| c.coord);
+hash_iter	src/systems/transport/snapshot.rs	let node_keys: HashSet<&str> = snap.nodes.iter().map(|n| n.key.as_str()).collect();
+hash_iter	src/systems/water/flood_consequences.rs	dirty.keys.extend(blocks.blocked.iter().cloned());
+hash_iter	src/systems/water/flood_consequences.rs	dirty.keys.extend(changed.iter().cloned());
+hash_iter	src/systems/water/flood_consequences.rs	let changed: HashSet<String> = flipped.iter().map(|(x, z)| tile_key(*x, *z)).collect();
+hash_iter	src/systems/weather/polling_stations.rs	let mut unique: HashSet<IVec2> = sites.chunks.iter().copied().collect();
+real_time	src/construction/build_interaction.rs	time: Res<Time>,
+real_time	src/construction/history.rs	let dt = time.delta_secs();
+real_time	src/construction/history.rs	time: Res<Time>,
+real_time	src/construction/place_feedback.rs	pub fn tick_place_feedback_pulse(time: Res<Time>, mut pulse: ResMut<PlaceFeedbackPulse>) {
+real_time	src/construction/place_feedback.rs	pulse.elapsed_secs += time.delta_secs();
+real_time	src/construction/roads/input.rs	time: Res<Time<Real>>,
+real_time	src/construction/sessions.rs	pub fn tick_tool_session_time(time: Res<Time>, mut session: ResMut<ActiveToolSession>) {
+real_time	src/strategic/hybrid_brain.rs	let dt = time.delta_secs().clamp(0.0, 0.25) * ctrl.dt_scale();
+real_time	src/strategic/hybrid_brain.rs	time: Res<Time>,
+real_time	src/strategic/sim.rs	let dt = time.delta_secs().clamp(0.0, 0.25) * ctrl.dt_scale();
+real_time	src/strategic/sim.rs	time: Res<Time>,
+real_time	src/systems/atmosphere/advect.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/atmosphere/advect.rs	time: Res<Time>,
+real_time	src/systems/atmosphere/gpu_field_bridge.rs	*cadence_acc += time.delta_secs();
+real_time	src/systems/atmosphere/gpu_field_bridge.rs	time: Res<Time>,
+real_time	src/systems/atmosphere/incremental_schedule.rs	*acc += time.delta_secs();
+real_time	src/systems/atmosphere/incremental_schedule.rs	*full_acc += time.delta_secs();
+real_time	src/systems/atmosphere/incremental_schedule.rs	time: Res<Time>,
+real_time	src/systems/atmosphere/incremental_schedule.rs	time: Res<Time>,
+real_time	src/systems/ecology/chunk_ecology.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/ecology/chunk_ecology.rs	time: Res<Time>,
+real_time	src/systems/ecology/vegetation_field.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/ecology/vegetation_field.rs	time: Res<Time>,
+real_time	src/systems/fire/chunk_fire_overlay.rs	let deposit_fuel_k = time.delta_secs() * ctrl.dt_scale() * DEPOSIT_FUEL_RATE;
+real_time	src/systems/fire/chunk_fire_overlay.rs	let deposit_k = time.delta_secs() * ctrl.dt_scale() * DEPOSIT_RATE;
+real_time	src/systems/fire/chunk_fire_overlay.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/fire/chunk_fire_overlay.rs	time: Res<Time>,
+real_time	src/systems/fire/chunk_fire_overlay.rs	time: Res<Time>,
+real_time	src/systems/fire/chunk_surface_fire.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/fire/chunk_surface_fire.rs	time: Res<Time>,
+real_time	src/systems/fire/ember_spot_ignition.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/fire/ember_spot_ignition.rs	time: Res<Time>,
+real_time	src/systems/fire/entity_exposure.rs	let dt = time.delta_secs() * ctrl.dt_scale();
+real_time	src/systems/fire/entity_exposure.rs	time: Res<Time>,
+real_time	src/systems/fire/fire_light_emission.rs	time: Res<Time>,
+real_time	src/systems/sim_control.rs	sim_delta_micros_from_frame(time.delta_secs(), ctrl.speed)
+real_time	src/systems/sim_control.rs	time: Res<Time>,
+real_time	src/systems/terrain/material_plugin.rs	time: Option<Res<Time>>,
+real_time	src/systems/terrain/material_plugin.rs	time: Option<Res<Time>>,
+real_time	src/systems/terrain/material_plugin.rs	time: Option<Res<Time>>,
+real_time	src/systems/transport/mod.rs	let dt = time.delta_secs() * sim.dt_scale();
+real_time	src/systems/transport/mod.rs	time: Res<Time>,
+rng	src/ai/faction/rng.rs	//! **Deterministic randomness for AI decisions** (FAI-2). No `thread_rng`, no clock: every roll is a
+rng	src/ai/faction/rng.rs	/// The world-intent resolver's roll for one tick (replaces `rand::thread_rng().gen()`).
+rng	src/strategic/hybrid_brain.rs	// FAI-2: seeded from session seed + sim tick (frame counter before a clock exists) - no `thread_rng`.
+wall_clock	src/economy/logistics/orders/tests.rs	let t0 = std::time::Instant::now();
+wall_clock	src/economy/logistics/orders/tests.rs	let t1 = std::time::Instant::now();
+wall_clock	src/systems/water/gpu_field.rs	let t0 = Instant::now();
+wall_clock	src/systems/water/solver_tick.rs	let t0 = std::time::Instant::now();
+wall_clock	src/systems/water/surface_water.rs	let t0 = std::time::Instant::now();

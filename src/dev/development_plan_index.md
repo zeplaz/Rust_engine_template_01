@@ -10,7 +10,7 @@ CI is green on `master` (`7aca50c6`). Bevy 0.20, Bevy UI only.
 | Program | State | What is left |
 |:---|:---|:---|
 | Roads + rail · [`plan_roads_v1.md`](plan_roads_v1.md) | **OPEN** | operator hands-on of the line tool; congestion/grading capture; truck-hauled works; RD-2/5/7; B-3 repair |
-| Cursor-wave cleanup · [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) | **OPEN** (67/70) | CQ-78, CQ-79, CQ-84 |
+| Cursor-wave cleanup · [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) | **CLOSED** 11-24 (70/70) | — |
 | Ref-books residual · [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) | **OPEN** (residual) | RND-02, RND-12 PARTIAL; 9 DEFER on triggers |
 | Voxel occupation · [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) | **OPEN** | default-on decision (OCC-P4/P5) |
 | Dam-flood benchmark · [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) | **OPEN** | DF-10 baseline (blocked), DF-3 capture |
@@ -39,7 +39,7 @@ VSS-001, Artist Studio expansion, APS grammar evolution, production iso tiles, r
 
 **Roads + rail (OPEN — 2026-11-20: RD-0/1/3/4/6, bridges, works bills, grading, UI responsiveness in code; remaining: hands-on check, truck-hauled works, RD-2/5/7 …):** [`plan_roads_v1.md`](plan_roads_v1.md) — PLAN-ROADS-v1 · road tiers (dirt/gravel/paved/concrete/motorway, lanes), congestion, rail parity (trains, yards, intermodal), worn dirt tracks, off-road speed field, leg time from the route driven, player + AI road building · RD-0..RD-11
 
-**Cursor-wave cleanup (OPEN — 67/70 done 2026-11-24):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — residual CQ-78/79/84 · **dam-flood (SIGNED):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — DF-1…9 landed in code · **DF-10 BLOCKED** (baseline) · **water depth:** [`plan_water_depth_truth_v1.md`](plan_water_depth_truth_v1.md) — W0–W4 ADOPTED · W5 DEFER
+**Cursor-wave cleanup (CLOSED — 70/70 2026-11-24):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — residual CQ-78/79/84 · **dam-flood (SIGNED):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — DF-1…9 landed in code · **DF-10 BLOCKED** (baseline) · **water depth:** [`plan_water_depth_truth_v1.md`](plan_water_depth_truth_v1.md) — W0–W4 ADOPTED · W5 DEFER
 
 **Bevy 0.19 migration (CLOSED):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — do **not** reopen `MIG-*` 0.19 rows · deferrals [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 

@@ -1,7 +1,7 @@
 # One-shot setup for designer art MCP (Windows)
 # Installs Python package, writes ~/.cursor/mcp.json + rust_engine_art_mcp.env, runs smoke.
 param(
-    [string]$Repo = "<repo>",
+    [string]$Repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
     [string]$Py = "python"
 )
 

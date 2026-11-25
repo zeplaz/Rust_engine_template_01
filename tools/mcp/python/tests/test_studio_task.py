@@ -48,7 +48,7 @@ def test_run_queued_massing_export(tmp_path, monkeypatch):
     from rust_engine_mcp.paths import repo_root, schemas_dir
 
     monkeypatch.setattr(studio_task, "studio_tasks_dir", lambda: tmp_path)
-    example = schemas_dir() / "examples" / "massing_preview_pilot_rail_warehouse_v1.json"
+    example = repo_root() / "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
     payload = tmp_path / "massing_preview.json"
     payload.write_text(example.read_text(encoding="utf-8"), encoding="utf-8")
     # payload_path relative to repo for resolve_payload

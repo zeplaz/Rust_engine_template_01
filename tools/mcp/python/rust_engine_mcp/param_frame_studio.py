@@ -15,11 +15,6 @@ from . import grammar_facility_brief, landscape_preset_browse, studio_task
 from .paths import repo_root, schemas_dir
 from .schemas import validate_param_frame
 
-S1_DUAL_CITE: dict[str, list[str]] = {
-    "new_rows": ["PCG-06", "PCG-08", "DES-04"],
-    "legacy_keywords": ["pcg", "shape_grammars"],
-}
-
 STUDIO_MODIFIER_IDS: tuple[str, ...] = (
     "district_style",
     "facility_binding",
@@ -50,26 +45,9 @@ def load_param_frame(path: Path | str | None = None) -> dict[str, Any]:
     if not p.is_file():
         raise FileNotFoundError(p)
     data = json.loads(p.read_text(encoding="utf-8"))
+    data.pop("ref_books_dual_cite", None)  # legacy book bookkeeping field (CQ-79)
     validate_param_frame(data)
     return data
-
-
-def merge_ref_books_dual_cite(frame: dict[str, Any]) -> dict[str, Any]:
-    """Ensure S1 orient rows are recorded on the frame (non-destructive merge)."""
-    out = deepcopy(frame)
-    cite = dict(out.get("ref_books_dual_cite") or {})
-    new_rows = list(cite.get("new_rows") or [])
-    legacy = list(cite.get("legacy_keywords") or [])
-    for row in S1_DUAL_CITE["new_rows"]:
-        if row not in new_rows:
-            new_rows.append(row)
-    for kw in S1_DUAL_CITE["legacy_keywords"]:
-        if kw not in legacy:
-            legacy.append(kw)
-    cite["new_rows"] = new_rows
-    cite["legacy_keywords"] = legacy
-    out["ref_books_dual_cite"] = cite
-    return out
 
 
 def browse_grammar_catalog(*, repo: Path | None = None) -> list[dict[str, Any]]:
@@ -206,7 +184,6 @@ def upsert_grammar_chain_step(frame: dict[str, Any], entry: dict[str, Any]) -> d
             }
         )
     out["grammar_chain"] = chain
-    out = merge_ref_books_dual_cite(out)
     validate_param_frame(out)
     return out
 
@@ -235,7 +212,6 @@ def upsert_modifier(
     if not replaced:
         mods.append(payload)
     out["modifiers"] = mods
-    out = merge_ref_books_dual_cite(out)
     validate_param_frame(out)
     return out
 
@@ -249,13 +225,12 @@ def toggle_connection_graph_id(frame: dict[str, Any], graph_id: str) -> dict[str
     else:
         ids.append(gid)
     out["connection_graph_ids"] = ids
-    out = merge_ref_books_dual_cite(out)
     validate_param_frame(out)
     return out
 
 
 def write_param_frame(frame: dict[str, Any], path: Path) -> Path:
-    data = merge_ref_books_dual_cite(frame)
+    data = frame
     validate_param_frame(data)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")

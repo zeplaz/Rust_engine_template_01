@@ -24,9 +24,7 @@ def test_param_frame_example_exports_massing_preview() -> None:
     assert data["presentation_only"] is True
     assert data["sim_occupation"] is False
     assert len(data["massing_columns"]) > 0
-    cite = data.get("ref_books_dual_cite") or {}
-    assert "PCG-06" in (cite.get("new_rows") or [])
-    assert "geometry_visual_effects" in (cite.get("legacy_keywords") or [])
+    assert "ref_books_dual_cite" not in data  # book bookkeeping stays out of payloads (CQ-79)
     for col in data["massing_columns"]:
         assert 1 <= col["floors"] <= 2
 

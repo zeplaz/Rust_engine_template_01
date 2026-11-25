@@ -59,22 +59,6 @@ def validate_param_frame_path(path: Path, *, compression_level: int = 3) -> Vali
     try:
         data = schemas.load_json_file(path)
         schemas.validate_param_frame(data)
-        cite = (
-            data.get("ref_books_dual_cite")
-            if isinstance(data.get("ref_books_dual_cite"), dict)
-            else {}
-        )
-        if not cite.get("new_rows"):
-            issues.append(
-                ValidationIssue(
-                    kind="MissingField",
-                    severity="warning",
-                    file=str(path),
-                    field="ref_books_dual_cite.new_rows",
-                    hint="ParamFrame should dual-cite NEW matrix row ids (PLAN v3 §1)",
-                    signature="param_frame_missing_new_cite",
-                )
-            )
     except Exception as exc:  # noqa: BLE001
         issues = _load_fail(path, exc, "param_frame_invalid")
     return _schema_report(

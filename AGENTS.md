@@ -7,8 +7,8 @@ Policy: [`src/dev/single_worktree_policy_v1.md`](src/dev/single_worktree_policy_
 
 ## Project
 
-Rust + Bevy **0.20** on master (PLAN-BEVY-020-MIG-v1 **PROGRAM CLOSE** — gate [`debug_runs/mig_bevy_020/mig_v2_gate.json`](debug_runs/mig_bevy_020/mig_v2_gate.json)). UI is Bevy UI (egui is gone). Guide: https://bevy.org/learn/migration-guides/0-19-to-0-20/
-Closed **0.19** MIG-* rows stay closed. **Open work (one board):** [src/dev/coder_todos_v1.md](src/dev/coder_todos_v1.md) — roads, cleanup-wave residual, ref-books residual, voxel occupation, dam-flood DF-10, parked items. Plan index (current status table at the top, history below): [src/dev/development_plan_index.md](src/dev/development_plan_index.md).
+Rust + Bevy **0.20** on master (PLAN-BEVY-020-MIG-v1 **PROGRAM CLOSE**; CI green). UI is Bevy UI (egui is gone). Guide: https://bevy.org/learn/migration-guides/0-19-to-0-20/
+Closed **0.19** MIG-* rows stay closed. **Open work (one board):** [src/dev/coder_todos_v1.md](src/dev/coder_todos_v1.md) — roads, ref-books residual, voxel occupation, dam-flood DF-10, parked items. Plan index (current status table at the top, history below): [src/dev/development_plan_index.md](src/dev/development_plan_index.md).
 
 ## Review path (how to check a run)
 

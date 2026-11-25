@@ -12,7 +12,7 @@ def test_brief_veg_species_table_green() -> None:
     assert brief["green"] is True
     assert brief["species_count"] >= 4
     assert "oak" in brief["species_ids"]
-    assert brief["ref_books_dual_cite"]["new_rows"] == ["PCG-05"]
+    assert "ref_books_dual_cite" not in brief
 
 
 def test_validate_veg_species_report_passes() -> None:

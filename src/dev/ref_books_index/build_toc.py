@@ -1,6 +1,6 @@
 """Rebuild toc/<book>.tsv from the PDFs (deterministic; no book text is stored).
 
-    python -I src/dev/ref_books_index/build_toc.py ["$REF_BOOKS_DIR"]
+    python -I src/dev/ref_books_index/build_toc.py [<books dir>]   # default: $REF_BOOKS_DIR
 
 Sources per book: PDF bookmark outline (pypdf) + numbered x.y.z[.w] headings found in the
 pdftotext dump (GEA books only list x.y in their outline). Output columns:
@@ -14,7 +14,9 @@ import os, re, subprocess, sys, tempfile
 import pypdf
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = sys.argv[1] if len(sys.argv) > 1 else r"$REF_BOOKS_DIR"
+ROOT = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("REF_BOOKS_DIR", "")
+if not ROOT:
+    sys.exit("build_toc: pass the books folder or set REF_BOOKS_DIR")
 BOOKS = {  # id -> (file, scan_text_for_subsections, first_body_page)
     "gea4v1": ("game-engine-architecture-volume-i-foundations-and-core-engine-systems-4_compress.pdf", True, 15),
     "gea4v2": ("Game Engine Architecture Volume II_ Graphics_ Motion_ and Sound_ 4th Edition.sanet.st.pdf", True, 15),

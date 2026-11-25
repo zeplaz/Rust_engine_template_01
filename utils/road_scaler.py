@@ -1,3 +1,4 @@
+import sys
 from PIL import Image
 import os
 
@@ -18,8 +19,8 @@ def resize_tile_map(input_path, output_path, scale_factor):
 
 
 # Set your input and output paths, and the desired scaling factor
-input_path = "%USERPROFILE%\\Downloads\\gen_art\\terrain\\hjm-cityroads-64.png"
-output_path = "%USERPROFILE%\\Downloads\\gen_art\\terrain\\road_out_scaleup.png"
+input_path = sys.argv[1]
+output_path = sys.argv[2]
 scale_factor = 6.375  # Adjust this value as needed
 
 resize_tile_map(input_path, output_path, scale_factor)

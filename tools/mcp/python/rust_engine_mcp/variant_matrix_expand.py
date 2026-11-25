@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from rust_engine_mcp.paths import repo_root
+from rust_engine_mcp.paths import repo_rel, repo_root
 
 # Canonical bake params per variant_key (deterministic Blender tile_variant_bake job).
 VARIANT_BAKE: dict[str, dict[str, Any]] = {
@@ -311,7 +311,7 @@ def expand_matrix_to_tile_batch(
         "source_tier": "production",
         "development_tier": "production",
         "keyframe_rename_pk": True,
-        "matrix_ref": str(Path(matrix_path).as_posix()),
+        "matrix_ref": repo_rel(matrix_path),
         "rules_applied": [
             "no_ai_generated_images",
             "deterministic_output",

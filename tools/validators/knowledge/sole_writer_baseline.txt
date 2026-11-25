@@ -1,0 +1,6 @@
+# sole_writer_check known violations (CQ-78)
+# Regenerate: python tools/validators/<script>.py --write-baseline
+src/render/view_runtime/bridge.rs  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/bridge.rs  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/phase_d_parity_stress.rs  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/phase_d_parity_stress.rs  ResMut/&mut ViewManager outside src/gui/view_authority.rs

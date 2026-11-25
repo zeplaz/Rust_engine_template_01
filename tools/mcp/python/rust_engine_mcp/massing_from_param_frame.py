@@ -13,12 +13,6 @@ from typing import Any
 from .massing_from_pilot import build_massing_preview_from_pilot
 from .schemas import validate_massing_preview, validate_param_frame
 
-_S2_DUAL_CITE: dict[str, list[str]] = {
-    "new_rows": ["PCG-06", "RND-09", "LGT-04"],
-    "legacy_keywords": ["geometry_visual_effects", "shape_grammars"],
-}
-
-
 def _origin_from_intent(intent: dict[str, Any]) -> tuple[int, int]:
     hints = intent.get("footprint_hint_tiles")
     if isinstance(hints, list) and hints:
@@ -67,21 +61,6 @@ def _clamp_column_floors(
     return out
 
 
-def _merge_dual_cite(frame: dict[str, Any]) -> dict[str, list[str]]:
-    base = dict(_S2_DUAL_CITE)
-    frame_cite = frame.get("ref_books_dual_cite")
-    if not isinstance(frame_cite, dict):
-        return base
-    for key in ("new_rows", "legacy_keywords"):
-        existing = list(base.get(key) or [])
-        extra = frame_cite.get(key)
-        if isinstance(extra, list):
-            for item in extra:
-                s = str(item)
-                if s and s not in existing:
-                    existing.append(s)
-        base[key] = existing
-    return base
 
 
 def build_massing_preview_from_param_frame(frame: dict[str, Any]) -> dict[str, Any]:
@@ -116,7 +95,6 @@ def build_massing_preview_from_param_frame(frame: dict[str, Any]) -> dict[str, A
         target_max=int(tmax) if tmax is not None else None,
     )
 
-    payload["ref_books_dual_cite"] = _merge_dual_cite(frame)
     payload["note"] = (
         "VOXEL-MASSING-PRES-001 — ParamFrame→preview (S2); never commit to occupation"
     )

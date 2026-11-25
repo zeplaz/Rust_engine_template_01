@@ -1,3 +1,4 @@
+import sys
 from lark import Lark, Transformer, v_args
 
 
@@ -93,7 +94,7 @@ def rust_to_fbs(rust_code):
     return fbs_output
 
 if __name__ == "__main__":
-    with open(r"src/entities/types_of/s_flagz.rs", 'r') as f:
+    with open(sys.argv[1], 'r') as f:
         rust_code = f.read()
 
     fbs_code = rust_to_fbs(rust_code)

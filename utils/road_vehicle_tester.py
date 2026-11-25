@@ -1,9 +1,10 @@
+import sys
 import numpy as np
 from PIL import Image
 
 # Open the tilemaps
-road_tilemap = Image.open("%USERPROFILE%\\Downloads\\gen_art\\terrain\\road_out_scaleup.png")
-vehicle_tilemap = Image.open("%USERPROFILE%\\Downloads\\gen_art\source\\truck_civ_01\\tilemaps\\tile_map_empty_miday.png")
+road_tilemap = Image.open(sys.argv[1])
+vehicle_tilemap = Image.open(sys.argv[2])
 
 # Set the size of the tiles
 road_tile_width = 1920 // 6
@@ -48,4 +49,4 @@ road_tilemap.paste(
 
 
 # Save the result as a new image
-road_tilemap.save("%USERPROFILE%\\Downloads\\gen_art\\source\\combined.png")
+road_tilemap.save(sys.argv[3])

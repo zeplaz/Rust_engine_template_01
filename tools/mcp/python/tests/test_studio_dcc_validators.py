@@ -13,7 +13,7 @@ from rust_engine_mcp.validators.studio_dcc import (
 )
 
 PARAM_FRAME = schemas_dir() / "examples" / "param_frame_rail_warehouse_v1.json"
-MASSING_PILOT = schemas_dir() / "examples" / "massing_preview_pilot_rail_warehouse_v1.json"
+MASSING_PILOT = repo_root() / "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
 BUILDING_GRAMMAR = schemas_dir() / "examples" / "building_grammar_industrial_warehouse_v1.json"
 
 
@@ -40,7 +40,7 @@ def test_building_grammar_validate_report_passes() -> None:
 
 def test_run_validator_aliases_and_paths() -> None:
     rel_pf = "tools/mcp/schemas/examples/param_frame_rail_warehouse_v1.json"
-    rel_mp = "tools/mcp/schemas/examples/massing_preview_pilot_rail_warehouse_v1.json"
+    rel_mp = "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
     rel_bg = "tools/mcp/schemas/examples/building_grammar_industrial_warehouse_v1.json"
     assert run_validator("param_frame", rel_pf).status == "passed"
     assert run_validator("massing_preview", rel_mp).status == "passed"

@@ -13,9 +13,7 @@ def test_example_param_frame_validates() -> None:
     example = schemas_dir() / "examples" / "param_frame_rail_warehouse_v1.json"
     data = json.loads(example.read_text(encoding="utf-8"))
     validate_param_frame(data)
-    cite = data.get("ref_books_dual_cite") or {}
-    assert "IO-09" in cite.get("new_rows", [])
-    assert "shape_grammars" in cite.get("legacy_keywords", [])
+    assert "ref_books_dual_cite" not in data
 
 
 def test_studio_task_param_frame_example_validates() -> None:

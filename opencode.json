@@ -16,7 +16,7 @@
   "mcp": {
     "rust-engine-art": {
       "type": "local",
-      "command": ["cmd", "/c", "tools/mcp/scripts/run_rust_engine_mcp.cmd"],
+      "command": ["cmd", "/c", "tools\\mcp\\scripts\\run_rust_engine_mcp.cmd"],
       "enabled": true
     }
   }

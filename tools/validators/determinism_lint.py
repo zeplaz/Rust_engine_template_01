@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""E4 — report-only determinism lint in sim dirs (MEM-08, LOOP-02, MATH-02)."""
+"""E4 — determinism lint in sim dirs (MEM-08, LOOP-02, MATH-02).
+
+Report by default; `--fail` exits 1 on hits not in `knowledge/determinism_baseline.txt`
+(CI runs it that way); `--write-baseline` refreshes that file.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +11,10 @@ import re
 import sys
 from pathlib import Path
 
+import baseline
+
 _REPO = Path(__file__).resolve().parents[2]
+_BASELINE = Path(__file__).resolve().parent / "knowledge" / "determinism_baseline.txt"
 _SIM_DIRS = [
     _REPO / "src" / "combat",
     _REPO / "src" / "economy",
@@ -47,8 +54,6 @@ def strip_test_lines(raw: str) -> list[tuple[int, str]]:
 
 
 def main() -> int:
-    # CQ-78: default report-only; `--fail` exits non-zero when hits exist.
-    fail = "--fail" in sys.argv
     hits: list[tuple[str, str, int, str]] = []
     counts = {r: 0 for r, _ in _RULES}
     for root in _SIM_DIRS:
@@ -87,9 +92,8 @@ def main() -> int:
     print("top 15:")
     for rule, rel, lineno, snip in hits[:15]:
         print(f"  {rule} {rel}:{lineno}  {snip}")
-    if fail and hits:
-        return 1
-    return 0
+    keys = [f"{rule}	{rel}	{snip}" for rule, rel, _lineno, snip in hits]
+    return baseline.gate(sys.argv, keys, _BASELINE, "determinism_lint known hits (CQ-78)")
 
 
 if __name__ == "__main__":

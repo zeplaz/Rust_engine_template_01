@@ -1,3 +1,4 @@
+import sys
 import json
 import numpy as np
 from pathlib import Path
@@ -6,11 +7,11 @@ from PIL import Image, ImageOps
 
 
 # Define the configuration file path
-config_file_path = "assets/terrain/road_config.json"
+config_file_path = sys.argv[1]
 
 # Open the tilemaps
-road_tilemap = Image.open("%USERPROFILE%\\Downloads\\gen_art\\terrain\\road_out_scaleup.png")
-vehicle_tilemap = Image.open("%USERPROFILE%\\Downloads\\gen_art\source\\truck_civ_01\\tilemaps\\tile_map_empty_miday.png")
+road_tilemap = Image.open(sys.argv[2])
+vehicle_tilemap = Image.open(sys.argv[3])
 
 # Set the size of the tiles
 road_tile_width = 1920 // 6

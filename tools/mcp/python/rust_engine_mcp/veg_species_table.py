@@ -77,10 +77,6 @@ def brief_veg_species_table(
         "species_count": len(ids),
         "species_ids": ids,
         "profiles": profiles,
-        "ref_books_dual_cite": {
-            "new_rows": ["PCG-05"],
-            "legacy_keywords": ["l_systems"],
-        },
         "green": green,
         "issues": issues,
     }

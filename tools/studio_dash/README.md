@@ -7,7 +7,7 @@ Static HTML from JSON for APS, mission tools, and world-builder — same loop as
 | Kind | Helper | Example input |
 |:---|:---|:---|
 | **Param frame** | `frame_qc.frame_qc_view` | `tools/mcp/schemas/examples/param_frame_rail_warehouse_v1.json` |
-| **Massing preview** | `massing_qc.massing_qc_view` | `tools/mcp/schemas/examples/massing_preview_pilot_rail_warehouse_v1.json` |
+| **Massing preview** | `massing_qc.massing_qc_view` | `assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json` |
 | **HTML** | `render_report.write_report` | self-contained dark-theme table report |
 
 ```text

@@ -44,11 +44,7 @@ def run_smoke(
     )
     massing_json = massing_json or (
         root
-        / "tools"
-        / "mcp"
-        / "schemas"
-        / "examples"
-        / "massing_preview_pilot_rail_warehouse_v1.json"
+        / "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
     )
     dest = out_dir or _out_dir()
 

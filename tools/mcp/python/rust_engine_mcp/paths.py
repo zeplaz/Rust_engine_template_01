@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from functools import lru_cache
 from pathlib import Path
 
@@ -47,9 +48,28 @@ def blender_exe() -> Path:
         p = Path(raw)
         if p.is_file():
             return p.resolve()
+    on_path = shutil.which("blender")
+    if on_path:
+        return Path(on_path).resolve()
     raise FileNotFoundError(
-        "Blender not found. Set BLENDER_EXE or tools/mcp/config.local.json blender_exe"
+        "Blender not found. Set BLENDER_EXE, tools/mcp/config.local.json blender_exe, or put blender on PATH"
     )
+
+
+def repo_rel(path: str | Path | None) -> str | None:
+    """Repo-relative POSIX path for anything written to committed files (no machine paths).
+
+    Paths outside the repo come back unchanged; ``None`` / empty stay as they are.
+    """
+    if not path:
+        return path  # type: ignore[return-value]
+    p = Path(path)
+    if not p.is_absolute():
+        return str(path).replace("\\", "/")
+    try:
+        return p.resolve().relative_to(repo_root().resolve()).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def resolve_under_root(root: Path, rel: str | Path, *, label: str = "path") -> Path:

@@ -24,15 +24,7 @@ In code: road tiers, congestion (BPR), bridges (type pick, flood scour/collapse,
 | RD-2 → RD-5 → RD-7 | coder | off-road speed field, worn tracks, rail freight |
 | B-3 bridge repair (with D-7), overpass deck model | coder | after the phase order above |
 
-### 2. Cursor-wave cleanup — [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) (67 of 70 done)
-
-| Item | State | What is left |
-|:---|:---|:---|
-| CQ-78 | PARTIAL | `sole_writer_check.py` / `determinism_lint.py` have `--fail` but nothing runs them (add a baseline + CI step, or delete). `assets/staging/reports/pcg_06_grammar_rule_coverage.json` still in git. Duplicate `massing_preview_pilot_rail_warehouse_v1.json` (assets + `tools/mcp/schemas/examples`). 70-byte `tile_factory_floor_greybox_001` PNG stub. |
-| CQ-79 | OPEN | `build_toc.py` still defaults to `$REF_BOOKS_DIR` (`lookup.py` reads `REF_BOOKS_DIR`). Broad `except` in `studio_task.py` (`list_tasks`). `ref_books_dual_cite` still in `massing_preview_v1`, `param_frame_v1` schemas + an example. Not re-checked: `playcheck.py` unlink abort, "Uncategorised" CLI prune. |
-| CQ-84 | PARTIAL | Accept evidence must cite tests or matrix rows, not gitignored JSON (DF-10 still cites a note). |
-
-### 3. Ref-books residual — [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md)
+### 2. Ref-books residual — [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md)
 
 Ledger [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv): **125 ADOPTED · 3 PARTIAL · 9 DEFER** (137 rows, 2026-11-24).
 
@@ -43,16 +35,16 @@ Ledger [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv): **125 ADO
 | EXEC-05 | PARTIAL (locked) | attention scaffold is enough; more consumers are their own slices |
 | DEFER ×9 | waiting on triggers | LEARN-02, TAC-10, RND-06, RND-07, TAC-14, ANIM-03, PHYS-11, DEC-09, DES-03 |
 
-### 4. Voxel occupation — [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md)
+### 3. Voxel occupation — [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md)
 
 Review fixes done (save/load, deterministic site pick, witness code removed: CQ-07/20/30). Flags stay **off** by default
 until OCC-P4/P5 are re-scored for turning it on in play.
 
-### 5. Dam-flood benchmark — [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md)
+### 4. Dam-flood benchmark — [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md)
 
 DF-1…9 in code. **DF-10** (lock baseline v1) blocked on a baseline capture; DF-3 capture Accept open.
 
-### 6. Parked (needs a decision or an outside trigger)
+### 5. Parked (needs a decision or an outside trigger)
 
 | Item | Waiting on |
 |:---|:---|
@@ -68,6 +60,7 @@ DF-1…9 in code. **DF-10** (lock baseline v1) blocked on a baseline capture; DF
 | What | Where |
 |:---|:---|
 | CI green: `-D warnings` clean, lib tests 18 → 0 failed, Python steps fixed (jsonschema, `repo_root()` fallback) | [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) · `f87a4c1c`, `90a5b211`, `ab85af54`, `7aca50c6` |
+| Cursor-wave cleanup 70/70 (CQ-78/79/84 on 11-24) | [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) |
 | Bevy 0.20 migration incl. the M0 lib-test defer log | [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) |
 | GPU stubs kill A–D, mips, array, cull | [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) |
 | Nov 16 review re-grades: TAC-03 dense heat GPU, MOVE-05 formation members, MOVE-10 wildlife, TAC-05 fort, PCG-07 settlement roads, NAV-13 route cost | cleanup CQ-50/51/52/53/54/57g/58 · `adoption.tsv` |

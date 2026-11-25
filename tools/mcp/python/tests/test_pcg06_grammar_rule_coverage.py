@@ -103,8 +103,8 @@ def test_pcg06_write_staging_report(tmp_path: Any, monkeypatch: pytest.MonkeyPat
         for s in (1, 2, 3, 4)
     ]
     body = kit_coverage_audit.write_pcg06_grammar_rule_coverage_report(entries=entries, repo=tmp_path)
-    assert body.get("written") == kit_coverage_audit.PCG_06_STAGING_REL
-    out = tmp_path / kit_coverage_audit.PCG_06_STAGING_REL
+    assert body.get("written") == kit_coverage_audit.PCG_06_REPORT_REL
+    out = tmp_path / kit_coverage_audit.PCG_06_REPORT_REL
     assert out.is_file()
     assert body.get("report_only") is True
     never = body.get("never_fire_rules") or []

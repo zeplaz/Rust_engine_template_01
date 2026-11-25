@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from rust_engine_mcp import assembly, blender_runner
-from rust_engine_mcp.paths import jobs_root, repo_root
+from rust_engine_mcp.paths import jobs_root, repo_rel, repo_root
 from rust_engine_mcp.schemas import load_json_file
 from rust_engine_mcp.tile_index import register_tile_atlas_from_meta
 from rust_engine_mcp.validators import run_validator
@@ -142,7 +142,7 @@ def _write_atlas_meta(
         tiles.append(
             {
                 "variant_key": key,
-                "png": png_paths[i] if i < len(png_paths) else None,
+                "png": repo_rel(png_paths[i]) if i < len(png_paths) else None,
                 "grid": [col, row],
                 "uv": [
                     col / cols,
@@ -158,7 +158,7 @@ def _write_atlas_meta(
         "batch_id": batch.get("batch_id"),
         "tile_id": batch.get("tile_id"),
         "atlas_id": atlas.get("atlas_id"),
-        "atlas_png": atlas_path,
+        "atlas_png": repo_rel(atlas_path),
         "columns": cols,
         "rows": rows,
         "tile_px": tile_px,
@@ -587,8 +587,8 @@ def _tile_batch_run_keyframe_pack(
         "status": "done",
         "bake_source": "keyframe_pack",
         "variant_count": len(variant_keys),
-        "png_paths": png_paths,
-        "atlas_path": atlas_path,
+        "png_paths": [repo_rel(p) for p in png_paths],
+        "atlas_path": repo_rel(atlas_path),
         "meta_json": str(meta_path.relative_to(repo_root())).replace("\\", "/"),
         "dry_run": tile_dry_run_enabled(),
     }
@@ -803,8 +803,8 @@ def tile_batch_run(tile_batch_path: str | Path) -> dict[str, Any]:
         "status": "done",
         "bake_source": "smoke_ortho_headless",
         "variant_count": len(variant_keys),
-        "png_paths": png_paths,
-        "atlas_path": atlas_path,
+        "png_paths": [repo_rel(p) for p in png_paths],
+        "atlas_path": repo_rel(atlas_path),
         "meta_json": str(meta_path.relative_to(repo_root())).replace("\\", "/"),
         "dry_run": tile_dry_run_enabled(),
     }

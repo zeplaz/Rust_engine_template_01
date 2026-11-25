@@ -1,6 +1,6 @@
 # Write ~/.cursor/mcp.json + rust_engine_art_mcp.env from repo template
 param(
-    [string]$Repo = "<repo>",
+    [string]$Repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path,
     [string]$Python = "python",
     [string]$Blender = "blender",
     [switch]$Merge

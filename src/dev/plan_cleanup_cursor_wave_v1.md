@@ -1,6 +1,6 @@
 # PLAN-CLEANUP-CURSOR-WAVE-v1 — clean up the 14–16 Nov Cursor-agent wave
 
-**Status:** OPEN — **67 of 70 done** (2026-11-24); left: CQ-78, CQ-79, CQ-84 (see [`coder_todos_v1.md`](coder_todos_v1.md) §2) · **Written:** 2026-11-16 · **Owner on pickup:** `@coder` (Rust), `@coder-mcp` (tools/mcp), `@plan-orchestrator` (docs). Run deletions past `@cleanup-intelligence` first.
+**Status:** **CLOSED — 70 of 70 done** (2026-11-24) · **Written:** 2026-11-16 · **Owner on pickup:** `@coder` (Rust), `@coder-mcp` (tools/mcp), `@plan-orchestrator` (docs). Run deletions past `@cleanup-intelligence` first.
 **Scope:** `git diff 8abc4326 HEAD` — 18 Cursor co-authored commits, 403 files, +46.5k / −2.5k lines. The last commit (`afdf586c`, "Ship defer-unlock board…") alone is 310 files / +30k lines, though its message names only three items.
 
 ---
@@ -324,10 +324,10 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-57j | DONE | committed 11-16/17 | LGT-06 policy → PixelWorld `Tonemapping`. |
 | CQ-57k | DONE | committed 11-16/17 | DES-06 logistic regrowth. |
 | CQ-69 | DONE | committed 11-16/17 | `MissionSenseFrame` publish → mission step. |
-| CQ-78 | PARTIAL | committed 11-16/17 | Validators gain `--fail`; `tune.py` marked T7-not-built. Dashboard consolidate / duplicate massing still open (CQ-75/76). |
-| CQ-84 | PARTIAL | committed 11-16/17 | Prefer matrix rows / test names; DF-10 cites `baseline_dam_df10_note.md` + matrix rows not live JSON as Accept. |
+| CQ-78 | DONE | 2026-11-24 | Validators keep a committed baseline (`tools/validators/knowledge/*_baseline.txt`); `--fail` fails on new findings only; CI step added. `tune.py` marked T7-not-built. PCG-06 coverage report moved to `debug_runs/reports/` (removed from git). Duplicate massing example removed (tools use the `assets/` copy). Stray 70-byte `tile_map_*` atlas removed (the 1×1 variants are the documented smoke bake). |
+| CQ-84 | DONE | 2026-11-24 | Voxel-occupation plan cites tests, not gitignored JSON; PCG-03/TAC-05 "world-look sign-off" retracted (no record); RND-07 JSON evidence removed; AGENTS.md no longer cites the gitignored migration gate. DF-10 Accept already commits its baseline into `tools/sim_review/expected/`. |
 | CQ-68 / 68b / 68c | DONE | committed 11-16 | Dump reporters per domain; world-gen shell split; tile fallback reads split (detail in the P-table rows). |
-| CQ-79 | OPEN | — | 2026-11-24 check: `lookup.py` reads `REF_BOOKS_DIR`; `build_toc.py` default, `studio_task.py` broad `except`, `ref_books_dual_cite` in two schemas still open. |
+| CQ-79 | DONE | 2026-11-24 | `lookup.py` / `build_toc.py` read `REF_BOOKS_DIR` (no machine default). `studio_task.list_tasks` catches only read/parse/schema errors. `playcheck.py` aborts if the stale dump cannot be removed. CLI: no commands left uncategorised (new `studio` and `books` groups; none were unused). `ref_books_dual_cite` removed from payloads, schemas, QC and dashboards; tests assert it stays out. |
 | CQ-85 | DONE | `4761b21a`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
 
 **Exit criteria:**

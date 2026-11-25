@@ -48,6 +48,16 @@ _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _LEVEL = re.compile(r"\s(ERROR|WARN)\s+([\w:]+):\s*(.*)")
 
 
+
+def _drop_stale_dump() -> None:
+    """Remove the previous run's dump; abort if it cannot go (it would be scored as this run)."""
+    if not _DUMP.exists():
+        return
+    try:
+        _DUMP.unlink()
+    except OSError as e:
+        raise SystemExit(f"playcheck: cannot remove stale dump {_DUMP}: {e}") from e
+
 def _cargo_target_dir() -> Path:
     """Honor CARGO_TARGET_DIR (sandbox / CI) before the repo-local target/."""
     env = os.environ.get("CARGO_TARGET_DIR")
@@ -254,11 +264,7 @@ def run_one(
     capture_view: str | None,
 ) -> tuple[list[str], list[str]]:
     t0 = time.time()
-    if _DUMP.exists():
-        try:
-            _DUMP.unlink()
-        except OSError:
-            pass
+    _drop_stale_dump()
     lines = run_game(exe, seed, frame, secs, scene, ticks, min_secs, capture_view)
     scored = score(t0)
     return lines, scored
@@ -323,11 +329,7 @@ def main() -> None:
     if n_seeds == 1:
         t0 = time.time()
         # Drop stale dump so an early capture / crash cannot score a previous run.
-        if _DUMP.exists():
-            try:
-                _DUMP.unlink()
-            except OSError:
-                pass
+        _drop_stale_dump()
         lines = run_game(exe, seeds[0], frame, a.secs, a.scene, a.ticks, min_secs, capture_view)
         s = summarise_log(lines)
         scored = score(t0)

@@ -1035,14 +1035,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser(
         "grammar-rule-coverage-report",
-        help="PCG-06 — golden-seed grammar rule coverage (report only, staging JSON)",
+        help="PCG-06 — golden-seed grammar rule coverage (report only; JSON goes to debug_runs/reports)",
     )
     p.add_argument("--json", action="store_true", help="Emit full JSON report")
     p.add_argument("--markdown", action="store_true", help="Emit designer markdown table")
     p.add_argument(
         "--write",
         action="store_true",
-        help="Write assets/staging/reports/pcg_06_grammar_rule_coverage.json",
+        help="Write debug_runs/reports/pcg_06_grammar_rule_coverage.json",
     )
     p.set_defaults(func=_cmd_grammar_rule_coverage_report)
 

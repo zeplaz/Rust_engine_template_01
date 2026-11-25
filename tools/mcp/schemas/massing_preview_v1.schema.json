@@ -50,21 +50,6 @@
       "type": "string",
       "description": "Source ParamFrame frame_id when exported via massing_from_param_frame (Studio DCC)."
     },
-    "ref_books_dual_cite": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "new_rows": {
-          "type": "array",
-          "items": { "type": "string", "pattern": "^[A-Z]+-[0-9]+$" }
-        },
-        "legacy_keywords": {
-          "type": "array",
-          "items": { "type": "string", "minLength": 1 }
-        }
-      },
-      "description": "Adoption ledger orient (NEW + LEGACY matrix)."
-    },
     "massing_columns": {
       "type": "array",
       "items": { "$ref": "#/$defs/massing_column" }

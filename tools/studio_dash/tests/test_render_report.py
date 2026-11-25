@@ -73,8 +73,7 @@ def test_render_param_frame_qc():
     assert "Modifiers" in html
     assert "Massing intent" in html
     assert "rail_warehouse_param_frame_v1" in html
-    assert "Ref-books dual cite" in html
-    assert "IO-09" in html
+    assert "Ref-books dual cite" not in html  # book bookkeeping is not shown in asset QC (CQ-79)
 
 
 def test_qc_smoke_writes_html(tmp_path, monkeypatch):
@@ -107,11 +106,7 @@ def test_frame_and_massing_qc_adapters(tmp_path, monkeypatch):
     massing_raw = json.loads(
         (
             root
-            / "tools"
-            / "mcp"
-            / "schemas"
-            / "examples"
-            / "massing_preview_pilot_rail_warehouse_v1.json"
+            / "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json"
         ).read_text(encoding="utf-8")
     )
     f = emit_frame_qc_dashboard(frame_raw, name="f1")

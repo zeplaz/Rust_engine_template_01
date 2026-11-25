@@ -43,7 +43,6 @@ def render_report(
         "connection_graph_ids",
         "massing_intent",
         "escalate",
-        "ref_books_dual_cite",
         "report_kind",
         "series",
         "chart",
@@ -160,18 +159,6 @@ def render_report(
             f"<table><tbody>{erows}</tbody></table>"
         )
 
-    dual = data.get("ref_books_dual_cite")
-    dual_html = ""
-    if isinstance(dual, dict) and dual:
-        new_rows = dual.get("new_rows") or []
-        legacy = dual.get("legacy_keywords") or []
-        dual_html = (
-            "<h2>Ref-books dual cite</h2>"
-            "<table><tbody>"
-            f"<tr><th>NEW rows</th><td>{_esc(', '.join(str(x) for x in new_rows))}</td></tr>"
-            f"<tr><th>LEGACY keywords</th><td>{_esc(', '.join(str(x) for x in legacy))}</td></tr>"
-            "</tbody></table>"
-        )
 
     # Issues / errors lists
     issues = data.get("errors") or data.get("issues") or []
@@ -299,7 +286,6 @@ th {{ color: #9aa0a6; width: 28%; }}
 {graphs_html}
 {intent_html}
 {escalate_html}
-{dual_html}
 {metric_html}
 {floors_html}
 {massing_html}

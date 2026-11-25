@@ -6,7 +6,7 @@ if not defined RUST_ENGINE_PYTHON (
   set "RUST_ENGINE_PYTHON=python"
 )
 if not defined RUST_ENGINE_REPO (
-  set "RUST_ENGINE_REPO=<repo>"
+  set "RUST_ENGINE_REPO=%~dp0..\..\.."
 )
 set PYTHONUNBUFFERED=1
 set PYTHONIOENCODING=utf-8

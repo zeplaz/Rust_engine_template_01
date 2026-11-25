@@ -149,7 +149,7 @@ Apply E1–E8 to the canonical spec; apply only the ⟦GEN-SAFE⟧ ones (all of 
 ```text
 $REPORT §13 L435-503 · W1 L618-639 · WS10 L1872-1945
 finding   MCP tool schemas injected every request = ~96% of always-on budget. Signature book = −92% @ 100% callable.
-our case  rust_engine_mcp exposes ~90 CLI commands; the MCP server surface is the redacted tax.
+our case  rust_engine_mcp exposes ~90 CLI commands; the MCP server surface is the biggest tax.
 do        1 emit each MCP tool as ONE signature line:  name(req, [opt]):type =default -> result   (+ tiny shared-field codebook)
           2 tool-result outputs (status/diff) as ●◐○ vectors ($REPORT W5 L686 · WS11 L1949 : −73% vs JSON)
           3 cross-agent handoffs as the Δ-handoff table ($REPORT W7 L726 · WS12 : lossless, −61% vs JSON)

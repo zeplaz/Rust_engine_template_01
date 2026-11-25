@@ -94,6 +94,16 @@ jobs:
       - name: ResourceType vs RESOURCE_TYPES parity
         run: python src/utils/asset_tools/scripts/check_resource_parity.py
 
+      # CQ-78: sole-writer and determinism lints fail only on findings not in their committed
+      # baselines (tools/validators/knowledge/*_baseline.txt). Refresh with --write-baseline.
+      - name: sole-writer + determinism lint (new findings only)
+        run: |
+          python tools/validators/sole_writer_check.py --fail
+          python tools/validators/determinism_lint.py --fail
+
+      - name: no machine paths in tracked files
+        run: python tools/validators/no_machine_paths.py
+
       - name: py_compile (asset_tools config + key pages)
         run: |
           python -m py_compile src/utils/asset_tools/src/config/asset_config.py

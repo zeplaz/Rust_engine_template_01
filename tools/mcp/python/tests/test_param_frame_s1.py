@@ -14,17 +14,6 @@ from rust_engine_mcp.schemas import validate_param_frame
 pytestmark_panel = pytest.mark.aps_gui
 
 
-def test_s1_dual_cite_on_example_frame() -> None:
-    frame = param_frame_studio.load_param_frame()
-    merged = param_frame_studio.merge_ref_books_dual_cite(frame)
-    cite = merged["ref_books_dual_cite"]
-    assert "PCG-06" in cite["new_rows"]
-    assert "PCG-08" in cite["new_rows"]
-    assert "DES-04" in cite["new_rows"]
-    assert "pcg" in cite["legacy_keywords"]
-    assert "shape_grammars" in cite["legacy_keywords"]
-
-
 def test_browse_grammar_catalog_non_empty_no_bpy() -> None:
     rows = param_frame_studio.browse_grammar_catalog()
     assert len(rows) >= 3
@@ -105,8 +94,7 @@ def test_param_frame_panel_round_trip(gui_panel_host) -> None:
     panel._on_add_grammar()
     frame = panel.get_frame()
     validate_param_frame(frame)
-    cite = frame.get("ref_books_dual_cite") or {}
-    assert "PCG-08" in (cite.get("new_rows") or [])
+    assert "ref_books_dual_cite" not in frame
 
 
 @pytest.mark.aps_gui
@@ -116,9 +104,8 @@ def test_aps_app_has_param_frame_tab(aps_app) -> None:
     assert aps_app.param_frame.get_frame().get("schema_version") == 1
 
 
-def test_example_frame_still_validates_after_s1_cite_merge() -> None:
+def test_example_frame_validates() -> None:
     example = schemas_dir() / "examples" / "param_frame_rail_warehouse_v1.json"
     data = json.loads(example.read_text(encoding="utf-8"))
-    merged = param_frame_studio.merge_ref_books_dual_cite(data)
-    validate_param_frame(merged)
+    validate_param_frame(data)
     assert len(param_frame_studio.browse_connection_graph_ids(repo=repo_root())) >= 1

@@ -12,7 +12,6 @@ def frame_qc_view(data: dict[str, Any]) -> dict[str, Any]:
     graphs = list(data.get("connection_graph_ids") or [])
     intent = data.get("massing_intent") if isinstance(data.get("massing_intent"), dict) else {}
     escalate = data.get("escalate") if isinstance(data.get("escalate"), dict) else {}
-    dual = data.get("ref_books_dual_cite") if isinstance(data.get("ref_books_dual_cite"), dict) else {}
 
     enabled_mods = sum(1 for m in modifiers if isinstance(m, dict) and m.get("enabled", True))
 
@@ -30,7 +29,6 @@ def frame_qc_view(data: dict[str, Any]) -> dict[str, Any]:
         "connection_graph_ids": graphs,
         "massing_intent": intent,
         "escalate": escalate,
-        "ref_books_dual_cite": dual,
         "metrics": {
             "grammar_steps": len(chain),
             "modifiers": len(modifiers),

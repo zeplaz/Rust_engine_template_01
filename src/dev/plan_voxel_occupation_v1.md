@@ -9,7 +9,7 @@
 | **Parents** | [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) (**VOXEL-MASSING-PRES-001**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`construction_invariants.md`](construction_invariants.md) |
 | **Book rows (dual-cite)** | **NEW:** **PCG-06** (aig3:8.5–8.5.2) · **ECS-15** (gea4v2:16.2.2) · **LEGACY:** `shape_grammars` (aig_e3 p748) · `asset_pipeline` (gea_v1_e4 p68) |
 | **Deferral** | **DR-VOXEL-OCCUPATION** — **CLOSED** 2026-11-15 (`voxel_occupation_authority_live.json`) |
-| **Steward EV/Cx** | **PASS** 2026-11-15 — X2-P0 clear to cut; witness `debug_runs/construction/voxel_occupation_steward_evcx_2026-11-15.json` |
+| **Steward EV/Cx** | 2026-11-15 review said PASS; its JSON record was a gitignored debug file and is not evidence (CQ-84). Evidence now: tests in `src/strategic/site/voxel_occupation.rs` (`cq07_default_config_is_off_until_save_proven`, `voxel_occupation_snapshot_ron_round_trip`, `apply_site_commit_appends_on_recommit_and_picks_lowest_site_id`, `voxel_occupation_commit_authority_writes_and_blocks_reserve`). |
 
 **EV/Cx (steward):** Q↑ Ct▮▮▮ Cx▮▮▮▮▮▮ EV/Cx=**MED-HIGH** — bounded authority migration inside existing construction execute funnel; risk = dual occupation during phased cutover, save slice ordering, and `RepresentationResult` accidentally becoming a writer. Complexity budget: **one** new sim resource family + **one** RON hydrate slice; no parallel nav/PHYS/voxel gameplay in X2 scope without separate charter. **Recorded:** PASS unlocks X2-P0 only (flag default off); P1+ retains phased dual-book guards.
 
@@ -28,7 +28,7 @@
 | Witness code in production | `VoxelOccupationAuthorityWitness`, `authority_witness_stub`, `write_authority_witness_json`, hardcoded `issued`, always-true `dual_writer_guard_ok` (`:423-470, 541-552, 607-665`) | Delete; counts only in `sim_run_dump` (CQ-30) |
 | Failing test | `voxel_occupation_p2_sole_writer_tile_derived_cache` asserts `"X2-P2"`, code returns `"OCC-P5"` | Fix with CQ-30 (CQ-20) |
 | Docs contradict code | module docs say flags default off; `Default` sets both on (`:1-15` vs `:30-44`) | Align |
-| Evidence untracked | cited `debug_runs/construction/*.json` are gitignored | Cite tests / matrix rows instead (CQ-84) |
+| Evidence untracked | cited `debug_runs/construction/*.json` are gitignored | **Done (CQ-84, 2026-11-24):** plan cites tests instead |
 
 **Close again only when:** voxel occupation survives save → load in a test, the site pick is deterministic, no witness code remains, and lib tests are green. Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
@@ -167,7 +167,7 @@ Update (view — unchanged)
 | Steward **EV/Cx PASS** | **PASS** 2026-11-15 (`@sim-steward` · X2-P0 scope) | — |
 | User world sign-off | N/A at charter | Required only if X2 changes default save semantics or visible gameplay rules (`plan_ref_books_upgrade_v3` §0.1 hard gate) |
 
-**DR status after steward sign-off:** **X2 implement unblock** (P0) — **DR-VOXEL-OCCUPATION** stays `product_blocked` until first **X2 witness** (`voxel_occupation_authority_live.json`).
+**DR status:** **X2 implemented** — **DR-VOXEL-OCCUPATION** stays `product_blocked` until default-on is decided (OCC-P4/P5). Evidence: tests in `src/strategic/site/voxel_occupation.rs` (`cq07_default_config_is_off_until_save_proven`, `voxel_occupation_snapshot_ron_round_trip`, `apply_site_commit_appends_on_recommit_and_picks_lowest_site_id`, `voxel_occupation_commit_authority_writes_and_blocks_reserve`); counts in the `sim_run_dump` occupation section.
 
 ---
 
@@ -188,7 +188,7 @@ Cross-link: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1
 | Field | Value |
 |:---|:---|
 | **Needs** | X2-P3 ADOPTED · product wants default-on |
-| **Files** | `debug_runs/construction/voxel_occupation_productize_evcx_<date>.json` · this plan amend |
+| **Files** | this plan amend (decision recorded here, not in a debug file) |
 | **Authority** | `@sim-steward` EV/Cx; **no** code flag flip yet |
 | **Do** | Re-score EV/Cx for **default-on** (save semantics, dual-book absence, overlap call sites, demolish/blast). Complexity: no new resource family. |
 | **Don't** | Flip default in same slice as first EV/Cx · Studio write path |
@@ -210,7 +210,7 @@ Cross-link: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1
 | Field | Value |
 |:---|:---|
 | **Needs** | OCC-P5 green |
-| **Files** | `debug_runs/construction/voxel_occupation_authority_live.json` · `plan_deferral_registry_v1.md` **DR-VOXEL-OCCUPATION** |
+| **Files** | tests in `src/strategic/site/voxel_occupation.rs` (`cq07_default_config_is_off_until_save_proven`, `voxel_occupation_snapshot_ron_round_trip`, `apply_site_commit_appends_on_recommit_and_picks_lowest_site_id`, `voxel_occupation_commit_authority_writes_and_blocks_reserve`) · `plan_deferral_registry_v1.md` **DR-VOXEL-OCCUPATION** |
 | **Do** | Emit live witness (revision, cell count, `dual_writer_guard_ok`, flags); close DR row |
 | **Don't** | Verdict predicates in production code |
 | **Accept** | Witness present · DR closed/product_shipped · dump keys non-zero under playcheck+dump env |
@@ -224,7 +224,7 @@ Cross-link: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1
 
 | Witness | Purpose |
 |:---|:---|
-| `debug_runs/construction/voxel_occupation_authority_live.json` | revision, cell count, dual-writer guard |
+| `sim_run_dump.json` occupation section (debug run, local) + `voxel_occupation_dual_writer_guard_tile_mutation_without_mirror` test | revision, cell count, dual-writer guard |
 | Lib tests `voxel_occupation::` + migrated `tile_occupation::` | overlap, road reserve, hydrate round-trip |
 | sim_review dump keys `occupation.*` | regression counts |
 
@@ -257,7 +257,7 @@ Cross-link: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1
 - **Do not implement:** X2 code in this slice
 
 **Deferrals:** [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) — **DR-VOXEL-OCCUPATION** (partial predicates satisfied).  
-**Migration truth:** [`mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json)
+**Migration truth:** CI green on `master` (`cargo test --lib`); [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md)
 
 ---
 
