@@ -182,23 +182,33 @@ pub fn sync_construction_site_demands_system(
                 book.consumed_applied.insert((id, tag), applied + delta);
             }
         }
-        if book.published.get(&id) != Some(&targets) {
+        // The site's stock target is what is still to be built in, not the whole bill: material
+        // already built in has left the site's stock, and refilling it to the full bill made
+        // standing lines deliver far more than the bill (a dam emptied its HQ and stalled).
+        let still_to_come: Vec<(&'static str, u32)> = targets
+            .iter()
+            .map(|&(tag, required)| {
+                let applied = book.consumed_applied.get(&(id, tag)).copied().unwrap_or(0);
+                (tag, required.saturating_sub(applied))
+            })
+            .collect();
+        if book.published.get(&id) != Some(&still_to_come) {
             let build_ticks = def_ref
                 .zip(catalog.as_deref())
                 .and_then(|(d, reg)| reg.get(d.catalog_id.as_str()))
                 .map(|def| def.construction_time_ticks);
-            for &(tag, required) in &targets {
+            for (&(tag, required), &(_, left)) in targets.iter().zip(&still_to_come) {
                 requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
                     site: id,
                     cargo: CargoKind::new(tag),
                     consumer: ConsumerKind::Construction,
-                    buffer_target: required,
-                    reorder_point: required,
+                    buffer_target: left,
+                    reorder_point: left,
                     draw_rate_per_min: construction_draw_per_min(required, build_ticks, ticks_per_minute),
                     priority: Priority::Normal,
                 }));
             }
-            book.published.insert(id, targets);
+            book.published.insert(id, still_to_come);
         }
     }
     // Sites that finished building (or vanished): retract and consume the materials.
