@@ -22,12 +22,14 @@ pub fn dump_corridor_works_section(arm: Res<SimDumpArm>, works: Option<Res<Corri
         json!({
             "lines": works.works.len(),
             "supplied": works.works.values().filter(|w| w.supplied()).count(),
-            "taken_total": works.taken_total,
+            "ordered_total": works.ordered_total,
             "rows": works.works.values().take(16).map(|w| json!({
                 "segment": w.segment_id,
                 "length_m": w.length_m,
                 "delivered_ratio": w.delivered_ratio(),
                 "source": w.last_source.map(|s| s.0),
+                "works_site": w.site.map(|s| s.0),
+                "closed": w.closed,
                 "bill": w.bill.iter().map(|m| json!({"cargo": m.cargo, "needed": m.needed, "delivered": m.delivered})).collect::<Vec<_>>(),
             })).collect::<Vec<_>>(),
         }),

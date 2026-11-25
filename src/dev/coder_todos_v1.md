@@ -14,13 +14,12 @@ either closed below or retired with the witness system.
 
 ### 1. Roads and rail — [`plan_roads_v1.md`](plan_roads_v1.md) (OPEN)
 
-In code: road tiers, congestion (BPR), bridges (type pick, flood scour/collapse, fire, blast), works bills, grading, line tool, ghosts, merged line panel, panel drag.
+In code: road tiers, congestion (BPR), bridges (type pick, flood scour/collapse, fire, blast), works bills hauled by trucks, grading, line tool, ghosts, merged line panel, panel drag.
 
 | Item | Who | Note |
 |:---|:---|:---|
 | Hands-on check of the line tool | operator | RMB click vs pan, curves, G assist, T bridge type, ghosts along the line, cursor alignment, merged type list, panel drag, 2D bridge marks, materials row |
 | Capture congestion and grading | coder | `road_flow.peak_vc` and grading volume in a dam-scene dump; a narrow road with many trucks |
-| Trucks haul works materials | coder | today the bill is drawn from stock; send order-sim runs to the works site instead |
 | RD-2 → RD-5 → RD-7 | coder | off-road speed field, worn tracks, rail freight |
 | B-3 bridge repair (with D-7), overpass deck model | coder | after the phase order above |
 

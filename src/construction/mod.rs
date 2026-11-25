@@ -413,6 +413,7 @@ impl Plugin for BuildPlanningPlugin {
                     bridges::bridge_fire_damage_system.after(bridges::register_bridges_system),
                     (
                         corridor_works::register_corridor_works_system,
+                        corridor_works::sync_corridor_works_sites_system,
                         corridor_works::supply_corridor_works_system,
                         corridor_works::publish_corridor_works_caps_system,
                     )
