@@ -5,7 +5,7 @@
 | **⟨ID⟩** | **PLAN-VOXEL-OCCUPATION-v1** |
 | **Slice** | **PLAN-REF-BOOKS-UPGRADE-v3** wave V3 **X1** (charter only — **no X2 impl**) |
 | **Owner** | `@planner` (charter) → **X2** `@coder` + `@sim-steward` (EV/Cx gate) |
-| **Status** | **REOPENED 2026-11-16** — commit authority defaults ON but voxel occupation is not saved (overlay is an unwired stub); non-deterministic site pick; OCC-P6 "live witness" is banned test-shaped code; P2 test fails. **DR-VOXEL-OCCUPATION reopened** · cleanup **CQ-07, CQ-20, CQ-30** |
+| **Status** | **OPEN 2026-11-24** — review fixes done (save/load wired, deterministic site pick, witness code deleted: CQ-07/20/30, `efe818b8`); flags default **off** until OCC-P4/P5 re-score for default-on. Was: **REOPENED 2026-11-16** — commit authority defaults ON but voxel occupation is not saved (overlay is an unwired stub); non-deterministic site pick; OCC-P6 "live witness" is banned test-shaped code; P2 test fails. **DR-VOXEL-OCCUPATION reopened** · cleanup **CQ-07, CQ-20, CQ-30** |
 | **Parents** | [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) (**VOXEL-MASSING-PRES-001**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`construction_invariants.md`](construction_invariants.md) |
 | **Book rows (dual-cite)** | **NEW:** **PCG-06** (aig3:8.5–8.5.2) · **ECS-15** (gea4v2:16.2.2) · **LEGACY:** `shape_grammars` (aig_e3 p748) · `asset_pipeline` (gea_v1_e4 p68) |
 | **Deferral** | **DR-VOXEL-OCCUPATION** — **CLOSED** 2026-11-15 (`voxel_occupation_authority_live.json`) |

@@ -8,7 +8,7 @@
 | **Trigger** | **L1 (`NAV-09`) + L3 (`NAV-10`) ADOPTED** — open-goal source pick + `LogisticsRouteDirtyTiles` |
 | **Book orient** | `python src/dev/ref_books_index/lookup.py --row NAV-13` |
 | **Owner lane** | `@coder` (navigation + logistics orders) |
-| **Status** | **REOPENED 2026-11-16** — forecast sync + route purge wired, but P2 time-aware Dijkstra is never fed a forecast, and the revision bumps every step so the route cache is cleared every step. **NAV-13 → PARTIAL** · cleanup **CQ-02, CQ-35, CQ-53** |
+| **Status** | **RE-CLOSED 2026-11-24** — route cache no longer cleared every step (CQ-02/35, `b0001258`); one production route cost with forecast, path concerns, heat, wildlife (CQ-53). Was: **REOPENED 2026-11-16** — forecast sync + route purge wired, but P2 time-aware Dijkstra is never fed a forecast, and the revision bumps every step so the route cache is cleared every step. **NAV-13 → PARTIAL** · cleanup **CQ-02, CQ-35, CQ-53** |
 
 ## Review 2026-11-16 — reopened
 

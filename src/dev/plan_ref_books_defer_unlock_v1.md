@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-DEFER-UNLOCK-v1** |
-| **Status** | **REOPENED 2026-11-16** — review re-graded W1/W2/W3 claims: TAC-03 PARTIAL, MOVE-10/PCG-07 UNWIRED, MOVE-05/TAC-05 PARTIAL, RND-07 evidence retracted. See Review + cleanup plan §5. |
+| **Status** | **OPEN (residual only) — 2026-11-24.** The 2026-11-16 re-grades are resolved: TAC-03, MOVE-05, MOVE-10, TAC-05, PCG-07 are ADOPTED with production callers (cleanup CQ-50/51/52/54/57g/58); RND-07 test-shaped verdict deleted (CQ-31), stays DEFER. Ledger: **125 ADOPTED · 3 PARTIAL (EXEC-05, RND-02, RND-12) · 9 DEFER**. |
 | **Date** | 2026-11-15 |
 | **Parents** | [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (**PROGRAM CLOSE**) · [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) §8 · [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) |
 | **Child charters** | [`plan_unit_member_v1.md`](plan_unit_member_v1.md) · [`plan_town_growth_v1.md`](plan_town_growth_v1.md) **TWN-PCG07** · [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) **OCC-P4…P6** · [`plan_dense_heat_wgsl_v1.md`](plan_dense_heat_wgsl_v1.md) (conditional) |

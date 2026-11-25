@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v3** |
-| **Status** | **REVIEWED 2026-11-16** — ledger counts in §2.1 track `adoption.tsv` (CQ-80); several rows re-graded UNWIRED/PARTIAL in cleanup §5. V0–V4 cuttable ★ closed; residual unlock: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
+| **Status** | **PROGRAM CLOSE · review resolved 2026-11-24** (re-graded rows wired; residual in the defer-unlock plan) — was: **REVIEWED 2026-11-16** — ledger counts in §2.1 track `adoption.tsv` (CQ-80); several rows re-graded UNWIRED/PARTIAL in cleanup §5. V0–V4 cuttable ★ closed; residual unlock: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
 | **Date** | 2026-11-15 · closed 2026-11-15 |
 | **Parents** | [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (**WAVES 0–S CLOSED**) · [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) · [`plan_shared_atmosphere_weather_fire_v1.md`](plan_shared_atmosphere_weather_fire_v1.md) |
 | **Obeys** | `AGENTS.md` · one writer · Sim→View→Render→UI · Studio = DCC (parametric frames) · play UI only · no test-shaped production |
@@ -65,7 +65,7 @@ DO / ACCEPT / LEDGER  same as v2 §0; ledger records BOTH cites
 
 | Bucket | Signal | Upgrade implication |
 |:---|:---|:---|
-| Adoption | **123 ADOPTED · 0 UNWIRED · 1 PARTIAL · 9 DEFER · 133 total** (`adoption.tsv` · measured 2026-11-16 · `--open` = DEFER/PARTIAL) | ADOPTED only with production caller; DEFER/PARTIAL unlock via defer-unlock plan |
+| Adoption | **125 ADOPTED · 0 UNWIRED · 3 PARTIAL · 9 DEFER · 137 total** (`adoption.tsv` · measured 2026-11-24 · `--open` = DEFER/PARTIAL) | ADOPTED only with production caller; DEFER/PARTIAL unlock via defer-unlock plan |
 | DBG | DBG-04 / DBG-06 **ADOPTED** | GPU capture + pause/step shipped |
 | Tools / authoring | ECS-15 · IO-09 · DES-04 · PCG-06 **ADOPTED** (V1 S0–S5) | Studio param frames + MCP promote shipped |
 | Voxel / PCG | PCG-02/04/05 · RND-09 · LGT-04 **ADOPTED** (V3); **PCG-07** DEFER (town-growth) · **PCG-03** DEFER ⚠ world | Massing + flora + atmosphere presentation shipped; occupation flag default-off |
@@ -263,7 +263,7 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 
 ## 10. Ledger (2026-11-15 snapshot — read `adoption.tsv`)
 
-**Authoritative ledger:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv). Update statuses there only. Live counts: **123 ADOPTED · 0 UNWIRED · 1 PARTIAL · 9 DEFER** (133 rows). This §10 table is the program-close evidence snapshot.
+**Authoritative ledger:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv). Update statuses there only. Live counts: **125 ADOPTED · 0 UNWIRED · 3 PARTIAL · 9 DEFER** (137 rows, 2026-11-24). This §10 table is the program-close evidence snapshot (older counts in it are history).
 
 | Id | Wave | Status | Evidence |
 |:---|:---|:---|:---|

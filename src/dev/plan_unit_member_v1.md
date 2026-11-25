@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-UNIT-MEMBER-v1** |
-| **Status** | **REOPENED 2026-11-16** — member systems tick on zero entities (spawn is test-only); TAC-10 type is doc-only. **MOVE-05 → PARTIAL**, **TAC-10 → UNWIRED** · cleanup **CQ-54, CQ-57n** |
+| **Status** | **RE-CLOSED 2026-11-24** — `spawn_formation` spawns members (`combat/formation.rs:97`, CQ-54); TAC-10 type removed (CQ-57n). Was: **REOPENED 2026-11-16** — member systems tick on zero entities (spawn is test-only); TAC-10 type is doc-only. **MOVE-05 → PARTIAL**, **TAC-10 → UNWIRED** · cleanup **CQ-54, CQ-57n** |
 | **Date** | 2026-11-15 |
 | **Owner** | `@planner` → `@coder` |
 | **Parents** | [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W1 · PLAN-FRONT-COMBAT FC-5/6 · v3 PROGRAM CLOSE |

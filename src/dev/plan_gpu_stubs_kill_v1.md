@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-GPU-STUBS-KILL-v1** |
-| **Status** | **ACTIVE · P0 / HIGH** |
+| **Status** | **CLOSED 2026-11-24** — every row on the pick board is done. Residual lives in the ref-books ledger (RND-02 veg GPU instance buffer, RND-12 CPU-count expand); `smoke_volume` deferred to ES-4. |
 | **Date** | 2026-11-17 |
 | **Trigger** | Operator: finish GPU stubs + priority GPU upgrades (eliminate host pixel & mesh debt) |
 | **Parent** | [`plan_final_gpu_presentation_v1.md`](plan_final_gpu_presentation_v1.md) · [`plan_rpc1_gpu_terrain_ab_v1.md`](plan_rpc1_gpu_terrain_ab_v1.md) · [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) |

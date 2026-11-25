@@ -8,7 +8,7 @@
 
 ---
 
-## PLAN-GPU-STUBS-KILL-v1 — **P0 / HIGH (pick now)**
+## PLAN-GPU-STUBS-KILL-v1 — **CLOSED 2026-11-24** (all rows done)
 
 Charter: [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md). **Locked:** sole terrain display = world bake texture; **delete** `terrain_instanced_draw` + retire `GpuTilemap`.
 
@@ -40,7 +40,6 @@ Charter: [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md). **Locked:** s
 | ☑ | **DESTROY-T2.1** | P1 | Site columns skip destroyed mask tiles | `layers.rs` `build_site` |
 | ☑ | **DESTROY-T2b** | P1 | Priority remesh for masked chunks | `remesh_priority` → pending front |
 | ☑ | **STAGE-RING** Tier 0 | P1 | Mask upload never budget-gated | [`plan_stage_ring_v1.md`](plan_stage_ring_v1.md) |
-| ☐ | **GS-06/08** | P1 | Fire LOD / smoke_volume stubs — finish or rename | Honest naming |
 
 **Kill order:** GS-07 → A → A' → B → GS-03+04 → D → C → GS-05 → WITNESS → GS-09 → MIPS → ARRAY → CULL → GS-06/08.
 

@@ -1,6 +1,6 @@
 # PLAN-CLEANUP-CURSOR-WAVE-v1 — clean up the 14–16 Nov Cursor-agent wave
 
-**Status:** OPEN · **Written:** 2026-11-16 · **Owner on pickup:** `@coder` (Rust), `@coder-mcp` (tools/mcp), `@plan-orchestrator` (docs). Run deletions past `@cleanup-intelligence` first.
+**Status:** OPEN — **67 of 70 done** (2026-11-24); left: CQ-78, CQ-79, CQ-84 (see [`coder_todos_v1.md`](coder_todos_v1.md) §2) · **Written:** 2026-11-16 · **Owner on pickup:** `@coder` (Rust), `@coder-mcp` (tools/mcp), `@plan-orchestrator` (docs). Run deletions past `@cleanup-intelligence` first.
 **Scope:** `git diff 8abc4326 HEAD` — 18 Cursor co-authored commits, 403 files, +46.5k / −2.5k lines. The last commit (`afdf586c`, "Ship defer-unlock board…") alone is 310 files / +30k lines, though its message names only three items.
 
 ---
@@ -263,40 +263,40 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-05 | DONE | `0144002c` | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
 | CQ-06 | DONE | `f8367a42` | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
 | CQ-08 | DONE | `f22b6630` | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
-| CQ-20 | DONE | (pending commit) | Weather reads → `Option<Res>` (forecast/haul/renewable); heatmap blend vs sample assert; transport hydrate/g4 treat nodes as derived; ecs12 lint no longer bans `.push(`. All 15 named failures green. |
-| CQ-21 | DONE | (pending commit) | APS default archetype → IndustrialWarehouse; material filter passes category string + PhotoImage `master=`; tests retarget production example / style-pack resolve / shared Tk root. Six named pytest cases green. |
-| CQ-57h | DONE | (pending commit) | Real IO-08 rebuild: clear portal map, mark route dirty + clear RouteCache; deleted `POST_LOAD_DERIVED_STEPS` string list; utility (power/water) hydrate joins the same rebuild. |
-| CQ-57d | DONE | (pending commit) | `DestructibleDamage` component; fire integrity + blast peak escalate Intact→Collapsed; burn wash reads ladder; collapse still via demolish funnel. |
-| CQ-57a | DONE | (pending commit) | `combat/resolve.rs` `record_loss` on strength drop; `decide.rs` frag heat in `score_goals` / `faction_ai_tick_system`. |
-| CQ-57b | DONE | (pending commit) | `static_board_eval` folded into `score_goals` board-eval term (`decide.rs:346+`). |
-| CQ-57c | DONE | (pending commit) | `script_host.rs:drain_script_steps` → `reorder_pending_trigger_effects` + weather fact memory; Rete doc corrected. |
-| CQ-57e | DONE | (pending commit) | `io/streaming/budget.rs` `STREAMING_FRAME_ENTITY_BUDGET` + `allocate_nested_domain_budgets` for spawn caps. |
-| CQ-57f | DONE | (pending commit) | `network_flow_chunk_local_solver_system` bumps `WorldFieldLayerEpoch`; `world_read_snapshot_refresh_system` skips on stale slow epoch. |
-| CQ-57g | DONE | (pending commit) | `execute.rs` `enqueue_settlement_roads_once_system` → `enqueue_settlement_road_skeleton` (`ConstructionPlanQueue`). |
-| CQ-57i | DONE | (pending commit) | `map_tile_raster.rs` `overlay_heat_scorch_decal01` tint; deleted `surface_fire_scorch_decal01`. |
-| CQ-57l | DONE | (pending commit) | Removed DEC-09 `plan_goap` / GOAP helpers from `decide.rs`. |
-| CQ-57m | DONE | (pending commit) | Deleted `relax_sense_from_samples`, `classify_storm_with_plume`, default-k `combine_visibility_m` (keep `_k`). |
-| CQ-57n | DONE | (pending commit) | Doc/env deletes + empty `contamination_tick` + unread `saw_forecast_route_invalidation`. Residual: heat `*_pub` aliases still used by play pack path until CQ-50. |
-| CQ-50 | DONE | (pending commit) | `DenseHeatGpuPlugin`: stage inject → RenderApp H/V WGSL → `ReadbackComplete` sole `DenseHeatPlayField` writer; CPU via `RUST_ENGINE_DENSE_HEAT_CPU=1`. CQ-38: removed emit main-world ×0.85 dense blend. VFX residual: `fire_particle.wgsl` group 4 samples dense field A (`max` with projection heat). |
-| CQ-38 | DONE | (pending commit) | Fire VFX no longer reads `DenseHeatPlayField` / magic blend; expand compute binds GPU dense lattice instead. |
-| CQ-60 | DONE | (pending commit) | Fire tick snapshots only active+neighbour ring; `mem::take` instead of HashMap clone; edge cell walk without per-neighbour Vec. |
-| CQ-56 | DONE | (pending commit) | `MissileSortieLaunch.wind` from stations; `apply_missile_sortie_launches_system` → `launch_with_wind`. |
-| CQ-55 | DONE | (pending commit) | Ballistics solid probe via occupation + `probe_hits_solid` on MaterializedChunk; deleted coherent pair pipeline; `CollisionPlugin` minimal. |
-| CQ-53 | DONE | (pending commit) | Costed routes + heat/wildlife; single `logistics_grid_path` (NAV-04 scratch); `front_haul_path_concern` in publish + truck path; `sync_truck_motion_waypoints` + MOVE-08 filter in potential-field. |
-| CQ-51 | DONE | (pending commit) | Ecology seeds `WildlifeHerdBook` from world seed; schedules soft syncs; herd soft costs feed route cost via `NavFieldFrame`. |
-| CQ-52 | DONE | (pending commit) | `route_edge_cost` / `path_edges_between_tiles_costed` read heat + wildlife soft samples from `NavFieldFrame`. |
-| CQ-58 | DONE | (pending commit) | `execute_deployment_orders` → `plan_fortification_rows_with_analysis`; dragon teeth use `chokepoint_at`; faction digest folds mean chokepoint into Advance. |
-| CQ-59 | DONE | (pending commit) | `seed_build_readability_harness_once` moved off ConstructionPlugin into `TestHarnessPlugin` (scene-gated). |
-| CQ-80 | DONE | (pending commit) | `adoption.tsv` sole ledger; v3 §2.1 counts **101/18/10/4**; v2 §9 superseded banner; ref-books skill/rule + `.claude` copy. |
-| CQ-81 | DONE | (pending commit) | Honest exits in v3 §0.1/§11; cleanup §0 aligned; no operational anti-stall in agent config trees. |
-| CQ-61 | DONE | (pending commit) | L0 `bump_revision` only on max-blend write; `weather_stale` no longer keys on `sim_micros`; clipmap doc cites frame gate. |
-| CQ-62 | DONE | (pending commit) | `detect_firestorm_plumes` once in `AtmosphereFrame::derive`; coupling reads `firestorm_plume_mask`. |
-| CQ-63 | DONE | (pending commit) | ROI edge capped (`DENSE_ROI_MAX_EDGE=64`) with centroid recenter; `ensure_roi` unions overlap on expand; attention dense foci capped at 32 hottest. |
-| CQ-54 | DONE | (pending commit) | `spawn_formation` → members + `FormationOverwatchClock`; overwatch flips on 2s phase while relocating. No new GPU instance path (members sim-only). |
-| CQ-64 | DONE | (pending commit) | `sync_voxel_massing_visual_requests` clears massing only on intentional empty paths, not every tick. |
-| CQ-65 | DONE | (pending commit) | Combat cap + alert-bark priority return early when pending has no matching class. |
-| CQ-66 | DONE | (pending commit) | Pixel-world rain/cloud layers cache mesh upload key (30/20 Hz quant) + skip redundant CPU upload. |
-| CQ-67 | DONE | (pending commit) | Dropped quantum `reserve_chunks` on insert; optional `reserve_chunk_capacity` uses `HashMap::reserve`. |
+| CQ-20 | DONE | committed 11-16/17 | Weather reads → `Option<Res>` (forecast/haul/renewable); heatmap blend vs sample assert; transport hydrate/g4 treat nodes as derived; ecs12 lint no longer bans `.push(`. All 15 named failures green. |
+| CQ-21 | DONE | committed 11-16/17 | APS default archetype → IndustrialWarehouse; material filter passes category string + PhotoImage `master=`; tests retarget production example / style-pack resolve / shared Tk root. Six named pytest cases green. |
+| CQ-57h | DONE | committed 11-16/17 | Real IO-08 rebuild: clear portal map, mark route dirty + clear RouteCache; deleted `POST_LOAD_DERIVED_STEPS` string list; utility (power/water) hydrate joins the same rebuild. |
+| CQ-57d | DONE | committed 11-16/17 | `DestructibleDamage` component; fire integrity + blast peak escalate Intact→Collapsed; burn wash reads ladder; collapse still via demolish funnel. |
+| CQ-57a | DONE | committed 11-16/17 | `combat/resolve.rs` `record_loss` on strength drop; `decide.rs` frag heat in `score_goals` / `faction_ai_tick_system`. |
+| CQ-57b | DONE | committed 11-16/17 | `static_board_eval` folded into `score_goals` board-eval term (`decide.rs:346+`). |
+| CQ-57c | DONE | committed 11-16/17 | `script_host.rs:drain_script_steps` → `reorder_pending_trigger_effects` + weather fact memory; Rete doc corrected. |
+| CQ-57e | DONE | committed 11-16/17 | `io/streaming/budget.rs` `STREAMING_FRAME_ENTITY_BUDGET` + `allocate_nested_domain_budgets` for spawn caps. |
+| CQ-57f | DONE | committed 11-16/17 | `network_flow_chunk_local_solver_system` bumps `WorldFieldLayerEpoch`; `world_read_snapshot_refresh_system` skips on stale slow epoch. |
+| CQ-57g | DONE | committed 11-16/17 | `execute.rs` `enqueue_settlement_roads_once_system` → `enqueue_settlement_road_skeleton` (`ConstructionPlanQueue`). |
+| CQ-57i | DONE | committed 11-16/17 | `map_tile_raster.rs` `overlay_heat_scorch_decal01` tint; deleted `surface_fire_scorch_decal01`. |
+| CQ-57l | DONE | committed 11-16/17 | Removed DEC-09 `plan_goap` / GOAP helpers from `decide.rs`. |
+| CQ-57m | DONE | committed 11-16/17 | Deleted `relax_sense_from_samples`, `classify_storm_with_plume`, default-k `combine_visibility_m` (keep `_k`). |
+| CQ-57n | DONE | committed 11-16/17 | Doc/env deletes + empty `contamination_tick` + unread `saw_forecast_route_invalidation`. Residual: heat `*_pub` aliases still used by play pack path until CQ-50. |
+| CQ-50 | DONE | committed 11-16/17 | `DenseHeatGpuPlugin`: stage inject → RenderApp H/V WGSL → `ReadbackComplete` sole `DenseHeatPlayField` writer; CPU via `RUST_ENGINE_DENSE_HEAT_CPU=1`. CQ-38: removed emit main-world ×0.85 dense blend. VFX residual: `fire_particle.wgsl` group 4 samples dense field A (`max` with projection heat). |
+| CQ-38 | DONE | committed 11-16/17 | Fire VFX no longer reads `DenseHeatPlayField` / magic blend; expand compute binds GPU dense lattice instead. |
+| CQ-60 | DONE | committed 11-16/17 | Fire tick snapshots only active+neighbour ring; `mem::take` instead of HashMap clone; edge cell walk without per-neighbour Vec. |
+| CQ-56 | DONE | committed 11-16/17 | `MissileSortieLaunch.wind` from stations; `apply_missile_sortie_launches_system` → `launch_with_wind`. |
+| CQ-55 | DONE | committed 11-16/17 | Ballistics solid probe via occupation + `probe_hits_solid` on MaterializedChunk; deleted coherent pair pipeline; `CollisionPlugin` minimal. |
+| CQ-53 | DONE | committed 11-16/17 | Costed routes + heat/wildlife; single `logistics_grid_path` (NAV-04 scratch); `front_haul_path_concern` in publish + truck path; `sync_truck_motion_waypoints` + MOVE-08 filter in potential-field. |
+| CQ-51 | DONE | committed 11-16/17 | Ecology seeds `WildlifeHerdBook` from world seed; schedules soft syncs; herd soft costs feed route cost via `NavFieldFrame`. |
+| CQ-52 | DONE | committed 11-16/17 | `route_edge_cost` / `path_edges_between_tiles_costed` read heat + wildlife soft samples from `NavFieldFrame`. |
+| CQ-58 | DONE | committed 11-16/17 | `execute_deployment_orders` → `plan_fortification_rows_with_analysis`; dragon teeth use `chokepoint_at`; faction digest folds mean chokepoint into Advance. |
+| CQ-59 | DONE | committed 11-16/17 | `seed_build_readability_harness_once` moved off ConstructionPlugin into `TestHarnessPlugin` (scene-gated). |
+| CQ-80 | DONE | committed 11-16/17 | `adoption.tsv` sole ledger; v3 §2.1 counts **101/18/10/4**; v2 §9 superseded banner; ref-books skill/rule + `.claude` copy. |
+| CQ-81 | DONE | committed 11-16/17 | Honest exits in v3 §0.1/§11; cleanup §0 aligned; no operational anti-stall in agent config trees. |
+| CQ-61 | DONE | committed 11-16/17 | L0 `bump_revision` only on max-blend write; `weather_stale` no longer keys on `sim_micros`; clipmap doc cites frame gate. |
+| CQ-62 | DONE | committed 11-16/17 | `detect_firestorm_plumes` once in `AtmosphereFrame::derive`; coupling reads `firestorm_plume_mask`. |
+| CQ-63 | DONE | committed 11-16/17 | ROI edge capped (`DENSE_ROI_MAX_EDGE=64`) with centroid recenter; `ensure_roi` unions overlap on expand; attention dense foci capped at 32 hottest. |
+| CQ-54 | DONE | committed 11-16/17 | `spawn_formation` → members + `FormationOverwatchClock`; overwatch flips on 2s phase while relocating. No new GPU instance path (members sim-only). |
+| CQ-64 | DONE | committed 11-16/17 | `sync_voxel_massing_visual_requests` clears massing only on intentional empty paths, not every tick. |
+| CQ-65 | DONE | committed 11-16/17 | Combat cap + alert-bark priority return early when pending has no matching class. |
+| CQ-66 | DONE | committed 11-16/17 | Pixel-world rain/cloud layers cache mesh upload key (30/20 Hz quant) + skip redundant CPU upload. |
+| CQ-67 | DONE | committed 11-16/17 | Dropped quantum `reserve_chunks` on insert; optional `reserve_chunk_capacity` uses `HashMap::reserve`. |
 | CQ-09 | DONE | `90012715`+ | Env massing load cfg-gated (`debug_assertions` / `sim_dump`); PixelWorld-scoped apply. |
 | CQ-10 | DONE | `90012715`+ | Warning duck hold (`WARNING_DUCK_HOLD_SECS`); playback consumes low-pass as ambient/spatial gain. |
 | CQ-11 | DONE | `90012715`+ | `validate_veg_species_path` / `brief_veg_species_table` honor `path`; bad-file pytest. |
@@ -315,17 +315,19 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-71 | DONE | `143d9ecd`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
 | CQ-72 | DONE | `143d9ecd`+ | `_theaters` rename; ATMO_GRID noise already gone. |
 | CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
-| CQ-75 | DONE | (working tree) | sim_review vs studio_dash ownership; thin mission_adapter. |
-| CQ-76 | DONE | (working tree) | massing_qc sole in rust_engine_mcp. |
-| CQ-77 | DONE | (working tree) | BQ-A2 fixture parity + adjacency field. |
-| CQ-83 | DONE | (working tree) | 14 closed plans archived under `src/dev/archive/closed_programs/`. |
-| CQ-22 | DONE | (working tree) | Pure `sim_pause_env_flag` / `terrain_env_flag` + `resolve_sim_default_authority_from`; named tests no longer `set_var`. |
-| CQ-23 | DONE | (working tree) | `enqueue_param_frame_task` keeps absolute payload outside repo; never writes `schemas/examples`. |
-| CQ-57j | DONE | (working tree) | LGT-06 policy → PixelWorld `Tonemapping`. |
-| CQ-57k | DONE | (working tree) | DES-06 logistic regrowth. |
-| CQ-69 | DONE | (working tree) | `MissionSenseFrame` publish → mission step. |
-| CQ-78 | PARTIAL | (working tree) | Validators gain `--fail`; `tune.py` marked T7-not-built. Dashboard consolidate / duplicate massing still open (CQ-75/76). |
-| CQ-84 | PARTIAL | (working tree) | Prefer matrix rows / test names; DF-10 cites `baseline_dam_df10_note.md` + matrix rows not live JSON as Accept. |
+| CQ-75 | DONE | committed 11-16/17 | sim_review vs studio_dash ownership; thin mission_adapter. |
+| CQ-76 | DONE | committed 11-16/17 | massing_qc sole in rust_engine_mcp. |
+| CQ-77 | DONE | committed 11-16/17 | BQ-A2 fixture parity + adjacency field. |
+| CQ-83 | DONE | committed 11-16/17 | 14 closed plans archived under `src/dev/archive/closed_programs/`. |
+| CQ-22 | DONE | committed 11-16/17 | Pure `sim_pause_env_flag` / `terrain_env_flag` + `resolve_sim_default_authority_from`; named tests no longer `set_var`. |
+| CQ-23 | DONE | committed 11-16/17 | `enqueue_param_frame_task` keeps absolute payload outside repo; never writes `schemas/examples`. |
+| CQ-57j | DONE | committed 11-16/17 | LGT-06 policy → PixelWorld `Tonemapping`. |
+| CQ-57k | DONE | committed 11-16/17 | DES-06 logistic regrowth. |
+| CQ-69 | DONE | committed 11-16/17 | `MissionSenseFrame` publish → mission step. |
+| CQ-78 | PARTIAL | committed 11-16/17 | Validators gain `--fail`; `tune.py` marked T7-not-built. Dashboard consolidate / duplicate massing still open (CQ-75/76). |
+| CQ-84 | PARTIAL | committed 11-16/17 | Prefer matrix rows / test names; DF-10 cites `baseline_dam_df10_note.md` + matrix rows not live JSON as Accept. |
+| CQ-68 / 68b / 68c | DONE | committed 11-16 | Dump reporters per domain; world-gen shell split; tile fallback reads split (detail in the P-table rows). |
+| CQ-79 | OPEN | — | 2026-11-24 check: `lookup.py` reads `REF_BOOKS_DIR`; `build_toc.py` default, `studio_task.py` broad `except`, `ref_books_dual_cite` in two schemas still open. |
 | CQ-85 | DONE | `4761b21a`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
 
 **Exit criteria:**
@@ -335,3 +337,5 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 - every ADOPTED row cites a production caller
 - `cargo check` ≤ 50 warnings
 - `playcheck.py` matrix no worse than at `afdf586c`
+
+**Ledger note (2026-11-24):** rows marked "committed 11-16/17" were written as `(pending commit)` / `(working tree)`; the work landed in the `[cleanup]` commits `56f32594`, `90012715`, `4761b21a`, `152505a0` (see `git log --grep CQ-`).

@@ -316,7 +316,7 @@ trucks on roads; debug perf avg 35 ms / p95 68 ms (debug rows fail their thresho
 2. Capture with congestion peak (`road_flow.peak_vc`) and grading volume; a scene with a narrow
    road and many trucks to see traffic spread.
 3. Works hauled by trucks (order-sim runs to a works site) instead of drawn from stock.
-4. R-7 remainder (economy activation chain first — 12 tests).
+4. ~~R-7 remainder (economy activation chain first — 12 tests).~~ Done 2026-11-24 in PLAN-CI-TEST-TRIAGE-v1 (T-1).
 5. Then the phase order (RD-2 off-road speed field → RD-5 worn tracks → RD-7 rail freight → …);
    B-3 repair with D-7; overpass deck model.
 

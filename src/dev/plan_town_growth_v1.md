@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-TOWN-GROWTH-v1** |
-| **Status** | **REOPENED 2026-11-16 (PCG07 only)** — road skeleton is a pure function with no production caller. **PCG-07 → UNWIRED** · cleanup **CQ-57g**. Other TWN slices were not re-reviewed. |
+| **Status** | **PCG-07 RE-CLOSED 2026-11-24** — `enqueue_settlement_roads_once_system` registered (`strategic/settlement/mod.rs:222`, CQ-57g). Other TWN slices were not re-reviewed. Was: **REOPENED 2026-11-16 (PCG07 only)** — road skeleton is a pure function with no production caller. **PCG-07 → UNWIRED** · cleanup **CQ-57g**. Other TWN slices were not re-reviewed. |
 | **Books unlock** | **TWN-PCG07** → **PCG-07** ([`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W2) |
 | **Date** | 2026-09-27 |
 | **Owner** | `@planner` → `@coder` |

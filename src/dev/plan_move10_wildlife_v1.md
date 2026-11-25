@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-MOVE10-WILDLIFE-v1** |
-| **Status** | **REOPENED 2026-11-16** — herd never seeded in play; soft costs unread. **MOVE-10 → UNWIRED** · cleanup **CQ-51/CQ-52** |
+| **Status** | **RE-CLOSED 2026-11-24** — herd seeded in play (`ecology/wildlife_flock.rs:287`, CQ-51); soft costs read by `route_edge_cost` (CQ-52). Was: **REOPENED 2026-11-16** — herd never seeded in play; soft costs unread. **MOVE-10 → UNWIRED** · cleanup **CQ-51/CQ-52** |
 | **Date** | 2026-11-16 |
 | **Parents** | [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) **MOVE-10-FLOCK** |
 | **Unlocks** | **MOVE-10** |

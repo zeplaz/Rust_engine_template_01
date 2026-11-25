@@ -1,6 +1,6 @@
 # PLAN-CI-TEST-TRIAGE-v1 — the 18 failing lib tests: broken feature or stale test
 
-Status: **DONE in code** (2026-11-24): all 7 fixes applied, `cargo test --lib` 2 347 passed / 0 failed, `-D warnings` clean; CI run on push pending. CI (`.github/workflows/ci.yml`) has been red since at least
+Status: **CLOSED** (2026-11-24): all 7 fixes applied, `cargo test --lib` 2 347 passed / 0 failed, `-D warnings` clean. CI green on `7aca50c6` (two Python-step follow-ups: `ab85af54` installs jsonschema; `7aca50c6` makes `repo_root()` ignore the committed Windows repo path when it does not exist). CI (`.github/workflows/ci.yml`) has been red since at least
 2026-11-15. Step 1 (`cargo rustc --lib -- -D warnings`, STAB-CI-001) is fixed (f87a4c1c); step 4
 (`cargo test -p proc_A_dine01 --lib`) fails on the 18 tests below. None were caused by the roads
 work (checked against the commit before it). Each was traced to its root cause; two causes were

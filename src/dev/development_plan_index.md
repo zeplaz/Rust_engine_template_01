@@ -1,6 +1,31 @@
 # Development plan index
 
-Single map of **planning → proof → implementation** for this repo. Use with orchestrator tooling so markdown boards, runtime todo boards, and witnesses stay aligned.
+Single map of **planning → proof → implementation** for this repo.
+
+## Current status (2026-11-24) — start here
+
+**Open work board:** [`coder_todos_v1.md`](coder_todos_v1.md) — the one list of what is open, closed recently, and parked.
+CI is green on `master` (`7aca50c6`). Bevy 0.20, Bevy UI only.
+
+| Program | State | What is left |
+|:---|:---|:---|
+| Roads + rail · [`plan_roads_v1.md`](plan_roads_v1.md) | **OPEN** | operator hands-on of the line tool; congestion/grading capture; truck-hauled works; RD-2/5/7; B-3 repair |
+| Cursor-wave cleanup · [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) | **OPEN** (67/70) | CQ-78, CQ-79, CQ-84 |
+| Ref-books residual · [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) | **OPEN** (residual) | RND-02, RND-12 PARTIAL; 9 DEFER on triggers |
+| Voxel occupation · [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) | **OPEN** | default-on decision (OCC-P4/P5) |
+| Dam-flood benchmark · [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) | **OPEN** | DF-10 baseline (blocked), DF-3 capture |
+| CI test triage · [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) | **CLOSED** 11-24 | — |
+| GPU stubs kill · [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) | **CLOSED** 11-24 | residual in ref-books ledger |
+| Ref-books v3 · [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) | **CLOSED** (review resolved 11-24) | ledger `adoption.tsv`: 125 / 3 / 9 |
+| Bevy 0.20 migration · [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) | **CLOSED** | — |
+
+**Not re-reviewed in this pass** (status is whatever their own header says; several "ACTIVE" tags below are months old):
+VSS-001, Artist Studio expansion, APS grammar evolution, production iso tiles, render production cleanup, town growth (other than PCG-07).
+
+**Everything below this line is the historical index.** Witness JSONs, runtime todo boards, machine queues and
+`cargo orchestrate` named there are retired (see [`AGENTS.md`](../AGENTS.md) "Review path"); treat those links as history.
+
+---
 
 **Agent orchestration lean path (2026-10-19):** [`prompts/guides/agent_orchestration_minimal_harness_v1.md`](../prompts/guides/agent_orchestration_minimal_harness_v1.md) — arXiv:2609.40303 · default single-owner + validation-first · witness [`debug_runs/agent_ops/minimal_harness_adoption_live.json`](../debug_runs/agent_ops/minimal_harness_adoption_live.json)
 
@@ -8,13 +33,13 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Cross-front pick queue (2026-07-03):** [`cross_front_pick_queue_v1.md`](cross_front_pick_queue_v1.md) — parallel lanes · pick-one-primary per session
 
-**Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · residual lib-test defer [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (SHIPPED) → v2 [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (WAVES 0–S CLOSED) → **ACTIVE** [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (dual matrices parallel · tools suite · voxels **in scope**) · Wave 3 charters: [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) (**SENSE-04**) · [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) (**NAV-13**)
+**Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · lib-test defer log [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) (CLOSED) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (SHIPPED) → v2 [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (WAVES 0–S CLOSED) → **CLOSED** [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (dual matrices parallel · tools suite · voxels **in scope**) · Wave 3 charters: [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) (**SENSE-04**) · [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) (**NAV-13**)
 
-**CI test triage (DONE in code — 2026-11-24, lib tests 0 failed):** [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) — PLAN-CI-TEST-TRIAGE-v1 · the 18 failing lib tests: 1 real bug (playquad launch), 2 latent faults (activation needs blueprint registry; two passes in one draw layer), 4 stale/brittle tests · fix order to green CI
+**CI test triage (CLOSED — 2026-11-24, lib tests 0 failed, CI green):** [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) — PLAN-CI-TEST-TRIAGE-v1 · the 18 failing lib tests: 1 real bug (playquad launch), 2 latent faults (activation needs blueprint registry; two passes in one draw layer), 4 stale/brittle tests · fix order to green CI
 
-**Roads + rail (OPEN — 2026-11-20: RD-0/1/3/4/6, bridges, works bills, grading, UI responsiveness in code; remaining: hands-on check, truck-hauled works, R-7 remainder, RD-2/5/7 …):** [`plan_roads_v1.md`](plan_roads_v1.md) — PLAN-ROADS-v1 · road tiers (dirt/gravel/paved/concrete/motorway, lanes), congestion, rail parity (trains, yards, intermodal), worn dirt tracks, off-road speed field, leg time from the route driven, player + AI road building · RD-0..RD-11
+**Roads + rail (OPEN — 2026-11-20: RD-0/1/3/4/6, bridges, works bills, grading, UI responsiveness in code; remaining: hands-on check, truck-hauled works, RD-2/5/7 …):** [`plan_roads_v1.md`](plan_roads_v1.md) — PLAN-ROADS-v1 · road tiers (dirt/gravel/paved/concrete/motorway, lanes), congestion, rail parity (trains, yards, intermodal), worn dirt tracks, off-road speed field, leg time from the route driven, player + AI road building · RD-0..RD-11
 
-**Cursor-wave cleanup (OPEN — 2026-11-16):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — most CQ DONE; residual CQ-75/76/77/79/83 archive · **dam-flood (SIGNED):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — DF-1…9 landed in code · **DF-10 BLOCKED** (baseline) · **water depth:** [`plan_water_depth_truth_v1.md`](plan_water_depth_truth_v1.md) — W0–W4 ADOPTED · W5 DEFER
+**Cursor-wave cleanup (OPEN — 67/70 done 2026-11-24):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — residual CQ-78/79/84 · **dam-flood (SIGNED):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — DF-1…9 landed in code · **DF-10 BLOCKED** (baseline) · **water depth:** [`plan_water_depth_truth_v1.md`](plan_water_depth_truth_v1.md) — W0–W4 ADOPTED · W5 DEFER
 
 **Bevy 0.19 migration (CLOSED):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — do **not** reopen `MIG-*` 0.19 rows · deferrals [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 
@@ -44,7 +69,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Destruction presentation (ADOPTED core — 2026-11-17):** [`plan_destruction_presentation_v1.md`](plan_destruction_presentation_v1.md) — T2/T2.1/T2b · STAGE-RING Tier0 · STRUCT-ROLE/CASCADE · DISASTER-PROXY · DEBRIS-FX. Charters under `plan_destroy_t2_mask_v1.md` + siblings. Residual: playcheck eye + GPU-C.2/RND-12/08. **Blast thresholds:** [`plan_blast_profile_v1.md`](plan_blast_profile_v1.md) (**PLAN-BLAST-PROFILE-v1** ADOPTED).
 
-**GPU stubs kill (ACTIVE · P0 — 2026-11-17):** [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) — upgrades **A–D** + delete instanced/`GpuTilemap`. Design: [`design_gpu_rtt_bake_water_displace_v1.md`](design_gpu_rtt_bake_water_displace_v1.md) (RTT control-tex bake · water VS displace · Part 3 practices). Pick: [`gpu_todos_v1.md`](gpu_todos_v1.md) § PLAN-GPU-STUBS-KILL.
+**GPU stubs kill (CLOSED 2026-11-24):** [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) — upgrades **A–D** + delete instanced/`GpuTilemap`. Design: [`design_gpu_rtt_bake_water_displace_v1.md`](design_gpu_rtt_bake_water_displace_v1.md) (RTT control-tex bake · water VS displace · Part 3 practices). Pick: [`gpu_todos_v1.md`](gpu_todos_v1.md) § PLAN-GPU-STUBS-KILL.
 
 **Render + GUI refactor (P1 — 2026-07-04):** [`plan_render_gui_refactor_v1.md`](plan_render_gui_refactor_v1.md) · **RGR-M1 ★closed** (001..004) · tail → [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) · queue [`render_gui_refactor_queue.json`](../tools/orchestrator/queues/render_gui_refactor_queue.json) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-RENDER-GUI-REFACTOR-v1
 

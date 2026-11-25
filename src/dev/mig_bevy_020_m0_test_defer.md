@@ -1,5 +1,7 @@
 # M0 lib-test DEFER log (Bevy 0.20)
 
+**CLOSED 2026-11-24:** lib tests 0 failed and CI green. The remaining failures were fixed in [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) (incl. the `ManufacturingBlueprintRegistry` one below). Kept as history.
+
 **Date:** 2026-11-13  
 **Result after WeatherField `If` fix:** `1558 passed; 25 failed; 2 ignored`.
 
