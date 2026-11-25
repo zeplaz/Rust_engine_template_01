@@ -46,6 +46,8 @@ pub struct InfraView {
     pub sites: Vec<Vec2>,
     /// Road stretches near its sites: ends, tier, volume / capacity.
     pub roads: Vec<(BuildSiteTile, BuildSiteTile, RoadTier, f32)>,
+    /// Road stretches near its sites damaged enough to rebuild (RD-10): ends, tier.
+    pub damaged: Vec<(BuildSiteTile, BuildSiteTile, RoadTier)>,
     /// Blocked stretches near its sites and the rubble / crater tiles on them.
     pub blocked: Vec<Vec<IVec2>>,
     /// Its truck legs: ends, metres on roads, metres off-road.
@@ -61,6 +63,10 @@ pub struct InfraView {
 pub fn plan_infrastructure(v: &InfraView, t: &AiRoadTuning, rail_reach: f32, rail_min_tiles: f32) -> Option<InfraAction> {
     if let Some(tiles) = v.blocked.iter().find(|t| !t.is_empty()) {
         return Some(InfraAction::ClearRubble { tiles: tiles.clone() });
+    }
+    // RD-10: a washed-out or blast-broken road is rebuilt by an upgrade order (repair is D-7).
+    if let Some((a, b, tier)) = v.damaged.first() {
+        return Some(InfraAction::Upgrade { a: *a, b: *b, to: crate::construction::next_road_tier(*tier) });
     }
     if let Some((a, b, tier, _)) = v
         .roads
@@ -99,6 +105,7 @@ pub struct InfraInputs<'w> {
     flow: Option<Res<'w, crate::economy::logistics::road_flow::RoadFlowBook>>,
     directory: Option<Res<'w, crate::systems::transport::TransportEdgeDirectory>>,
     debris: Option<Res<'w, crate::economy::logistics::debris_block::DebrisRouteBlockBook>>,
+    condition: Option<Res<'w, crate::economy::logistics::road_condition::RoadConditionBook>>,
     delta: Option<Res<'w, crate::terrain::ground_deform::GroundDeltaBook>>,
 }
 
@@ -135,6 +142,8 @@ impl InfraInputs<'_> {
         let dir = self.directory.as_deref();
         let mut roads = Vec::new();
         let mut blocked = Vec::new();
+        let mut damaged = Vec::new();
+        let rebuild = crate::infrastructure::road_tier_table().condition.rebuild_damage;
         let rubble: HashSet<IVec2> = self
             .debris
             .as_deref()
@@ -163,10 +172,11 @@ impl InfraInputs<'_> {
                         blocked.push(on);
                     }
                     if let CorridorKind::Road { tier, .. } = seg.kind {
-                        let vc = dir
-                            .and_then(|d| crate::construction::find_edge_id_for_segment(d, a, b))
-                            .and_then(|id| self.flow.as_deref().and_then(|f| f.by_edge.get(&id)))
-                            .map_or(0.0, |f| f.vc());
+                        let id = dir.and_then(|d| crate::construction::find_edge_id_for_segment(d, a, b));
+                        let vc = id.and_then(|id| self.flow.as_deref().and_then(|f| f.by_edge.get(&id))).map_or(0.0, |f| f.vc());
+                        if id.is_some_and(|id| self.condition.as_deref().is_some_and(|c| c.damage(id) >= rebuild)) {
+                            damaged.push((a, b, tier));
+                        }
                         roads.push((a, b, tier, vc));
                     }
                 }
@@ -199,7 +209,7 @@ impl InfraInputs<'_> {
             .filter(|s| s.owner == owner && s.role == SiteRole::Yard)
             .map(|s| Vec2::from(s.world_xz) / TILE_METRES_GAMEPLAY)
             .collect();
-        Some(InfraView { sites, roads, blocked, legs, hauls, yards })
+        Some(InfraView { sites, roads, damaged, blocked, legs, hauls, yards })
     }
 }
 
@@ -329,6 +339,8 @@ mod tests {
         let mut v = InfraView { sites: vec![Vec2::ZERO], ..Default::default() };
         v.roads = vec![(tile(0, 0), tile(8, 0), RoadTier::Dirt, 0.9), (tile(8, 0), tile(16, 0), RoadTier::Gravel, 0.7), (tile(0, 4), tile(8, 4), RoadTier::Paved, 2.0)];
         assert_eq!(plan_infrastructure(&v, &t(), 10.0, 60.0), Some(InfraAction::Upgrade { a: tile(0, 0), b: tile(8, 0), to: RoadTier::Gravel }), "paved roads are not upgraded here");
+        v.damaged = vec![(tile(0, 4), tile(8, 4), RoadTier::Paved)];
+        assert_eq!(plan_infrastructure(&v, &t(), 10.0, 60.0), Some(InfraAction::Upgrade { a: tile(0, 4), b: tile(8, 4), to: crate::construction::next_road_tier(RoadTier::Paved) }), "a damaged road is rebuilt first");
         v.blocked = vec![vec![IVec2::new(3, 0)]];
         assert_eq!(plan_infrastructure(&v, &t(), 10.0, 60.0), Some(InfraAction::ClearRubble { tiles: vec![IVec2::new(3, 0)] }));
     }

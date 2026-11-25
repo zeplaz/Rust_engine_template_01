@@ -69,6 +69,12 @@ impl RoadTier {
     pub fn spec(self) -> &'static RoadTierSpec {
         road_tier_table().spec(self)
     }
+
+    /// Track, dirt and gravel: they get muddy and wash out (RD-10).
+    #[must_use]
+    pub fn is_unpaved(self) -> bool {
+        matches!(self, RoadTier::Track | RoadTier::Dirt | RoadTier::Gravel)
+    }
 }
 
 /// One tier row.
@@ -113,6 +119,9 @@ pub struct RoadTierTable {
     /// RD-8 AI faction road and rail building.
     #[serde(default)]
     pub ai: AiRoadTuning,
+    /// RD-10 road condition (mud, flood erosion, blast damage).
+    #[serde(default)]
+    pub condition: ConditionTuning,
     pub tiers: Vec<RoadTierSpec>,
     /// Materials per metre of railway (ballast, rails, sleepers).
     #[serde(default = "default_rail_materials")]
@@ -187,6 +196,30 @@ impl Default for RailTuning {
             crossing_base_s: 12.0,
             crossing_per_train_s: 25.0,
         }
+    }
+}
+
+/// RD-10: how weather, water and blasts wear roads short of closing them.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct ConditionTuning {
+    /// Sim steps between two condition updates.
+    pub interval_steps: u64,
+    /// Damage per flooded minute on a gravel road (dirt × 1.5, track × 2, paved none).
+    pub flood_erosion_per_min: f32,
+    /// A blast reaches roads within its radius × this.
+    pub blast_reach_mul: f32,
+    /// Peak blast damage that wrecks an unpaved road outright at the centre.
+    pub blast_full_damage: f32,
+    /// A fully damaged road takes this much longer to drive (time × (1 + this × damage)).
+    pub damage_slow: f32,
+    /// The AI rebuilds a road (upgrade order) from this much damage.
+    pub rebuild_damage: f32,
+}
+
+impl Default for ConditionTuning {
+    fn default() -> Self {
+        Self { interval_steps: 60, flood_erosion_per_min: 0.01, blast_reach_mul: 1.5, blast_full_damage: 100.0, damage_slow: 2.0, rebuild_damage: 0.4 }
     }
 }
 
@@ -318,6 +351,7 @@ fn default_table() -> &'static RoadTierTable {
         worn_tracks: WornTrackTuning::default(),
         rail: RailTuning::default(),
         ai: AiRoadTuning::default(),
+        condition: ConditionTuning::default(),
         rail_materials_per_m: default_rail_materials(),
         tiers: vec![
             row(RoadTier::Track, 25.0, 1, 40.0, 0.4, 0.3),

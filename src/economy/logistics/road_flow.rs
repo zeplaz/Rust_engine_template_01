@@ -59,6 +59,8 @@ pub struct RoadFlowBook {
     buckets: HashMap<TransportEdgeId, u16>,
     /// Level-crossing delay as a time multiplier per road edge (RD-7).
     pub crossing_mul: HashMap<TransportEdgeId, f32>,
+    /// Mud and damage as a time multiplier per road edge (RD-10).
+    pub condition_mul: HashMap<TransportEdgeId, f32>,
 }
 
 impl RoadFlowBook {
@@ -66,6 +68,7 @@ impl RoadFlowBook {
     #[must_use]
     pub fn time_mul(&self, id: TransportEdgeId) -> f32 {
         self.by_edge.get(&id).map_or(1.0, |f| bpr_time_mul(f.vc())) * self.crossing_mul.get(&id).copied().unwrap_or(1.0)
+            * self.condition_mul.get(&id).copied().unwrap_or(1.0)
     }
 
     /// Highest volume / capacity on any edge (dump).
@@ -97,6 +100,7 @@ pub fn publish_road_flow_system(
     legs: Option<Res<SiteLegRouteBook>>,
     directory: Option<Res<TransportEdgeDirectory>>,
     crossings: Option<Res<super::level_crossings::LevelCrossingBook>>,
+    condition: Option<Res<super::road_condition::RoadConditionBook>>,
     mut book: ResMut<RoadFlowBook>,
     mut index: Local<EdgeIndex>,
     mut frames: Local<u32>,
@@ -105,7 +109,7 @@ pub fn publish_road_flow_system(
         return;
     };
     *frames += 1;
-    let crossings_changed = crossings.as_ref().is_some_and(|c| c.is_changed());
+    let crossings_changed = crossings.as_ref().is_some_and(|c| c.is_changed()) || condition.as_ref().is_some_and(|c| c.is_changed());
     if *frames < REFRESH_FRAMES && !legs.is_changed() && !crossings_changed {
         return;
     }
@@ -169,6 +173,22 @@ pub fn publish_road_flow_system(
         let b = buckets.entry(*id).or_insert(4);
         *b = b.saturating_add(((m - 1.0) * 4.0).round() as u16);
     }
+    // RD-10 mud and damage.
+    let mut condition_mul: HashMap<TransportEdgeId, f32> = HashMap::new();
+    if let Some(c) = condition.as_deref() {
+        let ordered: &std::collections::BTreeMap<u64, _> = &c.by_edge;
+        for id in ordered.keys() {
+            let m = c.time_mul(TransportEdgeId(*id));
+            if m > 1.0 {
+                condition_mul.insert(TransportEdgeId(*id), m);
+            }
+        }
+    }
+    for (id, m) in &condition_mul {
+        let b = buckets.entry(*id).or_insert(4);
+        *b = b.saturating_add(((m - 1.0) * 4.0).round() as u16);
+    }
+    book.condition_mul = condition_mul;
     book.crossing_mul = crossing_mul;
     if buckets != book.buckets {
         book.buckets = buckets;

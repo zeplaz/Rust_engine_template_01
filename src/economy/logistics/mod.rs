@@ -11,6 +11,7 @@ pub mod road_flow;
 pub mod track_wear;
 pub mod intermodal;
 pub mod level_crossings;
+pub mod road_condition;
 pub mod routes;
 pub mod solver;
 pub mod types;

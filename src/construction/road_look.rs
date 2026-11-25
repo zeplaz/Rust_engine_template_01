@@ -24,6 +24,8 @@ pub struct RoadState {
     pub blocked: bool,
     pub congested: bool,
     pub muddy: bool,
+    /// Washed out or blast-broken surface (RD-10), short of closed.
+    pub damaged: bool,
 }
 
 /// Ribbon width (path units, same scale as the old fixed 8) for a tier and lane count.
@@ -68,6 +70,8 @@ pub fn road_color(tier: RoadTier, state: RoadState) -> UiRgba {
         mix(base, UiRgba::from_rgba_unmultiplied(150, 60, 30, 240), 0.7)
     } else if state.congested {
         mix(base, UiRgba::from_rgba_unmultiplied(235, 160, 40, 240), 0.55)
+    } else if state.damaged {
+        mix(base, UiRgba::from_rgba_unmultiplied(95, 85, 75, 235), 0.6)
     } else if state.muddy {
         mix(base, UiRgba::from_rgba_unmultiplied(70, 50, 30, 235), 0.5)
     } else {
@@ -168,6 +172,7 @@ pub struct RoadLookReads<'w, 's> {
     debris: Option<Res<'w, crate::economy::logistics::debris_block::DebrisRouteBlockBook>>,
     flow: Option<Res<'w, crate::economy::logistics::road_flow::RoadFlowBook>>,
     wear: Option<Res<'w, crate::economy::logistics::track_wear::TrackWearBook>>,
+    condition: Option<Res<'w, crate::economy::logistics::road_condition::RoadConditionBook>>,
     weather: Query<'w, 's, (&'static crate::terrain::generation::Chunk, &'static crate::systems::weather::ChunkWeather)>,
 }
 
@@ -187,7 +192,10 @@ impl RoadLookReads<'_, '_> {
             let wet = crate::infrastructure::road_tier_table().offroad.mud_from_moisture;
             self.weather.iter().any(|(c, w)| c.coord == chunk && w.soil_moisture > wet)
         };
-        RoadState { flooded, blocked, congested, muddy }
+        let condition = self.condition.as_deref();
+        let muddy = muddy || id.is_some_and(|id| condition.is_some_and(|c| c.muddy(id)));
+        let damaged = id.is_some_and(|id| condition.is_some_and(|c| c.damage(id) >= 0.3));
+        RoadState { flooded, blocked, congested, muddy, damaged }
     }
 
     /// Worn-ground tint tiles.
@@ -218,6 +226,7 @@ mod tests {
             RoadState { blocked: true, ..default() },
             RoadState { congested: true, ..default() },
             RoadState { muddy: true, ..default() },
+            RoadState { damaged: true, ..default() },
         ] {
             assert_ne!(road_color(RoadTier::Gravel, s), base, "{s:?}");
         }

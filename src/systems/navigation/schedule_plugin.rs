@@ -25,6 +25,7 @@ impl Plugin for NavigationSchedulePlugin {
             .init_resource::<crate::economy::logistics::orders::SiteRailLegBook>()
             .init_resource::<crate::economy::logistics::intermodal::IntermodalBook>()
             .init_resource::<crate::economy::logistics::level_crossings::LevelCrossingBook>()
+            .init_resource::<crate::economy::logistics::road_condition::RoadConditionBook>()
             // The intermodal planner sends order requests (no-op when the orders plugin added it).
             .add_message::<crate::economy::logistics::orders::LogisticsOrderRequest>()
             // Worn tracks are placed through the construction queue (no-op when construction added it).
@@ -39,6 +40,9 @@ impl Plugin for NavigationSchedulePlugin {
                     // RD-4: traffic from last frame's legs feeds this frame's planning.
                     // RD-7: level crossings (priced by the trains running) feed road traffic time.
                     crate::economy::logistics::level_crossings::publish_level_crossings_system
+                        .before(crate::economy::logistics::road_flow::publish_road_flow_system),
+                    // RD-10: mud, flood erosion and blast damage feed road traffic time.
+                    crate::economy::logistics::road_condition::publish_road_condition_system
                         .before(crate::economy::logistics::road_flow::publish_road_flow_system),
                     crate::economy::logistics::road_flow::publish_road_flow_system
                         .before(crate::systems::navigation::plan_site_leg_routes_system),
