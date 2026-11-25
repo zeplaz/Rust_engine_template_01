@@ -307,7 +307,7 @@ pub fn supply_corridor_works_system(
         return;
     }
     let snap = &snapshot.0;
-    let site_of: HashMap<u32, SiteId> = sites.iter().map(|(w, id)| (w.segment_id, id.0)).collect();
+    let site_of: BTreeMap<u32, SiteId> = sites.iter().map(|(w, id)| (w.segment_id, id.0)).collect();
     let works_sites: Vec<SiteId> = site_of.values().copied().collect();
     let mut ordered = 0.0;
     let mut changed = false;

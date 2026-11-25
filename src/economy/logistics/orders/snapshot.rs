@@ -27,6 +27,8 @@ pub enum SiteRole {
     Construction,
     Plant,
     Unit,
+    /// Rail freight yard (RD-7): trains load and unload here.
+    Yard,
 }
 
 impl SiteRole {
@@ -38,6 +40,7 @@ impl SiteRole {
             Self::Construction => "construction",
             Self::Plant => "plant",
             Self::Unit => "unit",
+            Self::Yard => "yard",
         }
     }
 }

@@ -379,10 +379,16 @@ impl Plugin for SimRunDumpPlugin {
                         super::sim_run_dump_dam_flood::dump_dam_flood_history_section,
                         super::sim_run_dump_quadrants::dump_quadrants_section,
                         super::sim_run_dump_roads::dump_roads_section,
+                    )
+                        .in_set(SimDumpSet)
+                        .after(arm_sim_dump),
+                    // Roads, traffic and rail (PLAN-ROADS-v1): one system per domain.
+                    (
                         super::sim_run_dump_traffic::dump_corridor_works_section,
                         super::sim_run_dump_traffic::dump_road_flow_section,
                         super::sim_run_dump_traffic::dump_offroad_field_section,
                         super::sim_run_dump_traffic::dump_track_wear_section,
+                        super::sim_run_dump_traffic::dump_rail_section,
                     )
                         .in_set(SimDumpSet)
                         .after(arm_sim_dump),

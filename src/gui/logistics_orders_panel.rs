@@ -137,7 +137,8 @@ pub fn consumer_for_role(role: SiteRole) -> ConsumerKind {
         SiteRole::Construction => ConsumerKind::Construction,
         SiteRole::Plant => ConsumerKind::Plant,
         SiteRole::Unit => ConsumerKind::Unit,
-        SiteRole::Depot => ConsumerKind::Depot,
+        // A yard holds goods in transit like a depot (RD-7).
+        SiteRole::Depot | SiteRole::Yard => ConsumerKind::Depot,
     }
 }
 

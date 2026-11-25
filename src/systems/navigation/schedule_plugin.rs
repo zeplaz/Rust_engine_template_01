@@ -22,6 +22,10 @@ impl Plugin for NavigationSchedulePlugin {
             .init_resource::<crate::economy::logistics::road_flow::RoadFlowBook>()
             .init_resource::<crate::systems::navigation::offroad_speed::OffroadSpeedField>()
             .init_resource::<crate::economy::logistics::track_wear::TrackWearBook>()
+            .init_resource::<crate::economy::logistics::orders::SiteRailLegBook>()
+            .init_resource::<crate::economy::logistics::intermodal::IntermodalBook>()
+            // The intermodal planner sends order requests (no-op when the orders plugin added it).
+            .add_message::<crate::economy::logistics::orders::LogisticsOrderRequest>()
             // Worn tracks are placed through the construction queue (no-op when construction added it).
             .init_resource::<crate::construction::ConstructionPlanQueue>()
             .add_systems(
@@ -38,6 +42,12 @@ impl Plugin for NavigationSchedulePlugin {
                     crate::systems::navigation::offroad_speed::publish_offroad_speed_field_system
                         .before(crate::systems::navigation::plan_site_leg_routes_system),
                     crate::systems::navigation::plan_site_leg_routes_system,
+                    // RD-7: rail routes between freight yards (train trip times + drawing).
+                    crate::systems::navigation::rail_legs::plan_rail_legs_system
+                        .before(crate::systems::navigation::sync_truck_motion_waypoints_system),
+                    // RD-7: long hauls with yards at both ends go by rail (and back on loss).
+                    crate::economy::logistics::intermodal::plan_intermodal_system
+                        .after(crate::systems::navigation::rail_legs::plan_rail_legs_system),
                     crate::systems::navigation::sync_truck_motion_waypoints_system
                         .after(crate::systems::navigation::plan_site_leg_routes_system),
                     // RD-5: traffic wears tracks; well-worn runs along legs become Track roads.

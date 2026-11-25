@@ -113,6 +113,11 @@ pub struct DepotStartingStock(pub Vec<(String, u32)>);
 #[derive(Component, Clone, Debug, Default, PartialEq)]
 pub struct DepotStartingFleet(pub Vec<(CargoClassMask, u32, f32, u32)>);
 
+/// Trains a freight yard starts with (RD-7): `(count, wagons)`, applied once when the yard first
+/// registers. Wagon load and speed come from `road_tiers.ron` `rail`.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct YardStartingTrains(pub u32, pub u8);
+
 fn owner_of(slots: &Query<&FactionSlot>, entity: Entity) -> OwnerId {
     slots.get(entity).map_or(OwnerId::PLAYER, |s| OwnerId(s.0))
 }
@@ -421,6 +426,8 @@ impl Plugin for LogisticsOrdersPlugin {
                     (
                         tag_logistics_hubs_as_order_sites,
                         tag_flow_facilities_as_order_sites,
+                        tag_freight_yards_as_order_sites,
+                        grant_yard_handover_trains,
                         tag_mfg_facilities_as_order_sites,
                         super::construction_demand::tag_construction_sites_as_order_sites,
                     ),
@@ -487,6 +494,70 @@ pub fn tag_logistics_hubs_as_order_sites(
             role: SiteRole::Depot,
             position_m: None,
         });
+    }
+}
+
+/// Buildings that are freight yards (RD-7): the train-loading endpoints of rail hauls.
+pub const FREIGHT_YARD_CATALOG_IDS: [&str; 2] = ["freight_yard_v1", "logistics_rail_warehouse"];
+
+/// A finished freight yard becomes a `Yard` site (keeping the site id it had while being built)
+/// and gets the freight train it comes with.
+pub fn tag_freight_yards_as_order_sites(
+    mut commands: Commands,
+    sites: Query<(
+        Entity,
+        &crate::strategic::ConstructionSite,
+        &crate::economy::activation::BuildingDefinitionRef,
+        Option<&mut LogisticsOrderSite>,
+    )>,
+    slots: Query<&FactionSlot>,
+) {
+    for (entity, site, def, existing) in sites {
+        if site.phase != crate::strategic::SiteConstructionPhase::Operational
+            || !FREIGHT_YARD_CATALOG_IDS.contains(&def.catalog_id.as_str())
+        {
+            continue;
+        }
+        let name = format!("Freight yard #{}", entity.index());
+        match existing {
+            None => {
+                commands.entity(entity).insert((
+                    LogisticsOrderSite { name, owner: owner_of(&slots, site.owner), role: SiteRole::Yard, position_m: None },
+                    YardStartingTrains(1, 12),
+                ));
+            }
+            Some(mut s) if s.role != SiteRole::Yard => {
+                // Built in place: the construction endpoint becomes the yard. Its train comes with
+                // the hand-over (the site is already registered, so add it directly).
+                s.role = SiteRole::Yard;
+                s.name = name;
+                commands.entity(entity).insert(YardHandoverTrain);
+            }
+            Some(_) => {}
+        }
+    }
+}
+
+/// A yard that took over a registered construction endpoint still owes its train.
+#[derive(Component, Clone, Copy, Debug)]
+pub struct YardHandoverTrain;
+
+/// Give a handed-over yard its train once (the site is registered already).
+pub fn grant_yard_handover_trains(
+    mut commands: Commands,
+    mut res: ResMut<LogisticsOrderSimRes>,
+    yards: Query<(Entity, &LogisticsOrderSiteId, &LogisticsOrderSite), With<YardHandoverTrain>>,
+) {
+    let rail = &crate::infrastructure::road_tier_table().rail;
+    for (entity, id, site) in &yards {
+        res.sim.apply(LogisticsOrderCommand::AddTrain {
+            owner: site.owner,
+            home: id.0,
+            wagons: 12,
+            wagon_capacity: rail.wagon_capacity,
+            speed_mps: rail.speed_mps(),
+        });
+        commands.entity(entity).remove::<YardHandoverTrain>();
     }
 }
 
@@ -596,6 +667,7 @@ pub fn sync_logistics_order_sites_system(
             Option<&GlobalTransform>,
             Option<&DepotStartingStock>,
             Option<&DepotStartingFleet>,
+            Option<&YardStartingTrains>,
         ),
         Without<LogisticsOrderSiteId>,
     >,
@@ -620,7 +692,7 @@ pub fn sync_logistics_order_sites_system(
         }
     }
 
-    for (entity, site, t, g, start_stock, start_fleet) in &new_sites {
+    for (entity, site, t, g, start_stock, start_fleet, start_trains) in &new_sites {
         let Some(xz) = site_xz(site, t, g) else {
             continue;
         };
@@ -670,6 +742,17 @@ pub fn sync_logistics_order_sites_system(
                         speed_mps,
                     });
                 }
+            }
+        } else if let (None, SiteRole::Yard, Some(&YardStartingTrains(count, wagons))) = (rebound, site.role, start_trains) {
+            let rail = &crate::infrastructure::road_tier_table().rail;
+            for _ in 0..count {
+                res.sim.apply(LogisticsOrderCommand::AddTrain {
+                    owner: site.owner,
+                    home: id,
+                    wagons,
+                    wagon_capacity: rail.wagon_capacity,
+                    speed_mps: rail.speed_mps(),
+                });
             }
         } else if rebound.is_none() && seed.enabled && site.role == SiteRole::Depot {
             for &(class_mask, capacity_units, speed_mps, count) in &seed.vehicles {
@@ -742,6 +825,7 @@ pub fn step_logistics_orders_system(
     clock: Res<SimStepClock>,
     attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     legs: Option<Res<super::travel::SiteLegRouteBook>>,
+    rail_legs: Option<Res<super::travel::SiteRailLegBook>>,
 ) {
     let res = &mut *res;
     let registry = &mut *registry;
@@ -775,10 +859,12 @@ pub fn step_logistics_orders_system(
         }
         // RD-3: trip time = the route the planner laid (roads at tier speed, else off-road).
         let empty = super::travel::SiteLegRouteBook::default();
+        let no_rail = super::travel::SiteRailLegBook::default();
         let routed = super::travel::RoutedTravel {
             base: &registry.travel,
             legs: legs.as_deref().unwrap_or(&empty),
             offroad_mps: crate::infrastructure::road_tier_table().offroad_speed_mps(),
+            rail: rail_legs.as_deref().unwrap_or(&no_rail),
         };
         res.sim.tick(&routed);
     }

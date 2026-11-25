@@ -1352,3 +1352,143 @@ fn scale_probe_many_orders_and_vehicles() {
         sim.vehicles.values().filter(|v| !v.is_free()).count()
     );
 }
+
+/// Road distances plus a rail line between two yards (RD-7).
+struct RoadAndRail {
+    road: Distances,
+    rail: BTreeMap<(SiteId, SiteId), f32>,
+}
+
+impl TravelModel for RoadAndRail {
+    fn travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+        self.road.travel_ticks(from, to, speed_mps)
+    }
+
+    fn rail_travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+        if from == to {
+            return Some(0);
+        }
+        self.rail.get(&(from, to)).map(|m| (m / speed_mps).ceil() as u32)
+    }
+}
+
+fn yards_world(rail_open: bool) -> (LogisticsOrderSim, RoadAndRail, VehicleId) {
+    let mut sim = LogisticsOrderSim::new(cfg());
+    for (id, name) in [(SiteId(1), "Yard A"), (SiteId(2), "Yard B")] {
+        ok(sim.apply(LogisticsOrderCommand::RegisterSite { site: id, name: name.into() }));
+    }
+    // 3 km by road, 3 km by rail; trucks 10 m/s × 40 t, the train 20 m/s × 12 × 50 t.
+    let mut rail = BTreeMap::new();
+    if rail_open {
+        rail.insert((SiteId(1), SiteId(2)), 3000.0);
+        rail.insert((SiteId(2), SiteId(1)), 3000.0);
+    }
+    let travel = RoadAndRail { road: Distances::default().with(1, 2, 3000.0), rail };
+    for _ in 0..3 {
+        truck(&mut sim, OwnerId::PLAYER, 40);
+    }
+    let train = match ok(sim.apply(LogisticsOrderCommand::AddTrain {
+        owner: OwnerId::PLAYER,
+        home: SiteId(1),
+        wagons: 12,
+        wagon_capacity: 50,
+        speed_mps: 20.0,
+    })) {
+        CommandOutcome::CreatedVehicle(id) => id,
+        other => panic!("{other:?}"),
+    };
+    ok(sim.apply(LogisticsOrderCommand::SetStock { site: SiteId(1), cargo: CargoKind::new("Gravel"), on_hand: 2000 }));
+    ok(sim.apply(LogisticsOrderCommand::CreateOneOffRun {
+        owner: OwnerId::PLAYER,
+        source: SiteId(1),
+        sink: SiteId(2),
+        cargo: CargoKind::new("Gravel"),
+        quantity: 1200,
+        priority: Priority::Normal,
+        vehicle_cap: None,
+    }));
+    (sim, travel, train)
+}
+
+#[test]
+fn a_train_takes_the_yard_to_yard_bulk_run_and_moves_it_faster_per_unit() {
+    let (mut sim, travel, train) = yards_world(true);
+    sim.tick(&travel);
+    let a = sim.vehicles[&train].assignment.as_ref().expect("the train is picked first");
+    assert_eq!(a.load, 600, "a full consist");
+    // Run to completion: the train should carry most of the bill.
+    for _ in 0..2000 {
+        sim.tick(&travel);
+    }
+    let delivered = sim.stock.get(SiteId(2), &CargoKind::new("Gravel")).on_hand;
+    assert_eq!(delivered, 1200, "the whole run arrives");
+}
+
+#[test]
+fn without_a_rail_route_trains_stay_home_and_trucks_carry_the_run() {
+    let (mut sim, travel, train) = yards_world(false);
+    // 3 trucks × 40 t on a ~10-minute round trip: about 10 round trips.
+    for _ in 0..8000 {
+        sim.tick(&travel);
+    }
+    assert!(sim.vehicles[&train].assignment.is_none(), "no rail, no train work");
+    assert_eq!(sim.stock.get(SiteId(2), &CargoKind::new("Gravel")).on_hand, 1200, "trucks deliver it");
+}
+
+/// RD-7 done-when: a yard pair 150 tiles apart (2.4 km of rail, ~3 km by road) moves 1200 t of
+/// gravel faster with a train than the same trucks alone.
+#[test]
+fn rd7_done_when_rail_beats_trucks_per_unit_over_150_tiles() {
+    fn ticks_to_deliver(with_train: bool) -> u32 {
+        let mut sim = LogisticsOrderSim::new(cfg());
+        for (id, name) in [(SiteId(1), "Yard A"), (SiteId(2), "Yard B")] {
+            ok(sim.apply(LogisticsOrderCommand::RegisterSite { site: id, name: name.into() }));
+        }
+        let mut rail = BTreeMap::new();
+        rail.insert((SiteId(1), SiteId(2)), 2400.0);
+        rail.insert((SiteId(2), SiteId(1)), 2400.0);
+        let travel = RoadAndRail { road: Distances::default().with(1, 2, 3000.0), rail };
+        for _ in 0..4 {
+            match ok(sim.apply(LogisticsOrderCommand::AddVehicle {
+                owner: OwnerId::PLAYER,
+                home: SiteId(1),
+                class_mask: CargoClassMask::FREIGHT,
+                capacity_units: 10,
+                speed_mps: 12.0,
+            })) {
+                CommandOutcome::CreatedVehicle(_) => {}
+                other => panic!("{other:?}"),
+            }
+        }
+        if with_train {
+            let rail = crate::infrastructure::road_tier_table().rail.clone();
+            ok(sim.apply(LogisticsOrderCommand::AddTrain {
+                owner: OwnerId::PLAYER,
+                home: SiteId(1),
+                wagons: 12,
+                wagon_capacity: rail.wagon_capacity,
+                speed_mps: rail.speed_mps(),
+            }));
+        }
+        ok(sim.apply(LogisticsOrderCommand::SetStock { site: SiteId(1), cargo: CargoKind::new("Gravel"), on_hand: 1200 }));
+        ok(sim.apply(LogisticsOrderCommand::CreateOneOffRun {
+            owner: OwnerId::PLAYER,
+            source: SiteId(1),
+            sink: SiteId(2),
+            cargo: CargoKind::new("Gravel"),
+            quantity: 1200,
+            priority: Priority::Normal,
+            vehicle_cap: None,
+        }));
+        for t in 1..200_000 {
+            sim.tick(&travel);
+            if sim.stock.get(SiteId(2), &CargoKind::new("Gravel")).on_hand >= 1200 {
+                return t;
+            }
+        }
+        panic!("never delivered");
+    }
+    let by_rail = ticks_to_deliver(true);
+    let by_road = ticks_to_deliver(false);
+    assert!(by_rail * 3 < by_road, "rail {by_rail} ticks vs trucks {by_road} ticks for 1200 t over 150 tiles");
+}

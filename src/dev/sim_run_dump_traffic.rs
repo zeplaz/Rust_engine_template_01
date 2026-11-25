@@ -92,6 +92,44 @@ pub fn dump_track_wear_section(
     );
 }
 
+/// Writes the `rail` section (RD-7): trains and what they are doing, yard pairs with a rail route,
+/// hauls sent by rail and the ones put back on the road.
+pub fn dump_rail_section(
+    arm: Res<SimDumpArm>,
+    sim: Option<Res<crate::economy::logistics::orders::LogisticsOrderSimRes>>,
+    rail: Option<Res<crate::economy::logistics::orders::SiteRailLegBook>>,
+    intermodal: Option<Res<crate::economy::logistics::intermodal::IntermodalBook>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let trains: Vec<_> = sim
+        .as_ref()
+        .map(|s| s.sim.vehicles.values().filter(|v| v.mode.is_rail()).collect())
+        .unwrap_or_default();
+    dump.put_value(
+        "rail",
+        json!({
+            "trains": trains.len(),
+            "trains_busy": trains.iter().filter(|v| v.assignment.is_some()).count(),
+            "train_rows": trains.iter().take(8).map(|v| json!({
+                "id": v.id.0,
+                "at": v.at.0,
+                "phase": v.phase.label(),
+                "capacity": v.capacity_units,
+                "load": v.assignment.as_ref().map(|a| a.load),
+            })).collect::<Vec<_>>(),
+            "rail_legs": rail.as_ref().map_or(0, |r| r.legs.len()),
+            "leg_times_s": rail.as_ref().map(|r| r.legs.iter().take(8).map(|((a, b), l)| json!({
+                "from": a.0, "to": b.0, "time_s": l.route.time_s(crate::infrastructure::road_tier_table().rail.speed_mps()),
+            })).collect::<Vec<_>>()),
+            "hauls_by_rail": intermodal.as_ref().map_or(0, |i| i.chains.len()),
+            "reverted_to_road": intermodal.as_ref().map_or(0, |i| i.reverted),
+        }),
+    );
+}
+
 /// Writes the `road_flow` section.
 pub fn dump_road_flow_section(arm: Res<SimDumpArm>, flow: Option<Res<RoadFlowBook>>, mut dump: ResMut<SimRunDump>) {
     if !arm.due {

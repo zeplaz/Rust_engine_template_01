@@ -286,6 +286,32 @@ pub struct Assignment {
     pub load: u32,
 }
 
+/// How a vehicle travels (PLAN-ROADS-v1 RD-7): on roads / off-road, or on rail between yards.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VehicleMode {
+    #[default]
+    Road,
+    /// A train: an engine pulling `wagons` (capacity = wagons × wagon load); runs yard → yard on
+    /// rail only.
+    Rail { wagons: u8 },
+}
+
+impl VehicleMode {
+    #[must_use]
+    pub const fn is_rail(self) -> bool {
+        matches!(self, Self::Rail { .. })
+    }
+
+    /// Load / unload time multiplier (a train loads wagon by wagon).
+    #[must_use]
+    pub fn handling_mul(self) -> u32 {
+        match self {
+            Self::Road => 1,
+            Self::Rail { wagons } => 1 + u32::from(wagons) / 4,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Vehicle {
     pub id: VehicleId,
@@ -298,6 +324,9 @@ pub struct Vehicle {
     pub at: SiteId,
     pub phase: VehiclePhase,
     pub assignment: Option<Assignment>,
+    /// Road (trucks) unless a train.
+    #[serde(default)]
+    pub mode: VehicleMode,
 }
 
 impl Vehicle {

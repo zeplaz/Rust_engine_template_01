@@ -71,6 +71,15 @@ pub struct SiteLegRouteBook {
     pub revision: u64,
 }
 
+/// Planned yard-to-yard rail legs (RD-7): the rail route between two yards (tile units, a speed
+/// cap per stretch). Sole writer: the rail leg planner. Read by the order sim (train trip time)
+/// and train presentation. A pair with no entry has no rail route (no line, or it is cut).
+#[derive(bevy::prelude::Resource, Clone, Debug, Default)]
+pub struct SiteRailLegBook {
+    pub legs: BTreeMap<(SiteId, SiteId), PlannedLeg>,
+    pub revision: u64,
+}
+
 /// Order-sim travel over planned legs: a planned pair takes the time of the route actually driven
 /// (built roads at their tier speed, the rest off-road); an unplanned pair falls back to the
 /// straight line × detour at off-road speed until the planner gets to it.
@@ -79,6 +88,8 @@ pub struct RoutedTravel<'a> {
     pub legs: &'a SiteLegRouteBook,
     /// Off-road speed (m/s) for the fallback.
     pub offroad_mps: f32,
+    /// Yard-to-yard rail legs (RD-7); trains only run where one exists.
+    pub rail: &'a SiteRailLegBook,
 }
 
 impl TravelModel for RoutedTravel<'_> {
@@ -90,6 +101,15 @@ impl TravelModel for RoutedTravel<'_> {
             Some(leg) if leg.route.points.len() >= 2 => leg.route.time_s(speed_mps),
             _ => self.base.distance_m(from, to)? * self.base.detour.max(1.0) / speed_mps.min(self.offroad_mps).max(0.1),
         };
+        Some((secs / self.base.seconds_per_tick.max(1e-3)).ceil().max(1.0) as u32)
+    }
+
+    fn rail_travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+        if from == to {
+            return Some(0);
+        }
+        let leg = self.rail.legs.get(&(from, to)).filter(|l| l.route.points.len() >= 2)?;
+        let secs = leg.route.time_s(speed_mps);
         Some((secs / self.base.seconds_per_tick.max(1e-3)).ceil().max(1.0) as u32)
     }
 }

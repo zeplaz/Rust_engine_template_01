@@ -53,7 +53,7 @@ pub fn run_place_corridor_step_system(
     queue: Option<ResMut<ConstructionPlanQueue>>,
     mut log: ResMut<CorridorPlacementLog>,
 ) {
-    let Some(ScenarioStep::PlaceCorridor { kind, points }) = host.pending_steps.front() else {
+    let Some(ScenarioStep::PlaceCorridor { kind, points, assist }) = host.pending_steps.front() else {
         return;
     };
     // Wait until terrain, water, the network and the plan queue can answer.
@@ -63,18 +63,29 @@ pub fn run_place_corridor_step_system(
     if !live_height_grid_ready(heights.as_deref()) || !water.ready() {
         return;
     }
-    let (name, pts) = (kind.clone(), points.clone());
+    let (name, pts, assist) = (kind.clone(), points.clone(), *assist);
     host.pending_steps.pop_front();
     host.current_step_index = host.current_step_index.saturating_add(1);
     let Some(kind) = corridor_kind_from_name(&name) else {
         host.execution_log.push(format!("PlaceCorridor: unknown kind {name:?}"));
         return;
     };
-    let path: Vec<Vec2> = pts.iter().map(|p| Vec2::new(p.tile_x as f32 + 0.5, p.tile_z as f32 + 0.5)).collect();
+    let mut path: Vec<Vec2> = pts.iter().map(|p| Vec2::new(p.tile_x as f32 + 0.5, p.tile_z as f32 + 0.5)).collect();
     let params = params.as_ref();
     let grid = heights.as_deref();
     let ground = |p: Vec2| sample_height_norm(p.x, p.y, params, grid) * params.elevation_range_m;
     let wet = |t: IVec2| water.depth_m(t);
+    if assist && path.len() >= 2 {
+        let map = UVec2::new(params.width, params.height);
+        let mut routed = vec![path[0]];
+        for w in path.windows(2) {
+            match crate::construction::corridor_tool::assist_route(w[0], w[1], kind, &ground, &wet, roads.as_ref(), map) {
+                Some(rest) => routed.extend(rest),
+                None => routed.push(w[1]),
+            }
+        }
+        path = routed;
+    }
     let started = std::time::Instant::now();
     let checks = check_corridor_path(&path, kind, &ground, &wet, roads.as_ref(), UVec2::new(params.width, params.height));
     let check_us = started.elapsed().as_micros();

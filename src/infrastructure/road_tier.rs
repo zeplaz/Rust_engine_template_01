@@ -107,6 +107,9 @@ pub struct RoadTierTable {
     /// RD-5 worn tracks (wear, fade, forming).
     #[serde(default)]
     pub worn_tracks: WornTrackTuning,
+    /// RD-7 rail freight (trains, yards, intermodal).
+    #[serde(default)]
+    pub rail: RailTuning,
     pub tiers: Vec<RoadTierSpec>,
     /// Materials per metre of railway (ballast, rails, sleepers).
     #[serde(default = "default_rail_materials")]
@@ -137,6 +140,40 @@ pub struct OffroadTuning {
 impl Default for OffroadTuning {
     fn default() -> Self {
         Self { ford_max_m: 0.5, wet_m: 0.05, ford_mul: 0.35, rubble_mul: 0.3, mud_from_moisture: 0.6, mud_slow: 0.6, snow_slow: 0.5 }
+    }
+}
+
+/// RD-7: freight trains, yards and when a haul goes by rail.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct RailTuning {
+    /// Line speed of a freight train (km/h).
+    pub speed_kmh: f32,
+    /// Speed on the yard siding between the yard and the line (km/h).
+    pub siding_kmh: f32,
+    /// Units one wagon carries (t, m3 for tank wagons).
+    pub wagon_capacity: u32,
+    /// A yard joins the nearest rail node within this many tiles.
+    pub yard_reach_tiles: f32,
+    /// Hauls shorter than this (tiles, straight line) stay on the road.
+    pub intermodal_min_tiles: f32,
+}
+
+impl Default for RailTuning {
+    fn default() -> Self {
+        Self { speed_kmh: 80.0, siding_kmh: 15.0, wagon_capacity: 50, yard_reach_tiles: 10.0, intermodal_min_tiles: 60.0 }
+    }
+}
+
+impl RailTuning {
+    #[must_use]
+    pub fn speed_mps(&self) -> f32 {
+        self.speed_kmh / 3.6
+    }
+
+    #[must_use]
+    pub fn siding_mps(&self) -> f32 {
+        self.siding_kmh / 3.6
     }
 }
 
@@ -224,6 +261,7 @@ fn default_table() -> &'static RoadTierTable {
         offroad_speed_kmh: 18.0,
         offroad: OffroadTuning::default(),
         worn_tracks: WornTrackTuning::default(),
+        rail: RailTuning::default(),
         rail_materials_per_m: default_rail_materials(),
         tiers: vec![
             row(RoadTier::Track, 25.0, 1, 40.0, 0.4, 0.3),

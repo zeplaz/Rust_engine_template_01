@@ -26,6 +26,15 @@
         wheeled_per_s: 0.5,
         tracked_per_s: 1.5,
     ),
+    // RD-7 rail freight: line and siding speed, wagon load, how far a yard reaches for the line,
+    // and the shortest haul (straight-line tiles) worth sending by rail.
+    rail: (
+        speed_kmh: 80.0,
+        siding_kmh: 15.0,
+        wagon_capacity: 50,
+        yard_reach_tiles: 10.0,
+        intermodal_min_tiles: 60.0,
+    ),
     // Railway bill per metre: ballast, rails, sleepers.
     rail_materials_per_m: [("Gravel", 1.0), ("Steel", 0.25), ("Timber", 0.3)],
     tiers: [

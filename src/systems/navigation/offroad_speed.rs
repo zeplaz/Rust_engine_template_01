@@ -11,7 +11,7 @@
 //! - wetness: chunk weather soil moisture (mud) and snow cover.
 //!
 //! Sole writer: [`publish_offroad_speed_field_system`] (rebuilt when terrain changes and every
-//! [`REBUILD_EVERY_STEPS`] sim steps for water and weather). Readers: the cross-country truck path
+//! [`REBUILD_EVERY_STEPS`] sim steps for water and weather; sim time only — deterministic). Readers: the cross-country truck path
 //! and its trip time ([`super::road_vehicles_motion`]), road on/off ramps
 //! ([`crate::economy::logistics::routes::truck_road_route`]) and formations
 //! ([`crate::combat::formation::advance_formations_system`]).
@@ -34,11 +34,10 @@ use crate::terrain::material::{TagRegistry, TagSet};
 use crate::terrain::mobility::{evaluate_tile, MobilityProfile, MobilityProfileRegistry};
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
-/// Water and weather move; the field is rebuilt this often (sim steps) even when terrain did not,
-/// but at most once per [`MIN_REBUILD_REAL_S`] of real time (time skip runs many steps a frame).
-pub const REBUILD_EVERY_STEPS: u64 = 10;
-/// Real seconds between rebuilds that terrain did not force.
-pub const MIN_REBUILD_REAL_S: f32 = 5.0;
+/// Water and weather move; the field is rebuilt this often (sim steps = sim seconds) even when
+/// terrain did not. Sim time only, so the field (and the routes it feeds) is the same on every
+/// machine; 5 sim minutes keeps fast-forward cheap (a rebuild walks every tile).
+pub const REBUILD_EVERY_STEPS: u64 = 300;
 /// Mobility profile trucks use.
 pub const WHEELED_PROFILE: &str = "wheeled_logistics";
 /// Slowest a passable tile gets (keeps times finite).
@@ -174,9 +173,8 @@ pub fn publish_offroad_speed_field_system(
     water: WaterTileProbe,
     debris: Option<Res<DebrisRouteBlockBook>>,
     clock: Option<Res<SimStepClock>>,
-    time: Res<Time<Real>>,
     mut field: ResMut<OffroadSpeedField>,
-    mut last: Local<Option<(u64, f32)>>,
+    mut last: Local<Option<u64>>,
 ) {
     let (Some(dense), Some(params)) = (terrain.dense.as_deref(), terrain.params.as_deref()) else {
         return;
@@ -187,12 +185,11 @@ pub fn publish_offroad_speed_field_system(
     let step = clock.as_ref().map_or(0, |c| c.steps);
     let terrain_changed = terrain.dense.as_ref().is_some_and(|d| d.is_changed())
         || debris.as_ref().is_some_and(|d| d.is_changed());
-    let now = time.elapsed_secs();
-    let due = last.is_none_or(|(s, t)| step >= s + REBUILD_EVERY_STEPS && now >= t + MIN_REBUILD_REAL_S);
+    let due = last.is_none_or(|s| step >= s + REBUILD_EVERY_STEPS);
     if !field.is_empty() && !terrain_changed && !due {
         return;
     }
-    *last = Some((step, now));
+    *last = Some(step);
     field.rebuilds = field.rebuilds.wrapping_add(1);
 
     let (w, h) = (dense.width as i32, dense.height as i32);

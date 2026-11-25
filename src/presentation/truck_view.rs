@@ -128,10 +128,18 @@ pub fn sync_truck_presentation(
             }
         } else {
             let facing = facing_from_motion(v, &registry);
-            let color = match phase {
-                VisualActionPhase::Move => Color::srgb(0.85, 0.65, 0.15),
-                VisualActionPhase::Work => Color::srgb(0.55, 0.75, 0.25),
+            let color = match (v.mode, phase) {
+                // RD-7 trains: dark red engine-and-wagons bar.
+                (crate::economy::logistics::orders::model::VehicleMode::Rail { .. }, _) => Color::srgb(0.6, 0.18, 0.15),
+                (_, VisualActionPhase::Move) => Color::srgb(0.85, 0.65, 0.15),
+                (_, VisualActionPhase::Work) => Color::srgb(0.55, 0.75, 0.25),
                 _ => Color::srgb(0.45, 0.5, 0.55),
+            };
+            let (size, label) = match v.mode {
+                crate::economy::logistics::orders::model::VehicleMode::Rail { wagons } => {
+                    (Vec2::new(6.0 + 3.0 * f32::from(wagons), 3.5), format!("train:{}", id.0))
+                }
+                crate::economy::logistics::orders::model::VehicleMode::Road => (Vec2::new(6.0, 3.0), format!("truck:{}", id.0)),
             };
             let e = commands
                 .spawn((
@@ -139,7 +147,7 @@ pub fn sync_truck_presentation(
                     Transform::from_xyz(xz.x, xz.y, 2.0),
                     Sprite {
                         color,
-                        custom_size: Some(Vec2::new(6.0, 3.0)),
+                        custom_size: Some(size),
                         ..default()
                     },
                     VisualActionState {
@@ -154,7 +162,7 @@ pub fn sync_truck_presentation(
                         leg_key: 0,
                         route_version: 0,
                     },
-                    Name::new(format!("truck:{}", id.0)),
+                    Name::new(label),
                 ))
                 .id();
             index.by_vehicle.insert(*id, e);

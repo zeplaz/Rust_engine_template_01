@@ -123,6 +123,10 @@ pub enum ScenarioStep {
     PlaceCorridor {
         kind: String,
         points: Vec<ScenarioWorldTile>,
+        /// Join each pair of points with the tool's route assist (the player's G): a path that
+        /// holds the mode's grade and cut limits instead of straight lines.
+        #[serde(default)]
+        assist: bool,
     },
     /// DF-1 / D4 — coarse-step time skip for slow domains.
     SetTimeSkip {

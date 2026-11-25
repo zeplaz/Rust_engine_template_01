@@ -1105,3 +1105,63 @@ fn solver_anytime_partial_steps_hold_invariants() {
         );
     }
 }
+
+/// RD-7: a rail line between two yards gives a rail route; rubble on the line takes it away.
+#[test]
+fn rd7_yards_route_over_the_rail_line_and_lose_it_when_the_line_is_buried() {
+    use crate::construction::corridor_network::{CorridorKind, CorridorNetwork};
+    use crate::economy::logistics::debris_block::DebrisRouteBlockBook;
+    use crate::economy::logistics::routes::{rail_yard_route, RoadRouteWorld};
+    use crate::strategic::BuildSiteTile;
+    use crate::systems::transport::{
+        hydrate_transport_from_snapshot, refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
+        TransportEdgeDirectory, TransportFieldStore, TransportNavExport, TransportTopology,
+    };
+    let mut net = CorridorNetwork::default();
+    net.add_segment(
+        CorridorKind::Rail { profile: "default_rail".into() },
+        BuildSiteTile { x: 10, z: 10 },
+        BuildSiteTile { x: 210, z: 10 },
+    )
+    .expect("rail line");
+    let snap = net.bake_snapshot(10.25);
+    let (mut top, mut field, mut dir) =
+        (TransportTopology::default(), TransportFieldStore::default(), TransportEdgeDirectory::default());
+    hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &snap).unwrap();
+    let mut cache = TransportCostCache::default();
+    for (id, st) in &field.by_edge {
+        cache.by_edge.insert(
+            *id,
+            crate::systems::transport::edge_traversal_cost(st, &TransportCostWeights::default(), st.travel_time_base),
+        );
+    }
+    let mut nav = TransportNavExport::default();
+    refresh_transport_nav_export(&top, &cache, &dir, &mut nav);
+    let open = RoadRouteWorld {
+        nav: &nav,
+        directory: &dir,
+        graph: None,
+        cache: Some(&cache),
+        forecast: None,
+        nav_field: None,
+        flood: None,
+        debris: None,
+        bridges: None,
+        flow: None,
+        depart_tick: 0,
+        offroad_field: None,
+    };
+    let (yard_a, yard_b) = (Vec2::new(8.5, 13.5), Vec2::new(212.5, 13.5));
+    let route = rail_yard_route(&open, yard_a, yard_b, 10.0, 22.0, 4.0).expect("the yards reach the line");
+    let t = route.time_s(22.0);
+    // ~200 tiles × 16 m at 22 m/s ≈ 145 s on the line, plus two short sidings.
+    assert!(t > 140.0 && t < 200.0, "rail trip time {t}");
+    assert!(rail_yard_route(&open, yard_a, Vec2::new(212.5, 60.0), 10.0, 22.0, 4.0).is_none(), "a yard out of reach");
+    // Bury a stretch of the line: no rail route any more.
+    let mut debris = DebrisRouteBlockBook::default();
+    for x in 100..=120 {
+        debris.blocked.insert(format!("t{x}_10"));
+    }
+    let buried = RoadRouteWorld { debris: Some(&debris), ..open };
+    assert!(rail_yard_route(&buried, yard_a, yard_b, 10.0, 22.0, 4.0).is_none(), "the buried line is a wall");
+}

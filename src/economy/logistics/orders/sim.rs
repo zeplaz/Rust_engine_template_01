@@ -16,6 +16,21 @@ type FreePool = BTreeMap<OwnerId, BTreeMap<SiteId, Vec<VehicleId>>>;
 /// Travel time source. `None` = unreachable. Same-site travel should return `Some(0)`.
 pub trait TravelModel {
     fn travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32>;
+
+    /// Travel by rail between two yards (RD-7); `None` = no rail route (default: no rail).
+    fn rail_travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+        let _ = (from, to, speed_mps);
+        None
+    }
+}
+
+/// Travel ticks for a vehicle of `mode` (rail vehicles only move on rail).
+fn mode_travel_ticks(travel: &dyn TravelModel, mode: VehicleMode, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+    if mode.is_rail() {
+        travel.rail_travel_ticks(from, to, speed_mps)
+    } else {
+        travel.travel_ticks(from, to, speed_mps)
+    }
 }
 
 /// Tunables. Defaults assume one sim tick per simulated second.
@@ -76,6 +91,15 @@ pub enum LogisticsOrderCommand {
         capacity_units: u32,
         speed_mps: f32,
         cost: Vec<(CargoKind, u32)>,
+    },
+    /// A freight train homed at a yard (RD-7): `wagons` × `wagon_capacity` units, bulk and liquid
+    /// wagons, rail only.
+    AddTrain {
+        owner: OwnerId,
+        home: SiteId,
+        wagons: u8,
+        wagon_capacity: u32,
+        speed_mps: f32,
     },
     SetStock {
         site: SiteId,
@@ -393,6 +417,24 @@ impl LogisticsOrderSim {
                     speed_mps,
                 })
             }
+            C::AddTrain { owner, home, wagons, wagon_capacity, speed_mps } => {
+                if wagons == 0 || wagon_capacity == 0 {
+                    return CommandOutcome::Rejected("train needs wagons".into());
+                }
+                let out = self.apply_inner(C::AddVehicle {
+                    owner,
+                    home,
+                    class_mask: CargoClassMask(CargoClassMask::FREIGHT.0 | CargoClassMask::TANKER.0),
+                    capacity_units: u32::from(wagons) * wagon_capacity,
+                    speed_mps,
+                });
+                if let CommandOutcome::CreatedVehicle(id) = out {
+                    if let Some(v) = self.vehicles.get_mut(&id) {
+                        v.mode = VehicleMode::Rail { wagons };
+                    }
+                }
+                out
+            }
             C::AddVehicle {
                 owner,
                 home,
@@ -420,6 +462,7 @@ impl LogisticsOrderSim {
                         at: home,
                         phase: VehiclePhase::Idle,
                         assignment: None,
+                        mode: VehicleMode::Road,
                     },
                 );
                 CommandOutcome::CreatedVehicle(id)
@@ -784,6 +827,8 @@ impl LogisticsOrderSim {
     fn finish_leg(&mut self, vid: VehicleId, travel: &dyn TravelModel) {
         let (load_ticks, unload_ticks) = (self.config.load_ticks, self.config.unload_ticks);
         let v = self.vehicles.get_mut(&vid).expect("caller checked");
+        let mode = v.mode;
+        let handling = mode.handling_mul();
         let Some(a) = v.assignment.clone() else {
             v.phase = VehiclePhase::Idle;
             return;
@@ -791,7 +836,7 @@ impl LogisticsOrderSim {
         match v.phase {
             VehiclePhase::ToPickup(_) => {
                 v.at = a.source;
-                v.phase = VehiclePhase::Loading(Leg::new(load_ticks));
+                v.phase = VehiclePhase::Loading(Leg::new(load_ticks * handling));
             }
             VehiclePhase::Loading(_) => {
                 let mul = if self.weather_haul_mul <= 0.0 {
@@ -825,12 +870,12 @@ impl LogisticsOrderSim {
                     asg.load = actual;
                 }
                 // Route checked at allocation; a vanished route falls back to one tick.
-                let t = travel.travel_ticks(a.source, a.sink, speed).unwrap_or(1);
+                let t = mode_travel_ticks(travel, mode, a.source, a.sink, speed).unwrap_or(1);
                 v.phase = VehiclePhase::Hauling(Leg::new(t));
             }
             VehiclePhase::Hauling(_) => {
                 v.at = a.sink;
-                v.phase = VehiclePhase::Unloading(Leg::new(unload_ticks));
+                v.phase = VehiclePhase::Unloading(Leg::new(unload_ticks * handling));
             }
             VehiclePhase::Unloading(_) => {
                 v.phase = VehiclePhase::Idle;
@@ -1034,34 +1079,56 @@ impl LogisticsOrderSim {
         (pool, compatible)
     }
 
-    /// Shortest-deadhead free vehicle for `owner` carrying `class` to `source`.
+    /// Free vehicle for `owner` carrying `class` from `source` to `sink`.
     ///
-    /// Per site the lowest compatible id stands in; sites compete on `(deadhead, id)`.
+    /// Trucks: per site the lowest compatible id stands in; sites compete on `(deadhead, id)`.
+    /// Trains (RD-7) only run where rail joins the deadhead and the trip; the best train is taken
+    /// when its time per unit (deadhead + trip, over its capacity) beats the best truck's.
     /// Cost is O(sites holding free vehicles), not O(fleet).
     fn pick_from_pool(
         &self,
         pool: &FreePool,
         owner: OwnerId,
         class: CargoClass,
-        source: SiteId,
+        (source, sink): (SiteId, SiteId),
         travel: &dyn TravelModel,
     ) -> Option<(SiteId, VehicleId, u32)> {
         let mut best: Option<(u32, VehicleId, SiteId)> = None;
+        let mut best_rail: Option<(u64, VehicleId, SiteId, u32)> = None;
         for (&at, ids) in pool.get(&owner)? {
-            let Some(&vid) = ids
+            if let Some(&vid) = ids
                 .iter()
-                .find(|id| self.vehicles[id].class_mask.accepts(class))
-            else {
-                continue;
-            };
-            let Some(dead) = travel.travel_ticks(at, source, self.vehicles[&vid].speed_mps) else {
-                continue;
-            };
-            if best.is_none_or(|(bd, bid, _)| (dead, vid) < (bd, bid)) {
-                best = Some((dead, vid, at));
+                .find(|id| !self.vehicles[id].mode.is_rail() && self.vehicles[id].class_mask.accepts(class))
+            {
+                if let Some(dead) = travel.travel_ticks(at, source, self.vehicles[&vid].speed_mps) {
+                    if best.is_none_or(|(bd, bid, _)| (dead, vid) < (bd, bid)) {
+                        best = Some((dead, vid, at));
+                    }
+                }
+            }
+            for &vid in ids.iter().filter(|id| self.vehicles[id].mode.is_rail() && self.vehicles[id].class_mask.accepts(class)) {
+                let v = &self.vehicles[&vid];
+                let (Some(dead), Some(trip)) = (
+                    travel.rail_travel_ticks(at, source, v.speed_mps),
+                    travel.rail_travel_ticks(source, sink, v.speed_mps),
+                ) else {
+                    continue;
+                };
+                let per_unit = (u64::from(dead) + u64::from(trip)) * 1000 / u64::from(v.capacity_units.max(1));
+                if best_rail.is_none_or(|(bp, bid, _, _)| (per_unit, vid) < (bp, bid)) {
+                    best_rail = Some((per_unit, vid, at, dead));
+                }
             }
         }
-        best.map(|(dead, vid, at)| (at, vid, dead))
+        let road_per_unit = best.and_then(|(dead, vid, _)| {
+            let v = &self.vehicles[&vid];
+            let trip = travel.travel_ticks(source, sink, v.speed_mps)?;
+            Some((u64::from(dead) + u64::from(trip)) * 1000 / u64::from(v.capacity_units.max(1)))
+        });
+        match (best_rail, road_per_unit) {
+            (Some((rail_pu, vid, at, dead)), road) if road.is_none_or(|r| rail_pu < r) => Some((at, vid, dead)),
+            _ => best.map(|(dead, vid, at)| (at, vid, dead)),
+        }
     }
 
     fn allocate(&mut self, travel: &dyn TravelModel) {
@@ -1111,7 +1178,7 @@ impl LogisticsOrderSim {
                     reason.insert(id, Some(WaitReason::VehicleCap));
                     continue;
                 }
-                if travel.travel_ticks(source, sink, 1.0).is_none() {
+                if travel.travel_ticks(source, sink, 1.0).is_none() && travel.rail_travel_ticks(source, sink, 1.0).is_none() {
                     reason.insert(id, Some(WaitReason::Unreachable));
                     continue;
                 }
@@ -1122,7 +1189,7 @@ impl LogisticsOrderSim {
                 }
                 let class = cargo.class();
                 let Some((at, vid, deadhead)) =
-                    self.pick_from_pool(&pool, owner, class, source, travel)
+                    self.pick_from_pool(&pool, owner, class, (source, sink), travel)
                 else {
                     reason.insert(
                         id,

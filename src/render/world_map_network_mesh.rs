@@ -719,6 +719,7 @@ fn orders_site_color(role: crate::economy::logistics::orders::SiteRole) -> Color
         SiteRole::Construction => Color::srgba(0.95, 0.75, 0.25, 0.95),
         SiteRole::Plant => Color::srgba(0.45, 0.9, 0.5, 0.95),
         SiteRole::Unit => Color::srgba(0.95, 0.95, 0.95, 0.95),
+        SiteRole::Yard => Color::srgba(0.75, 0.55, 0.95, 0.95),
     }
 }
 

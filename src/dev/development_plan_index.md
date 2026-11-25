@@ -9,7 +9,7 @@ CI is green on `master` (`d11695fe`). Bevy 0.20, Bevy UI only.
 
 | Program | State | What is left |
 |:---|:---|:---|
-| Roads + rail · [`plan_roads_v1.md`](plan_roads_v1.md) | **OPEN** | operator hands-on of the line tool; congestion/grading capture; RD-7 rail freight; B-3 repair |
+| Roads + rail · [`plan_roads_v1.md`](plan_roads_v1.md) | **OPEN** | operator hands-on of the line tool; RD-9 look; RD-8 AI roads / rail; RD-10; RD-7 rest; B-3 repair |
 | Cursor-wave cleanup · [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) | **CLOSED** 11-24 (70/70) | — |
 | Ref-books residual · [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) | **OPEN** (residual) | RND-02, RND-12 PARTIAL; 9 DEFER on triggers |
 | Voxel occupation · [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) | **OPEN** | default-on decision (OCC-P4/P5) |

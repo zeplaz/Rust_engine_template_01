@@ -1,0 +1,19 @@
+{
+    "asset_name": "Freight yard",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Rail freight yard beside a railway: sidings, loading tracks and a truck apron. Trains load and unload here; long hauls with a yard at each end go by rail (one freight train comes with the yard)",
+    "supply_chain": "logistics_storage",
+    "supply_chain_role": "freight_yard",
+    "is_building": true,
+    "is_productive": false,
+    "building_size_x": 8,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 1600,
+    "power_generation": 0,
+    "power_consumption": 10,
+    "produces_resources": [],
+    "consumes_resources": ["Labour"],
+    "version": "1.0.0"
+}

@@ -23,11 +23,13 @@
             hq: Tile(x: 140, z: 168),
             stockpile: [
                 (cargo: "Concrete", amount: 7000),
-                (cargo: "Steel", amount: 2800),
+                (cargo: "Steel", amount: 3300),
                 (cargo: "Fuel", amount: 1600),
                 (cargo: "Machinery", amount: 800),
                 (cargo: "Cement", amount: 500),
-                (cargo: "Gravel", amount: 700),
+                // Roads and the railway built in the scene draw on these (works bills).
+                (cargo: "Gravel", amount: 3000),
+                (cargo: "Timber", amount: 500),
                 (cargo: "Limestone", amount: 500),
                 (cargo: "Coal", amount: 300),
                 (cargo: "Water", amount: 400),
@@ -42,6 +44,13 @@
                 (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
             ],
             formations: [],
+            // RD-7: freight yards at both ends of the west-bank rail line (scene PlaceCorridor rail
+            // (112,96) → (114,140); further south the bank is too steep for rail); the south
+            // yard holds the train.
+            yards: [
+                (name: "North yard", tile: (116, 98)),
+                (name: "South yard", tile: (118, 140), trains: 1, wagons: 12),
+            ],
         ),
         (
             slot: 1,

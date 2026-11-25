@@ -220,7 +220,9 @@ pub fn form_worn_tracks_system(
                         rotation: 0.0,
                     });
                 }
-                book.formed.extend(sub.iter().copied());
+                for tile in &sub {
+                    book.formed.insert(*tile);
+                }
                 formed += 1;
             }
         }

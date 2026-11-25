@@ -578,6 +578,34 @@ impl TruckRoadNetwork<'_> {
             .wrapping_add(self.construction.as_deref().map_or(0, |c| c.revision).rotate_left(47))
     }
 
+    /// Rail route between two yards (tile units, see [`rail_yard_route`]).
+    #[must_use]
+    pub fn rail_route(&self, depart_tick: u64, from: Vec2, to: Vec2) -> Option<TruckRoute> {
+        let (nav, directory) = (self.nav.as_deref()?, self.directory.as_deref()?);
+        let rail = &crate::infrastructure::road_tier_table().rail;
+        rail_yard_route(
+            &RoadRouteWorld {
+                nav,
+                directory,
+                graph: self.graph.as_deref(),
+                cache: self.cost_cache.as_deref(),
+                forecast: None,
+                nav_field: self.nav_field.as_deref(),
+                flood: self.blocks.flood.as_deref(),
+                debris: self.blocks.debris.as_deref(),
+                bridges: self.blocks.bridges.as_deref(),
+                flow: None,
+                depart_tick,
+                offroad_field: None,
+            },
+            from,
+            to,
+            rail.yard_reach_tiles,
+            rail.speed_mps(),
+            rail.siding_mps(),
+        )
+    }
+
     /// Fastest built-road route for a truck leg (tile units, see [`truck_road_route`]).
     #[must_use]
     pub fn route(
@@ -703,6 +731,20 @@ fn chain_edge_nodes(
     offroad_mps: f32,
     flow: Option<&super::road_flow::RoadFlowBook>,
 ) -> Option<(Vec<Vec2>, Vec<f32>)> {
+    chain_edge_nodes_with(directory, start, goal, edges, &|id, meta| {
+        let free = crate::infrastructure::road_profile_speed_mps(&meta.profile).unwrap_or(offroad_mps);
+        free / flow.map_or(1.0, |f| f.time_mul(id))
+    })
+}
+
+/// [`chain_edge_nodes`] with the speed cap of each edge from `cap_of`.
+fn chain_edge_nodes_with(
+    directory: &TransportEdgeDirectory,
+    start: bevy::math::IVec2,
+    goal: bevy::math::IVec2,
+    edges: &[TransportEdgeId],
+    cap_of: &dyn Fn(TransportEdgeId, &crate::systems::transport::TransportEdgeMeta) -> f32,
+) -> Option<(Vec<Vec2>, Vec<f32>)> {
     let mut cur = start;
     let mut out = vec![tile_centre(cur)];
     let mut caps = Vec::with_capacity(edges.len());
@@ -717,10 +759,86 @@ fn chain_edge_nodes(
             return None;
         };
         out.push(tile_centre(cur));
-        let free = crate::infrastructure::road_profile_speed_mps(&meta.profile).unwrap_or(offroad_mps);
-        caps.push(free / flow.map_or(1.0, |f| f.time_mul(*id)));
+        caps.push(cap_of(*id, meta));
     }
     (cur == goal).then_some((out, caps))
+}
+
+fn edge_carries_trains(meta: &crate::systems::transport::TransportEdgeMeta) -> bool {
+    meta.allowed_agents.iter().any(|a| a == "rail_train" || a == "train")
+}
+
+/// Rail route between two yards (RD-7), tile units: a siding from the yard to a rail node within
+/// `reach_tiles`, the transport graph's rail route (flooded, buried, cut or failed-bridge edges are
+/// walls, as for roads), a siding to the other yard. Line stretches at `rail_mps`, sidings at
+/// `siding_mps`. `None` when no rail line joins both yards.
+#[must_use]
+pub fn rail_yard_route(
+    world: &RoadRouteWorld,
+    from: Vec2,
+    to: Vec2,
+    reach_tiles: f32,
+    rail_mps: f32,
+    siding_mps: f32,
+) -> Option<TruckRoute> {
+    let (nav, directory) = nav_and_directory_without_closed_edges(world.graph, world.nav, world.directory);
+    let mut nodes: Vec<bevy::math::IVec2> = directory
+        .by_edge
+        .values()
+        .filter(|m| edge_carries_trains(m))
+        .flat_map(|m| [parse_tile_xy(&m.head_key), parse_tile_xy(&m.tail_key)])
+        .flatten()
+        .collect();
+    nodes.sort_by_key(|n| (n.x, n.y));
+    nodes.dedup();
+    let nearest = |p: Vec2| -> Vec<bevy::math::IVec2> {
+        let mut near: Vec<(f32, bevy::math::IVec2)> =
+            nodes.iter().map(|n| (tile_centre(*n).distance(p), *n)).filter(|(d, _)| *d <= reach_tiles).collect();
+        near.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.x.cmp(&b.1.x)).then(a.1.y.cmp(&b.1.y)));
+        near.into_iter().take(3).map(|(_, n)| n).collect()
+    };
+    let as_tile = |n: bevy::math::IVec2| BuildSiteTile { x: n.x.max(0) as u32, z: n.y.max(0) as u32 };
+    let to_nodes = nearest(to);
+    let mut best: Option<(f32, TruckRoute)> = None;
+    for a in nearest(from) {
+        for &b in &to_nodes {
+            if a == b {
+                continue;
+            }
+            let Some(edges) = path_edges_between_tiles_costed(
+                &nav,
+                &directory,
+                as_tile(a),
+                as_tile(b),
+                TransportMode::Rail,
+                world.cache,
+                world.forecast,
+                world.nav_field,
+                world.flood,
+                world.debris,
+                world.bridges,
+                None,
+                world.depart_tick,
+            ) else {
+                continue;
+            };
+            let Some((line, caps)) = chain_edge_nodes_with(&directory, a, b, &edges, &|_, _| rail_mps) else {
+                continue;
+            };
+            let mut points = vec![from];
+            points.extend(line);
+            points.push(to);
+            let mut caps_mps = vec![siding_mps];
+            caps_mps.extend(caps);
+            caps_mps.push(siding_mps);
+            let route = TruckRoute { points, caps_mps };
+            let t = route.time_s(rail_mps);
+            if best.as_ref().is_none_or(|(bt, _)| t < *bt) {
+                best = Some((t, route));
+            }
+        }
+    }
+    best.map(|(_, r)| r)
 }
 
 /// Fastest way over the built roads from `from` to `to` (tile units, cell = floor) for a truck of

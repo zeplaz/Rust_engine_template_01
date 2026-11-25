@@ -5,6 +5,7 @@ mod path_concerns;
 mod motion;
 mod nav;
 pub mod offroad_speed;
+pub mod rail_legs;
 mod potental_feild_nav;
 mod road_vehicles_motion;
 pub(crate) use road_vehicles_motion::vehicle_leg_pair;

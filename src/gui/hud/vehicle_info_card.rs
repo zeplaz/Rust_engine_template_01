@@ -27,8 +27,12 @@ pub fn vehicle_card_lines(v: &Vehicle, site_name: &dyn Fn(u32) -> String, select
         VehiclePhase::Hauling(l) => format!("hauling ({:.0} %)", l.fraction() * 100.0),
         VehiclePhase::Unloading(_) => "unloading".to_string(),
     };
+    let kind = match v.mode {
+        crate::economy::logistics::orders::model::VehicleMode::Rail { wagons } => format!("TRAIN #{} ({wagons} wagons)", v.id.0),
+        crate::economy::logistics::orders::model::VehicleMode::Road => format!("TRUCK #{}", v.id.0),
+    };
     let mut lines = vec![
-        format!("TRUCK #{}  · owner {}", v.id.0, v.owner.0),
+        format!("{kind}  · owner {}", v.owner.0),
         format!("Doing:     {doing}"),
     ];
     match &v.assignment {
@@ -132,6 +136,7 @@ mod tests {
             at: SiteId(1),
             phase: VehiclePhase::Hauling(Leg::new(10)),
             assignment: Some(Assignment { order: OrderId(3), source: SiteId(1), sink: SiteId(2), cargo: CargoKind::new("Gravel"), load: 40 }),
+            mode: Default::default(),
         };
         let name = |id: u32| if id == 1 { "HQ".to_string() } else { "Works 2".to_string() };
         let text = vehicle_card_lines(&v, &name, 3).join("\n");

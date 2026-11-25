@@ -101,6 +101,24 @@ pub struct FactionStart {
     /// Formations the faction starts the game with.
     #[serde(default)]
     pub formations: Vec<FormationLine>,
+    /// Freight yards the faction starts with (RD-7), each with its trains.
+    #[serde(default)]
+    pub yards: Vec<YardLine>,
+}
+
+/// A starting freight yard on a world tile with `trains` freight trains of `wagons` wagons.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct YardLine {
+    pub name: String,
+    pub tile: (i32, i32),
+    #[serde(default)]
+    pub trains: u32,
+    #[serde(default = "default_wagons")]
+    pub wagons: u8,
+}
+
+fn default_wagons() -> u8 {
+    12
 }
 
 #[derive(Resource, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -234,6 +252,22 @@ pub fn apply_faction_start_system(
                     .collect(),
             ),
         ));
+        for y in &f.yards {
+            let c = (Vec2::new(y.tile.0 as f32, y.tile.1 as f32) + Vec2::splat(0.5)) * METRES_PER_TILE;
+            commands.spawn((
+                Name::new(y.name.clone()),
+                FactionSlot(f.slot),
+                Transform::from_xyz(c.x, 0.0, c.y),
+                GlobalTransform::default(),
+                LogisticsOrderSite {
+                    name: y.name.clone(),
+                    owner: OwnerId(f.slot),
+                    role: SiteRole::Yard,
+                    position_m: Some([c.x, c.y]),
+                },
+                crate::economy::logistics::orders::plugin::YardStartingTrains(y.trains, y.wagons),
+            ));
+        }
     }
 }
 
@@ -305,5 +339,20 @@ impl Plugin for FactionStartPlugin {
             )
                 .before(seed_faction_ai_controllers_system),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shipped_start_configs_parse_and_the_dam_valley_has_its_yards() {
+        assert!(FactionStartConfig::load_default().is_some(), "faction_start_v1.ron");
+        let dam = FactionStartConfig::load_path("assets/configs/scenario/faction_start_dam_valley_v1.ron")
+            .expect("dam valley start config");
+        let player = dam.factions.iter().find(|f| f.slot == 0).expect("player");
+        assert_eq!(player.yards.len(), 2, "RD-7: north and south yard");
+        assert_eq!(player.yards.iter().map(|y| y.trains).sum::<u32>(), 1, "one train");
     }
 }

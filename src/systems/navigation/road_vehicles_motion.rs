@@ -328,6 +328,15 @@ pub fn offroad_route(points: Vec<Vec2>, offroad_mps: f32, field: Option<&super::
 
 /// Site pair a vehicle's current or next leg drives, if it is moving or about to.
 pub(crate) fn vehicle_leg_pair(v: &crate::economy::logistics::orders::Vehicle) -> Option<(SiteId, SiteId)> {
+    // Trains run on rail legs (`rail_legs`), never on truck legs (no road load, no wear).
+    if v.mode.is_rail() {
+        return None;
+    }
+    vehicle_trip_pair(v)
+}
+
+/// Site pair any vehicle's current or next trip runs between (trucks and trains).
+pub(crate) fn vehicle_trip_pair(v: &crate::economy::logistics::orders::Vehicle) -> Option<(SiteId, SiteId)> {
     let a = v.assignment.as_ref()?;
     match v.phase {
         VehiclePhase::ToPickup(_) => Some((v.at, a.source)),
@@ -402,6 +411,7 @@ pub fn sync_truck_motion_waypoints_system(
     sim: Option<Res<LogisticsOrderSimRes>>,
     registry: Option<Res<LogisticsSiteRegistry>>,
     book: Res<SiteLegRouteBook>,
+    rail_book: Option<Res<crate::economy::logistics::orders::SiteRailLegBook>>,
     mut q: Query<(
         &mut TruckMotionLeg,
         &mut Waypoints,
@@ -420,13 +430,18 @@ pub fn sync_truck_motion_waypoints_system(
         };
         let key = truck_leg_key(v);
         let pair = match v.phase {
-            VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_) => vehicle_leg_pair(v),
+            VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_) => vehicle_trip_pair(v),
             _ => None,
         };
         let Some(pair) = pair else {
             continue;
         };
-        let planned = book.legs.get(&pair);
+        // Trains follow their rail leg (RD-7), trucks their road / cross-country leg.
+        let planned = if v.mode.is_rail() {
+            rail_book.as_deref().and_then(|b| b.legs.get(&pair))
+        } else {
+            book.legs.get(&pair)
+        };
         let version = planned.map_or(0, |p| p.version);
         if leg.leg_key == key && leg.route_version == version && !wp.points.is_empty() {
             continue;
