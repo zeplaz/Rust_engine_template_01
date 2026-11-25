@@ -4,7 +4,8 @@
 //! zoom input write it exactly as in the top-down view (`map_camera_apply_input`), and this rig
 //! reads its mirror ([`MapCameraDesiredRes`]) like the 2D ortho does. The rig adds two things the
 //! flat view has no use for:
-//! - a yaw in 90 degree steps ([`PixelWorldCameraRig`], Q / E via [`crate::gui::InputBindings`]);
+//! - a free yaw and pitch ([`PixelWorldCameraRig`]): middle-mouse drag orbits (left/right) and
+//!   tilts (up/down); Q / E turn a quarter ([`crate::gui::InputBindings`]); the camera eases to it;
 //! - a focus height sampled from the voxel field, so the camera orbits the ground under it.
 //!
 //! The camera renders into the same RTT image ([`SimulationMapTexture`]) the top-down camera
@@ -32,8 +33,14 @@ use crate::gui::{MapCameraDesiredRes, SimulationMapTexture, SimulationMapViewpor
 /// is already in view; above the ceiling a single column fills the screen.
 pub const PIXEL_WORLD_ZOOM_RANGE: (f32, f32) = (1.5, 64.0);
 
-/// Camera pitch below the horizon.
+/// Default camera pitch below the horizon.
 const PITCH_DEG: f32 = 52.0;
+/// Pitch range a middle-drag tilts within (degrees below the horizon).
+pub const PITCH_RANGE_DEG: (f32, f32) = (25.0, 85.0);
+/// Middle-drag orbit: radians of yaw per pixel of horizontal drag.
+const ORBIT_RAD_PER_PX: f32 = 0.006;
+/// Middle-drag tilt: degrees of pitch per pixel of vertical drag.
+const TILT_DEG_PER_PX: f32 = 0.15;
 /// Vertical field of view.
 const FOV_DEG: f32 = 32.0;
 /// Yaw easing rate (1/s).
@@ -52,17 +59,38 @@ pub struct PixelWorldCamera;
 #[derive(Component)]
 pub struct PixelWorldSun;
 
-/// Quarter-turn yaw of the voxel camera. Sole writer: [`pixel_world_rotate_input_system`].
-#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// Where the voxel camera should look (the rendered camera eases to it). Writers: the Q / E and
+/// middle-drag input systems in this module (one domain: voxel camera input).
+#[derive(Resource, Clone, Copy, Debug, PartialEq)]
 pub struct PixelWorldCameraRig {
-    /// 0 = looking north; each step turns the view 90 degrees counter-clockwise.
-    pub yaw_steps: u8,
+    /// Radians; 0 = looking north, positive turns the view counter-clockwise.
+    pub yaw: f32,
+    /// Degrees below the horizon, within [`PITCH_RANGE_DEG`].
+    pub pitch_deg: f32,
+}
+
+impl Default for PixelWorldCameraRig {
+    fn default() -> Self {
+        Self { yaw: 0.0, pitch_deg: PITCH_DEG }
+    }
 }
 
 impl PixelWorldCameraRig {
     #[must_use]
     pub fn yaw_radians(self) -> f32 {
-        f32::from(self.yaw_steps % 4) * std::f32::consts::FRAC_PI_2
+        self.yaw
+    }
+
+    /// Quarter turn from the nearest quarter (Q / E): +1 counter-clockwise, -1 clockwise.
+    pub fn quarter_turn(&mut self, dir: f32) {
+        let q = std::f32::consts::FRAC_PI_2;
+        self.yaw = ((self.yaw / q).round() + dir.signum()) * q;
+    }
+
+    /// Middle-drag: orbit by the horizontal pixels, tilt by the vertical (drag up = steeper).
+    pub fn drag(&mut self, delta_px: Vec2) {
+        self.yaw -= delta_px.x * ORBIT_RAD_PER_PX;
+        self.pitch_deg = (self.pitch_deg - delta_px.y * TILT_DEG_PER_PX).clamp(PITCH_RANGE_DEG.0, PITCH_RANGE_DEG.1);
     }
 }
 
@@ -95,8 +123,10 @@ pub struct PixelWorldCameraFrame {
     /// Tactical-XY bounds of the ground the screen corners see (at the focus height).
     pub ground_min: Vec2,
     pub ground_max: Vec2,
-    /// Displayed yaw (eases toward the rig's step).
+    /// Displayed yaw (eases toward the rig).
     pub yaw: f32,
+    /// Displayed pitch below the horizon, radians (eases toward the rig).
+    pub pitch: f32,
 }
 
 impl PixelWorldCameraFrame {
@@ -176,14 +206,15 @@ pub fn pixel_world_rotate_input_system(
         return;
     }
     if keys.just_pressed(bindings.pixel_world_rotate_left) {
-        rig.yaw_steps = (rig.yaw_steps + 1) % 4;
+        rig.quarter_turn(1.0);
     }
     if keys.just_pressed(bindings.pixel_world_rotate_right) {
-        rig.yaw_steps = (rig.yaw_steps + 3) % 4;
+        rig.quarter_turn(-1.0);
     }
 }
 
-/// Middle-mouse drag orbits the voxel world (does not pan — pan stays on right-drag / WASD).
+/// Middle-mouse drag orbits (left/right) and tilts (up/down) the voxel camera, smoothly (does not
+/// pan — pan stays on right-drag / WASD).
 pub fn pixel_world_mmb_orbit_system(
     mode: Option<Res<WorldPresentationMode>>,
     mouse_btn: Res<ButtonInput<MouseButton>>,
@@ -191,10 +222,8 @@ pub fn pixel_world_mmb_orbit_system(
     active_map_surface: Res<crate::gui::ActiveMapViewInput>,
     input_routing: Option<Res<crate::render::view_runtime::ViewInputRoutingState>>,
     mut rig: ResMut<PixelWorldCameraRig>,
-    mut accum: Local<f32>,
 ) {
     if !mode.is_some_and(|m| m.is_pixel_world()) {
-        *accum = 0.0;
         return;
     }
     if active_map_surface.blocks_main_world_map_camera_input() {
@@ -203,21 +232,10 @@ pub fn pixel_world_mmb_orbit_system(
     if input_routing.is_some_and(|r| r.world_pointer_input_disabled()) {
         return;
     }
-    if !mouse_btn.pressed(MouseButton::Middle) {
-        *accum = 0.0;
+    if !mouse_btn.pressed(MouseButton::Middle) || input_frame.pointer_delta == Vec2::ZERO {
         return;
     }
-    *accum += input_frame.pointer_delta.x;
-    // ~48 px per 90° step — deliberate turntable, not twitchy.
-    const STEP_PX: f32 = 48.0;
-    while *accum >= STEP_PX {
-        *accum -= STEP_PX;
-        rig.yaw_steps = (rig.yaw_steps + 3) % 4; // CW
-    }
-    while *accum <= -STEP_PX {
-        *accum += STEP_PX;
-        rig.yaw_steps = (rig.yaw_steps + 1) % 4; // CCW
-    }
+    rig.drag(input_frame.pointer_delta);
 }
 
 /// Spawn the voxel camera + sun once the map RTT exists. Both start inactive / dark.
@@ -366,7 +384,7 @@ pub fn sync_pixel_world_camera(
     let zoom = clamp_pixel_world_zoom(desired.scale.x);
     let focus = desired.translation.truncate();
 
-    // Yaw eases toward the rig step along the short way round.
+    // Yaw eases toward the rig along the short way round; pitch eases at the same rate.
     let target_yaw = rig.yaw_radians();
     let dt = time.delta_secs().clamp(0.0, 0.1);
     let first = !frame.active;
@@ -379,6 +397,12 @@ pub fn sync_pixel_world_camera(
         }
         let step = d * (1.0 - (-YAW_EASE * dt).exp());
         if d.abs() < 1e-3 { target_yaw } else { frame.yaw + step }
+    };
+    let target_pitch = rig.pitch_deg.clamp(PITCH_RANGE_DEG.0, PITCH_RANGE_DEG.1).to_radians();
+    let pitch = if first || frame.pitch <= 0.0 {
+        target_pitch
+    } else {
+        frame.pitch + (target_pitch - frame.pitch) * (1.0 - (-YAW_EASE * dt).exp())
     };
 
     // Focus height: mean surface over a small cross around the focus, eased.
@@ -403,7 +427,6 @@ pub fn sync_pixel_world_camera(
     let distance = view_h_tiles / (2.0 * tan_half_fov);
     let (_, up_axis) = pixel_world_pan_axes(yaw);
     let forward = Vec3::new(up_axis.x, 0.0, -up_axis.y);
-    let pitch = PITCH_DEG.to_radians();
     let focus3 = tile_to_world3(focus, focus_height);
     let eye = focus3 - forward * (distance * pitch.cos()) + Vec3::Y * (distance * pitch.sin());
     *tf = Transform::from_translation(eye).looking_at(focus3, Vec3::Y);
@@ -437,6 +460,7 @@ pub fn sync_pixel_world_camera(
         ground_min: focus,
         ground_max: focus,
         yaw,
+        pitch,
     };
     // Ground footprint: the four screen-corner rays against the focus-height plane.
     let (mut lo, mut hi) = (focus, focus);

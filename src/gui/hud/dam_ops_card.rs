@@ -1,15 +1,24 @@
-//! DF-4 — play UI dam control card (multi-channel release → site [`DamControl`]).
-//! Player panel for any dam in the game — not DamFlood-only.
+//! DF-4 — dam operations: the dam section of the site card (multi-channel release → site
+//! [`DamControl`]). Player controls for any dam in the game — not DamFlood-only.
+//!
+//! The section lives inside the site card (`plant_info_card`: one movable card per focused site,
+//! no second overlapping card). Widgets (preset buttons, channel steppers + sliders, turbine unit
+//! buttons, online check) and the keyboard shortcuts both send [`DamAction`]s; one system applies
+//! them.
 //!
 //! Writes [`crate::construction::DamControl`] on the focused dam; construction mirrors
 //! that into [`crate::systems::water::BarrierControlIntent`] → SurfaceWaterField →
 //! PixelWorld / GPU field / foam jets.
 
 use bevy::prelude::*;
-use bevy::ui::FocusPolicy;
+use bevy::ui::RelativeCursorPosition;
 
 use crate::construction::{DamBody, DamControl};
 use crate::gui::logistics_focus::HudLogisticsFocus;
+use crate::gui::DeprecatedInteraction;
+use crate::gui::style::widgets::{
+    spawn_button, spawn_note, spawn_section_header, spawn_stepper, spawn_toggle, ui_slider_drag, ToggleState, UiButton, UiButtonVariant, UiKit, UiSlider, UiTooltip, FONT_SMALL, GAP,
+};
 use crate::strategic::{ConstructionSite, SiteArchetype};
 use crate::systems::water::{HydroGenerationState, SurfaceWaterField, DAM_TURBINE_UNIT_COUNT};
 
@@ -32,11 +41,6 @@ impl Default for DamOpsCardState {
     }
 }
 
-#[derive(Component)]
-pub struct DamOpsCardRoot;
-
-#[derive(Component)]
-pub struct DamOpsCardLabel;
 
 /// Toggle with Alt+D. Opens only while map focus is a Dam; clears when focus leaves / empties.
 pub fn toggle_dam_ops_card_system(
@@ -92,7 +96,7 @@ fn fmt_storage_m3(v: f64) -> String {
 }
 
 /// Operator-facing balance from live field + site control (production path).
-fn dam_ops_text(
+fn dam_status_text(
     ctrl: &DamControl,
     body: Option<&DamBody>,
     focus_turbine: u8,
@@ -232,22 +236,11 @@ fn dam_ops_text(
     }
 
     format!(
-        "DAM OPS — click dam, then use keys (no mouse knobs yet)\n\
-         ─────────────────────────────\n\
-         Natural inflow: {}  (river before the dam)\n\
+        "Natural inflow: {}  (river before the dam)\n\
          Release now:    {}  (low {} + spill {}{})\n\
          Pass-through:   {:.0}% of natural\n\
          {}\
-         ─────────────────────────────\n\
-         CHANNEL          KEYS          NOW\n\
-         Low outlet       [  ]          {:.0}%\n\
-         Mid outlet       ;  '          {:.0}%\n\
-         Spillway gate    -  =          {:.0}%\n\
-         {}\
-         ── Presets (number row) ──\n\
-         1 SHUT all  ·  2 LOW only  ·  3 PASS  ·  4 FLOOD  ·  5 AUGMENT lost turb\n\
-         Tab select T#  ·  , / . setpoint  ·  / trip-restore\n\
-         Alt+D hide card · water viz follows these setpoints",
+         {}",
         fmt_m3s(inflow),
         fmt_m3s(release),
         fmt_m3s(q_out),
@@ -255,9 +248,6 @@ fn dam_ops_text(
         extras,
         pass_pct,
         balance,
-        ctrl.outlet_open01 * 100.0,
-        ctrl.mid_outlet_open01 * 100.0,
-        ctrl.gate_open01 * 100.0,
         turb_lines.trim_end(),
     )
 }
@@ -276,75 +266,6 @@ fn focused_dam<'a>(
     Some((entity, body, ctrl))
 }
 
-/// Draw dam ops readout when visible (Bevy UI). Rebuild only on text / visibility change.
-pub fn rebuild_dam_ops_card_system(
-    mut commands: Commands,
-    mut state: ResMut<DamOpsCardState>,
-    focus: Res<HudLogisticsFocus>,
-    mut dams: Query<(Entity, &ConstructionSite, &DamBody, &mut DamControl)>,
-    field: Option<Res<SurfaceWaterField>>,
-    hydro: Option<Res<HydroGenerationState>>,
-    existing: Query<Entity, With<DamOpsCardRoot>>,
-    mut label: Query<&mut Text, With<DamOpsCardLabel>>,
-) {
-    if !state.visible {
-        for e in &existing {
-            commands.entity(e).despawn();
-        }
-        state.last_text.clear();
-        return;
-    }
-
-    let Some((_, body, ctrl)) = focused_dam(&focus, &mut dams) else {
-        for e in &existing {
-            commands.entity(e).despawn();
-        }
-        state.last_text.clear();
-        state.visible = false;
-        return;
-    };
-
-    let text = dam_ops_text(
-        ctrl.as_ref(),
-        Some(body),
-        state.focus_turbine,
-        field.as_deref(),
-        hydro.as_deref(),
-    );
-
-    if let Ok(mut t) = label.single_mut() {
-        if state.last_text != text {
-            t.0 = text.clone();
-            state.last_text = text;
-        }
-        return;
-    }
-
-    for e in &existing {
-        commands.entity(e).despawn();
-    }
-    state.last_text = text.clone();
-    commands.spawn((
-        DamOpsCardRoot,
-        DamOpsCardLabel,
-        Text::new(text),
-        Node {
-            position_type: PositionType::Absolute,
-            right: Val::Px(12.0),
-            top: Val::Px(88.0),
-            max_width: Val::Px(400.0),
-            padding: UiRect::all(Val::Px(10.0)),
-            ..default()
-        },
-        BackgroundColor(Color::srgba(0.06, 0.09, 0.11, 0.88)),
-        TextFont::from_font_size(13.0),
-        TextColor(Color::srgb(0.86, 0.92, 0.90)),
-        FocusPolicy::Pass,
-        Pickable::IGNORE,
-        ZIndex(960),
-    ));
-}
-
 fn sync_ctrl_aggregate(ctrl: &mut DamControl) {
     ctrl.turbine_setpoint_m3s = ctrl.turbines.iter().map(|t| t.effective_m3s()).sum();
 }
@@ -360,26 +281,194 @@ fn open_for_flow(q_m3s: f32, head_m: f32, area_m2: f32) -> f32 {
     (q_m3s / full).clamp(0.0, 1.0)
 }
 
-/// Adjust setpoints on the focused dam's [`DamControl`] (production authority).
-pub fn dam_ops_card_adjust_system(
+// ───────────────────────── Controls: one action path for keys and widgets ─────────────────────────
+
+/// A dam release channel the card adjusts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DamChannel {
+    Low,
+    Mid,
+    Spill,
+    /// The selected turbine unit's setpoint.
+    Turbine,
+}
+
+impl DamChannel {
+    pub const ALL: [DamChannel; 4] = [DamChannel::Low, DamChannel::Mid, DamChannel::Spill, DamChannel::Turbine];
+
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            DamChannel::Low => "Low outlet",
+            DamChannel::Mid => "Mid outlet",
+            DamChannel::Spill => "Spillway gates",
+            DamChannel::Turbine => "Turbine setpoint",
+        }
+    }
+}
+
+/// Largest turbine setpoint a unit takes (m³/s).
+pub const TURBINE_MAX_M3S: f32 = 120.0;
+
+/// One operator command on the focused dam (keys and card widgets both send these).
+#[derive(Message, Clone, Copy, Debug, PartialEq)]
+pub enum DamAction {
+    /// 1 shut all · 2 low only · 3 pass · 4 flood release · 5 augment lost turbine flow.
+    Preset(u8),
+    /// Step a channel (fraction of its range, signed).
+    Nudge(DamChannel, f32),
+    /// Set a channel to a fraction of its range.
+    Set(DamChannel, f32),
+    SelectTurbine(u8),
+    /// Trip / restore the selected turbine unit.
+    ToggleTurbine,
+}
+
+/// Fraction (0..1) of a channel's range now.
+#[must_use]
+pub fn channel_fraction(ctrl: &DamControl, focus_turbine: u8, ch: DamChannel) -> f32 {
+    match ch {
+        DamChannel::Low => ctrl.outlet_open01,
+        DamChannel::Mid => ctrl.mid_outlet_open01,
+        DamChannel::Spill => ctrl.gate_open01,
+        DamChannel::Turbine => {
+            let ti = (focus_turbine as usize).min(DAM_TURBINE_UNIT_COUNT - 1);
+            ctrl.turbines[ti].setpoint_m3s / TURBINE_MAX_M3S
+        }
+    }
+    .clamp(0.0, 1.0)
+}
+
+fn set_channel(ctrl: &mut DamControl, focus_turbine: u8, ch: DamChannel, f: f32) {
+    let f = f.clamp(0.0, 1.0);
+    match ch {
+        DamChannel::Low => ctrl.outlet_open01 = f,
+        DamChannel::Mid => ctrl.mid_outlet_open01 = f,
+        DamChannel::Spill => ctrl.gate_open01 = f,
+        DamChannel::Turbine => {
+            let ti = (focus_turbine as usize).min(DAM_TURBINE_UNIT_COUNT - 1);
+            ctrl.turbines[ti].setpoint_m3s = (f * TURBINE_MAX_M3S).round();
+        }
+    }
+}
+
+/// Apply one action to a dam's control (head / mid-outlet area feed the augment preset).
+pub fn apply_dam_action(ctrl: &mut DamControl, focus_turbine: &mut u8, action: DamAction, head_m: f32, mid_area_m2: f32) {
+    match action {
+        DamAction::Preset(1) => {
+            ctrl.outlet_open01 = 0.0;
+            ctrl.mid_outlet_open01 = 0.0;
+            ctrl.gate_open01 = 0.0;
+            for t in &mut ctrl.turbines {
+                t.setpoint_m3s = 0.0;
+            }
+        }
+        DamAction::Preset(2) => {
+            ctrl.outlet_open01 = 0.15;
+            ctrl.mid_outlet_open01 = 0.0;
+            ctrl.gate_open01 = 0.0;
+        }
+        DamAction::Preset(3) => {
+            ctrl.outlet_open01 = 0.45;
+            ctrl.mid_outlet_open01 = 0.25;
+            ctrl.gate_open01 = 0.15;
+        }
+        DamAction::Preset(4) => {
+            ctrl.outlet_open01 = 1.0;
+            ctrl.mid_outlet_open01 = 0.85;
+            ctrl.gate_open01 = 0.85;
+        }
+        // Augment: cover lost turbine flow with the mid outlet (+ low if needed).
+        DamAction::Preset(5) => {
+            let commanded: f32 = ctrl.turbines.iter().map(|t| t.setpoint_m3s.max(0.0)).sum();
+            let effective: f32 = ctrl.turbines.iter().map(|t| t.effective_m3s()).sum();
+            let lost = (commanded - effective).max(0.0);
+            if lost > 0.5 {
+                let need = open_for_flow(lost, head_m, mid_area_m2);
+                ctrl.mid_outlet_open01 = ctrl.mid_outlet_open01.max(need);
+                if need > 0.95 {
+                    ctrl.outlet_open01 = ctrl.outlet_open01.max(open_for_flow(lost * 0.5, head_m, mid_area_m2 * 1.2));
+                }
+            }
+        }
+        DamAction::Preset(_) => {}
+        DamAction::Nudge(ch, d) => {
+            let f = channel_fraction(ctrl, *focus_turbine, ch);
+            set_channel(ctrl, *focus_turbine, ch, f + d);
+        }
+        DamAction::Set(ch, f) => set_channel(ctrl, *focus_turbine, ch, f),
+        DamAction::SelectTurbine(i) => *focus_turbine = i.min(DAM_TURBINE_UNIT_COUNT as u8 - 1),
+        DamAction::ToggleTurbine => {
+            let ti = (*focus_turbine as usize).min(DAM_TURBINE_UNIT_COUNT - 1);
+            ctrl.turbines[ti].available01 = if ctrl.turbines[ti].available01 > 0.5 { 0.0 } else { 1.0 };
+        }
+    }
+    sync_ctrl_aggregate(ctrl);
+}
+
+/// Keyboard shortcuts (same actions as the card's widgets) while the dam section is open.
+pub fn dam_keys_to_actions_system(
     keys: Res<ButtonInput<KeyCode>>,
+    state: Res<DamOpsCardState>,
+    mut out: MessageWriter<DamAction>,
+) {
+    if !state.visible {
+        return;
+    }
+    let step = 0.05;
+    let digits = [
+        (KeyCode::Digit1, KeyCode::Numpad1, 1),
+        (KeyCode::Digit2, KeyCode::Numpad2, 2),
+        (KeyCode::Digit3, KeyCode::Numpad3, 3),
+        (KeyCode::Digit4, KeyCode::Numpad4, 4),
+        (KeyCode::Digit5, KeyCode::Numpad5, 5),
+    ];
+    for (a, b, n) in digits {
+        if keys.just_pressed(a) || keys.just_pressed(b) {
+            out.write(DamAction::Preset(n));
+        }
+    }
+    let nudges = [
+        (KeyCode::BracketLeft, DamChannel::Low, -step),
+        (KeyCode::BracketRight, DamChannel::Low, step),
+        (KeyCode::Semicolon, DamChannel::Mid, -step),
+        (KeyCode::Quote, DamChannel::Mid, step),
+        (KeyCode::Minus, DamChannel::Spill, -step),
+        (KeyCode::Equal, DamChannel::Spill, step),
+        (KeyCode::Comma, DamChannel::Turbine, -5.0 / TURBINE_MAX_M3S),
+        (KeyCode::Period, DamChannel::Turbine, 5.0 / TURBINE_MAX_M3S),
+    ];
+    for (k, ch, d) in nudges {
+        if keys.just_pressed(k) {
+            out.write(DamAction::Nudge(ch, d));
+        }
+    }
+    if keys.just_pressed(KeyCode::Tab) {
+        out.write(DamAction::SelectTurbine((state.focus_turbine + 1) % DAM_TURBINE_UNIT_COUNT as u8));
+    }
+    if keys.just_pressed(KeyCode::Slash) {
+        out.write(DamAction::ToggleTurbine);
+    }
+}
+
+/// Apply queued actions to the focused dam's [`DamControl`] (production authority) and mirror the
+/// scenario intent.
+pub fn apply_dam_actions_system(
+    mut actions: MessageReader<DamAction>,
     mut state: ResMut<DamOpsCardState>,
     focus: Res<HudLogisticsFocus>,
     mut dams: Query<(Entity, &ConstructionSite, &DamBody, &mut DamControl)>,
     field: Option<Res<SurfaceWaterField>>,
     mut scenario_intent: Option<ResMut<crate::scenario::dam_flood::DamControlIntent>>,
 ) {
-    if !state.visible {
+    if actions.is_empty() {
         return;
     }
     let Some((_, _body, mut ctrl)) = focused_dam(&focus, &mut dams) else {
+        actions.clear();
         return;
     };
-    let step = 0.05_f32;
-    let head = field
-        .as_ref()
-        .map(|f| (f.pool.stage_m - f.pool.bed_min_m).max(0.5))
-        .unwrap_or(10.0);
+    let head = field.as_ref().map(|f| (f.pool.stage_m - f.pool.bed_min_m).max(0.5)).unwrap_or(10.0);
     let mid_area = field
         .as_ref()
         .map(|f| {
@@ -390,94 +479,250 @@ pub fn dam_ops_card_adjust_system(
             }
         })
         .unwrap_or(2.0);
-
-    // Release presets.
-    if keys.just_pressed(KeyCode::Digit1) || keys.just_pressed(KeyCode::Numpad1) {
-        ctrl.outlet_open01 = 0.0;
-        ctrl.mid_outlet_open01 = 0.0;
-        ctrl.gate_open01 = 0.0;
-        for t in &mut ctrl.turbines {
-            t.setpoint_m3s = 0.0;
-        }
+    let mut focus_turbine = state.focus_turbine;
+    for a in actions.read() {
+        apply_dam_action(&mut ctrl, &mut focus_turbine, *a, head, mid_area);
     }
-    if keys.just_pressed(KeyCode::Digit2) || keys.just_pressed(KeyCode::Numpad2) {
-        ctrl.outlet_open01 = 0.15;
-        ctrl.mid_outlet_open01 = 0.0;
-        ctrl.gate_open01 = 0.0;
+    if state.focus_turbine != focus_turbine {
+        state.focus_turbine = focus_turbine;
     }
-    if keys.just_pressed(KeyCode::Digit3) || keys.just_pressed(KeyCode::Numpad3) {
-        ctrl.outlet_open01 = 0.45;
-        ctrl.mid_outlet_open01 = 0.25;
-        ctrl.gate_open01 = 0.15;
-    }
-    if keys.just_pressed(KeyCode::Digit4) || keys.just_pressed(KeyCode::Numpad4) {
-        ctrl.outlet_open01 = 1.0;
-        ctrl.mid_outlet_open01 = 0.85;
-        ctrl.gate_open01 = 0.85;
-    }
-    // Augment: cover lost turbine Q with mid (+ low if needed).
-    if keys.just_pressed(KeyCode::Digit5) || keys.just_pressed(KeyCode::Numpad5) {
-        let commanded: f32 = ctrl.turbines.iter().map(|t| t.setpoint_m3s.max(0.0)).sum();
-        let effective: f32 = ctrl.turbines.iter().map(|t| t.effective_m3s()).sum();
-        let lost = (commanded - effective).max(0.0);
-        if lost > 0.5 {
-            let need = open_for_flow(lost, head, mid_area);
-            ctrl.mid_outlet_open01 = ctrl.mid_outlet_open01.max(need);
-            if need > 0.95 {
-                ctrl.outlet_open01 = ctrl
-                    .outlet_open01
-                    .max(open_for_flow(lost * 0.5, head, mid_area * 1.2));
-            }
-        }
-    }
-
-    if keys.just_pressed(KeyCode::BracketLeft) {
-        ctrl.outlet_open01 = (ctrl.outlet_open01 - step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::BracketRight) {
-        ctrl.outlet_open01 = (ctrl.outlet_open01 + step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::Semicolon) {
-        ctrl.mid_outlet_open01 = (ctrl.mid_outlet_open01 - step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::Quote) {
-        ctrl.mid_outlet_open01 = (ctrl.mid_outlet_open01 + step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::Minus) {
-        ctrl.gate_open01 = (ctrl.gate_open01 - step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::Equal) {
-        ctrl.gate_open01 = (ctrl.gate_open01 + step).clamp(0.0, 1.0);
-    }
-    if keys.just_pressed(KeyCode::Tab) {
-        state.focus_turbine =
-            (state.focus_turbine + 1) % DAM_TURBINE_UNIT_COUNT as u8;
-    }
-    let ti = (state.focus_turbine as usize).min(DAM_TURBINE_UNIT_COUNT - 1);
-    if keys.just_pressed(KeyCode::Comma) {
-        ctrl.turbines[ti].setpoint_m3s = (ctrl.turbines[ti].setpoint_m3s - 5.0).max(0.0);
-    }
-    if keys.just_pressed(KeyCode::Period) {
-        ctrl.turbines[ti].setpoint_m3s = (ctrl.turbines[ti].setpoint_m3s + 5.0).min(120.0);
-    }
-    if keys.just_pressed(KeyCode::Slash) {
-        // Operator isolate / restore selected unit (damage caps still apply via derate).
-        if ctrl.turbines[ti].available01 > 0.5 {
-            ctrl.turbines[ti].available01 = 0.0;
-        } else {
-            ctrl.turbines[ti].available01 = 1.0;
-        }
-    }
-    sync_ctrl_aggregate(&mut ctrl);
-
-    // Keep scenario intent mirrored so DamFlood books / steps stay consistent.
     if let Some(intent) = scenario_intent.as_mut() {
         intent.gate_open01 = ctrl.gate_open01;
         intent.outlet_open01 = ctrl.outlet_open01;
         intent.mid_outlet_open01 = ctrl.mid_outlet_open01;
         intent.turbines = ctrl.turbines;
-        intent.focus_turbine = state.focus_turbine;
+        intent.focus_turbine = focus_turbine;
         intent.sync_turbine_aggregate();
+    }
+}
+
+// ───────────────────────── The dam section of the site card ─────────────────────────
+
+/// The dam section inside the site card (spawned while a dam is focused).
+#[derive(Component)]
+pub struct DamCardSection;
+
+#[derive(Component)]
+pub struct DamStatusText;
+
+#[derive(Component, Clone, Copy)]
+pub struct DamPresetButton(pub u8);
+
+#[derive(Component, Clone, Copy)]
+pub struct DamChannelStep(pub DamChannel, pub f32);
+
+#[derive(Component, Clone, Copy)]
+pub struct DamChannelReadout(pub DamChannel);
+
+#[derive(Component, Clone, Copy)]
+pub struct DamChannelSlider(pub DamChannel);
+
+#[derive(Component, Clone, Copy)]
+pub struct DamTurbineButton(pub u8);
+
+#[derive(Component)]
+pub struct DamTurbineOnlineToggle;
+
+const PRESETS: [(u8, &str); 5] = [(1, "Shut"), (2, "Low"), (3, "Pass"), (4, "Flood"), (5, "Augment")];
+
+fn readout(ctrl: &DamControl, focus_turbine: u8, ch: DamChannel) -> String {
+    let f = channel_fraction(ctrl, focus_turbine, ch);
+    match ch {
+        DamChannel::Turbine => format!("{:.0} m³/s", f * TURBINE_MAX_M3S),
+        _ => format!("{:.0} %", f * 100.0),
+    }
+}
+
+/// Spawn / remove the dam section inside the site card as dam focus comes and goes.
+#[allow(clippy::too_many_arguments)]
+pub fn sync_dam_card_section_system(
+    mut commands: Commands,
+    state: Res<DamOpsCardState>,
+    focus: Res<HudLogisticsFocus>,
+    mut dams: Query<(Entity, &ConstructionSite, &DamBody, &mut DamControl)>,
+    card: Query<Entity, With<crate::gui::hud::plant_info_card::FacilityInfoCardRoot>>,
+    sections: Query<Entity, With<DamCardSection>>,
+    palette: Option<Res<crate::gui::style::UiPalette>>,
+    mono: Option<Res<crate::gui::style::CmdUiMonoFont>>,
+) {
+    let want = state.visible && focused_dam(&focus, &mut dams).is_some();
+    if !want {
+        for e in &sections {
+            commands.entity(e).despawn();
+        }
+        return;
+    }
+    if !sections.is_empty() {
+        return;
+    }
+    let (Ok(card), Some(palette), Some(mono)) = (card.single(), palette, mono) else {
+        return;
+    };
+    let Some((_, _, ctrl)) = focused_dam(&focus, &mut dams) else {
+        return;
+    };
+    let kit = UiKit::new(&palette, mono.0.clone());
+    let ft = state.focus_turbine;
+    commands.entity(card).with_children(|root| {
+        root.spawn((
+            DamCardSection,
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(GAP),
+                margin: UiRect::top(Val::Px(6.0)),
+                padding: UiRect::top(Val::Px(6.0)),
+                border: UiRect::top(Val::Px(1.0)),
+                ..default()
+            },
+            BorderColor::all(palette.bevy_border_subtle()),
+        ))
+        .with_children(|sec| {
+            spawn_section_header(sec, &kit, "DAM OPERATIONS");
+            sec.spawn((DamStatusText, Text::new(""), kit.text_font(FONT_SMALL), TextColor(palette.bevy_primary_text())));
+            spawn_section_header(sec, &kit, "Release presets");
+            sec.spawn(Node { flex_direction: FlexDirection::Row, flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(GAP), row_gap: Val::Px(GAP), ..default() })
+                .with_children(|row| {
+                    for (n, label) in PRESETS {
+                        spawn_button(row, &kit, label, UiButton::new(UiButtonVariant::Normal), (DamPresetButton(n), UiTooltip(preset_tip(n).into())));
+                    }
+                });
+            spawn_section_header(sec, &kit, "Channels");
+            for ch in [DamChannel::Low, DamChannel::Mid, DamChannel::Spill] {
+                spawn_stepper(
+                    sec,
+                    &kit,
+                    ch.label(),
+                    DamChannelStep(ch, -0.05),
+                    DamChannelStep(ch, 0.05),
+                    DamChannelReadout(ch),
+                    &readout(&ctrl, ft, ch),
+                    DamChannelSlider(ch),
+                    channel_fraction(&ctrl, ft, ch),
+                );
+            }
+            spawn_section_header(sec, &kit, "Turbines");
+            sec.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(GAP), ..default() })
+                .with_children(|row| {
+                    for i in 0..DAM_TURBINE_UNIT_COUNT as u8 {
+                        let mut b = UiButton::new(UiButtonVariant::Normal);
+                        b.selected = i == ft;
+                        spawn_button(row, &kit, &format!("T{}", i + 1), b, DamTurbineButton(i));
+                    }
+                });
+            spawn_stepper(
+                sec,
+                &kit,
+                DamChannel::Turbine.label(),
+                DamChannelStep(DamChannel::Turbine, -5.0 / TURBINE_MAX_M3S),
+                DamChannelStep(DamChannel::Turbine, 5.0 / TURBINE_MAX_M3S),
+                DamChannelReadout(DamChannel::Turbine),
+                &readout(&ctrl, ft, DamChannel::Turbine),
+                DamChannelSlider(DamChannel::Turbine),
+                channel_fraction(&ctrl, ft, DamChannel::Turbine),
+            );
+            let online = ctrl.turbines[(ft as usize).min(DAM_TURBINE_UNIT_COUNT - 1)].available01 > 0.5;
+            spawn_toggle(sec, &kit, "Selected unit online", online, DamTurbineOnlineToggle);
+            spawn_note(sec, &kit, "Keys: 1-5 presets · [ ] low · ; ' mid · - = spill · Tab unit · , . setpoint · / trip", true, ());
+        });
+    });
+}
+
+fn preset_tip(n: u8) -> &'static str {
+    match n {
+        1 => "Close every outlet, gate and turbine (fill the reservoir)",
+        2 => "Low outlet only (small steady release)",
+        3 => "Pass roughly the natural river",
+        4 => "Open everything (flood release)",
+        _ => "Cover lost turbine flow with the mid / low outlets",
+    }
+}
+
+/// Card widgets → [`DamAction`]s (buttons on press, sliders while held).
+#[allow(clippy::type_complexity)]
+pub fn dam_card_widgets_to_actions_system(
+    presets: Query<(&DeprecatedInteraction, &DamPresetButton), Changed<DeprecatedInteraction>>,
+    steps: Query<(&DeprecatedInteraction, &DamChannelStep), Changed<DeprecatedInteraction>>,
+    turbines: Query<(&DeprecatedInteraction, &DamTurbineButton), Changed<DeprecatedInteraction>>,
+    online: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<DamTurbineOnlineToggle>)>,
+    sliders: Query<(&DamChannelSlider, &DeprecatedInteraction, &RelativeCursorPosition)>,
+    mut out: MessageWriter<DamAction>,
+) {
+    for (i, p) in &presets {
+        if *i == DeprecatedInteraction::Pressed {
+            out.write(DamAction::Preset(p.0));
+        }
+    }
+    for (i, s) in &steps {
+        if *i == DeprecatedInteraction::Pressed {
+            out.write(DamAction::Nudge(s.0, s.1));
+        }
+    }
+    for (i, t) in &turbines {
+        if *i == DeprecatedInteraction::Pressed {
+            out.write(DamAction::SelectTurbine(t.0));
+        }
+    }
+    for i in &online {
+        if *i == DeprecatedInteraction::Pressed {
+            out.write(DamAction::ToggleTurbine);
+        }
+    }
+    for (s, i, cursor) in &sliders {
+        if let Some(f) = ui_slider_drag(i, cursor) {
+            out.write(DamAction::Set(s.0, f));
+        }
+    }
+}
+
+/// Mirror the dam's state into the section (status text, readouts, sliders, unit buttons).
+#[allow(clippy::type_complexity)]
+pub fn refresh_dam_card_section_system(
+    mut state: ResMut<DamOpsCardState>,
+    focus: Res<HudLogisticsFocus>,
+    mut dams: Query<(Entity, &ConstructionSite, &DamBody, &mut DamControl)>,
+    readings: (Option<Res<SurfaceWaterField>>, Option<Res<HydroGenerationState>>),
+    mut status: Query<&mut Text, (With<DamStatusText>, Without<DamChannelReadout>)>,
+    mut readouts: Query<(&DamChannelReadout, &mut Text), Without<DamStatusText>>,
+    mut sliders: Query<(&DamChannelSlider, &mut UiSlider)>,
+    mut toggles: (Query<(&DamTurbineButton, &mut UiButton)>, Query<&mut ToggleState, With<DamTurbineOnlineToggle>>),
+) {
+    let ft = state.focus_turbine;
+    let Some((_, body, ctrl)) = focused_dam(&focus, &mut dams) else {
+        return;
+    };
+    let (field, hydro) = readings;
+    let text = dam_status_text(&ctrl, Some(body), ft, field.as_deref(), hydro.as_deref());
+    if state.last_text != text {
+        for mut t in &mut status {
+            t.0.clone_from(&text);
+        }
+        state.last_text = text;
+    }
+    for (r, mut t) in &mut readouts {
+        let s = readout(&ctrl, ft, r.0);
+        if t.0 != s {
+            t.0 = s;
+        }
+    }
+    for (s, mut slider) in &mut sliders {
+        let f = channel_fraction(&ctrl, ft, s.0);
+        if (slider.fraction - f).abs() > 1e-4 {
+            slider.fraction = f;
+        }
+    }
+    let (buttons, onl) = &mut toggles;
+    for (b, mut ui) in buttons.iter_mut() {
+        let sel = b.0 == ft;
+        if ui.selected != sel {
+            ui.selected = sel;
+        }
+    }
+    let online = ctrl.turbines[(ft as usize).min(DAM_TURBINE_UNIT_COUNT - 1)].available01 > 0.5;
+    for mut t in onl.iter_mut() {
+        if t.0 != online {
+            t.0 = online;
+        }
     }
 }
 
@@ -485,13 +730,18 @@ pub struct DamOpsCardPlugin;
 
 impl Plugin for DamOpsCardPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<DamOpsCardState>().add_systems(
+        app.init_resource::<DamOpsCardState>().add_message::<DamAction>().add_systems(
             Update,
             (
                 toggle_dam_ops_card_system,
-                dam_ops_card_adjust_system.after(toggle_dam_ops_card_system),
-                rebuild_dam_ops_card_system.after(dam_ops_card_adjust_system),
+                dam_keys_to_actions_system,
+                dam_card_widgets_to_actions_system,
+                apply_dam_actions_system,
+                sync_dam_card_section_system,
+                refresh_dam_card_section_system,
             )
+                .chain()
+                .after(crate::gui::hud::plant_info_card::sync_facility_info_card_system)
                 .run_if(crate::gui::ui_gates::in_simulation_or_editor),
         );
     }
@@ -523,12 +773,49 @@ mod tests {
         field.pool.stage_m = 18.0;
         field.pool.bed_min_m = 2.0;
         field.pool.storage_m3 = 2.5e6;
-        let text = dam_ops_text(&ctrl, None, 0, Some(&field), None);
+        let text = dam_status_text(&ctrl, None, 0, Some(&field), None);
         assert!(text.contains("Natural inflow"));
         assert!(text.contains("Release now"));
         assert!(text.contains("Held vs natural") || text.contains("Pass-through"));
-        assert!(text.contains("Low outlet"));
-        assert!(text.contains("Mid outlet"));
-        assert!(text.contains("Presets"));
+    }
+
+    #[test]
+    fn dam_card_systems_have_disjoint_queries() {
+        use crate::gui::style::widgets::test_support::init_ok;
+        init_ok(dam_keys_to_actions_system);
+        init_ok(dam_card_widgets_to_actions_system);
+        init_ok(apply_dam_actions_system);
+        init_ok(sync_dam_card_section_system);
+        init_ok(refresh_dam_card_section_system);
+        init_ok(crate::gui::hud::panel_drag::place_hud_cards_system);
+        init_ok(crate::gui::hud::plant_info_card::sync_facility_info_card_system);
+        init_ok(crate::gui::hud::panel_drag::drag_hud_panels_system);
+    }
+
+    #[test]
+    fn widgets_and_keys_share_one_action_path() {
+        let mut ctrl = DamControl {
+            gate_open01: 0.0,
+            outlet_open01: 0.0,
+            mid_outlet_open01: 0.0,
+            turbine_setpoint_m3s: 0.0,
+            turbines: [DamTurbineUnit::default(); DAM_TURBINE_UNIT_COUNT],
+        };
+        let mut ft = 0;
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::Preset(4), 10.0, 2.0);
+        assert!(ctrl.outlet_open01 > 0.9 && ctrl.gate_open01 > 0.8, "flood preset opens up");
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::Set(DamChannel::Spill, 0.3), 10.0, 2.0);
+        assert!((ctrl.gate_open01 - 0.3).abs() < 1e-5, "slider sets the spillway");
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::Nudge(DamChannel::Spill, -0.5), 10.0, 2.0);
+        assert_eq!(ctrl.gate_open01, 0.0, "steps clamp at shut");
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::SelectTurbine(1), 10.0, 2.0);
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::Set(DamChannel::Turbine, 0.5), 10.0, 2.0);
+        assert_eq!(ft, 1);
+        assert_eq!(ctrl.turbines[1].setpoint_m3s, TURBINE_MAX_M3S * 0.5);
+        assert_eq!(ctrl.turbines[0].setpoint_m3s, 0.0, "only the selected unit moves");
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::ToggleTurbine, 10.0, 2.0);
+        assert!(ctrl.turbines[1].available01 < 0.5, "trip");
+        apply_dam_action(&mut ctrl, &mut ft, DamAction::Preset(1), 10.0, 2.0);
+        assert!(ctrl.turbines.iter().all(|t| t.setpoint_m3s == 0.0), "shut stops every unit");
     }
 }

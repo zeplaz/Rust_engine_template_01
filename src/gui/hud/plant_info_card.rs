@@ -4,9 +4,15 @@
 //! held back. Presentation only: the text comes from `economy::facility_report`.
 //!
 //! Focus: the logistics focus (`HudLogisticsFocus`: map pick or the F9 cycle).
+//!
+//! One card per focused site: a dam's operations section is a child of this card
+//! (`dam_ops_card`), not a second card on top of it. The card moves by dragging it anywhere and
+//! reopens where the player left it ([`crate::gui::hud::panel_drag::HudCardPlacements`]).
 
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
+
+use crate::gui::hud::panel_drag::HudCardPlacements;
 
 use crate::economy::activation::BuildingDefinitionRef;
 use crate::economy::facility_inputs::FacilityInputs;
@@ -23,6 +29,9 @@ pub struct FacilityInfoCardRoot;
 
 #[derive(Component)]
 pub struct FacilityInfoCardText;
+
+/// Default distance of the card from the window's top-right corner (logical px).
+const CARD_ANCHOR_RIGHT_TOP: Vec2 = Vec2::new(12.0, 120.0);
 
 #[allow(clippy::type_complexity)]
 pub fn sync_facility_info_card_system(
@@ -41,9 +50,9 @@ pub fn sync_facility_info_card_system(
     player_owner: Option<Res<DamFloodPlayerOwner>>,
     roots: Query<Entity, With<FacilityInfoCardRoot>>,
     mut texts: Query<&mut Text, With<FacilityInfoCardText>>,
-    palette: Option<Res<UiPalette>>,
-    mono: Option<Res<CmdUiMonoFont>>,
+    style: (Option<Res<UiPalette>>, Option<Res<CmdUiMonoFont>>, Res<HudCardPlacements>),
 ) {
+    let (palette, mono, placements) = style;
     let lines = focus
         .tracked_entity
         .and_then(|e| sites.get(e).ok())
@@ -84,23 +93,26 @@ pub fn sync_facility_info_card_system(
     let (Some(palette), Some(mono)) = (palette, mono) else {
         return;
     };
+    let (anchor, drag, right, top) = placements.card("site_card", CARD_ANCHOR_RIGHT_TOP);
     commands
         .spawn((
             FacilityInfoCardRoot,
             Node {
                 position_type: PositionType::Absolute,
-                top: Val::Px(120.0),
-                right: Val::Px(12.0),
+                top,
+                right,
                 width: Val::Px(380.0),
+                flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(8.0)),
                 border: UiRect::all(Val::Px(1.0)),
                 border_radius: BorderRadius::ZERO,
                 ..default()
             },
+            anchor,
+            drag,
             BackgroundColor(palette.bevy_hud_panel_fill()),
             BorderColor::all(palette.bevy_wire_magenta()),
-            FocusPolicy::Pass,
-            Pickable::IGNORE,
+            FocusPolicy::Block,
             ZIndex(950),
         ))
         .with_children(|root| {

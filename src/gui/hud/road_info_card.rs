@@ -154,6 +154,7 @@ pub fn sync_road_info_card_system(
     mut texts: Query<&mut Text, With<RoadInfoCardText>>,
     palette: Option<Res<UiPalette>>,
     mono: Option<Res<CmdUiMonoFont>>,
+    placements: Res<crate::gui::hud::panel_drag::HudCardPlacements>,
 ) {
     if report.0.is_empty() {
         for e in &roots {
@@ -171,13 +172,17 @@ pub fn sync_road_info_card_system(
     let (Some(palette), Some(mono)) = (palette, mono) else {
         return;
     };
+    // Movable like every info card; reopens where the player left it.
+    let (anchor, drag, right, top) = placements.card("road_card", Vec2::new(12.0, 120.0));
     commands
         .spawn((
             RoadInfoCardRoot,
+            anchor,
+            drag,
             Node {
                 position_type: PositionType::Absolute,
-                top: Val::Px(120.0),
-                right: Val::Px(12.0),
+                top,
+                right,
                 width: Val::Px(300.0),
                 padding: UiRect::all(Val::Px(8.0)),
                 border: UiRect::all(Val::Px(1.0)),
@@ -186,8 +191,7 @@ pub fn sync_road_info_card_system(
             },
             BackgroundColor(palette.bevy_hud_panel_fill()),
             BorderColor::all(palette.bevy_wire_magenta()),
-            FocusPolicy::Pass,
-            Pickable::IGNORE,
+            FocusPolicy::Block,
             ZIndex(950),
         ))
         .with_children(|root| {

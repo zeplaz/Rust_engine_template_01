@@ -262,6 +262,8 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::hud::sim_build_picker_panel::SimBuildPickerPanelRoot>,
     With<crate::gui::hud::sim_road_power_sheets_bevy::SimRoadSheetRoot>,
     With<crate::gui::hud::sim_road_power_sheets_bevy::SimPowerSheetRoot>,
+    // Any movable panel or card (site card, …) keeps clicks and drags off the map under it.
+    With<crate::gui::hud::panel_drag::HudPanelDrag>,
 )>;
 
 /// True when `physical_cursor` (window physical px — the space `ComputedNode` /

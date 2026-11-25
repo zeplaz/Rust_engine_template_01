@@ -201,10 +201,13 @@ impl Plugin for InGameHudPlugin {
                 )
                     .run_if(in_simulation_or_editor),
             )
+            .init_resource::<crate::gui::hud::panel_drag::HudCardPlacements>()
             .add_systems(
                 Update,
                 (
                     crate::gui::hud::plant_info_card::sync_facility_info_card_system,
+                    crate::gui::hud::panel_drag::place_hud_cards_system
+                        .after(crate::gui::hud::panel_drag::drag_hud_panels_system),
                     crate::gui::hud::road_info_card::sync_road_report_system,
                     crate::gui::hud::road_info_card::sync_road_info_card_system
                         .after(crate::gui::hud::road_info_card::sync_road_report_system),
