@@ -19,6 +19,19 @@ pub struct PathLineRequest {
     pub valid: bool,
     pub slope_ok: bool,
     pub committed: bool,
+    /// RD-9 look: colour override, sideways offset, overlay line (see [`PathLook`]).
+    pub look: PathLook,
+}
+
+/// RD-9: how a path line is drawn beyond its kind / validity colour.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct PathLook {
+    /// Colour instead of the kind / validity colour.
+    pub color: Option<crate::gui::UiRgba>,
+    /// Sideways shift of the line (tile units, positive = left of start → end): rails, lanes.
+    pub offset: f32,
+    /// A detail line drawn over a base line (rails, sleepers, median): no bridge deck of its own.
+    pub overlay: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -357,12 +370,13 @@ pub fn sync_road_visual_requests(
     tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,
     placement: Res<crate::construction::roads::ActiveRoadPlacement>,
     roads: Res<crate::construction::CorridorNetwork>,
+    look: crate::construction::road_look::RoadLookReads,
     mut requests: ResMut<ConstructionVisualRequests>,
 ) {
     use crate::construction::build_tool_authority::BuildTool;
     use crate::construction::ghost_visual::road_control_point_color;
 
-    sync_executed_road_paths(&roads, &mut requests);
+    sync_executed_road_paths(&roads, &look, &mut requests);
 
     if !matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::Firebreak) {
         return;
@@ -379,6 +393,7 @@ pub fn sync_road_visual_requests(
             valid: seg.valid,
             slope_ok: !seg.works,
             committed: false,
+            look: Default::default(),
         });
         let a = BuildSiteTile {
             x: seg.start.x.floor() as u32,
@@ -433,40 +448,39 @@ pub fn sync_road_visual_requests(
 
 fn sync_executed_road_paths(
     roads: &crate::construction::CorridorNetwork,
+    look: &crate::construction::road_look::RoadLookReads,
     requests: &mut ConstructionVisualRequests,
 ) {
-    use crate::construction::ghost_visual::road_committed_color;
+    use crate::construction::road_look::{rail_stretch_lines, road_stretch_lines, RoadState};
     use crate::construction::tile_visual::build_site_tiles_between;
 
-    for (_, a, b) in roads.road_spans() {
-        requests.paths.push(PathLineRequest {
-            kind: VisualPathKind::Road,
-            start: Vec3::new(a.x as f32 + 0.5, 0.0, a.z as f32 + 0.5),
-            end: Vec3::new(b.x as f32 + 0.5, 0.0, b.z as f32 + 0.5),
-            width: 8.0,
-            valid: true,
-            slope_ok: true,
-            committed: true,
-        });
+    // RD-9: each tier at its width and colour, its state over it; zone tiles keep the footprint.
+    for (seg, a, b) in roads.road_spans() {
+        let (tier, lanes) = match seg.kind {
+            crate::construction::corridor_network::CorridorKind::Road { tier, lanes } => (tier, lanes),
+            crate::construction::corridor_network::CorridorKind::Rail { .. } => continue,
+        };
+        let state = look.state(a, b, tier);
+        requests.paths.extend(road_stretch_lines(a, b, tier, lanes, state));
+        let tint = crate::construction::road_look::road_color(tier, state);
         for t in build_site_tiles_between(a, b) {
             requests.zone_tiles.push(ZoneTileRequest {
                 center: Vec3::new(t.x as f32 + 0.5, 0.0, t.z as f32 + 0.5),
-                color: road_committed_color(),
+                color: crate::gui::UiRgba { a: tint.a / 3, ..tint },
             });
         }
     }
-    // Committed rail draws as rail (it used to land in the road tile list and draw as road).
+    // Committed rail: ballast, sleepers, rails (it used to land in the road list and draw as road).
     for (_, a, b) in roads.rail_spans() {
-        requests.paths.push(PathLineRequest {
-            kind: VisualPathKind::Rail,
-            start: Vec3::new(a.x as f32 + 0.5, 0.0, a.z as f32 + 0.5),
-            end: Vec3::new(b.x as f32 + 0.5, 0.0, b.z as f32 + 0.5),
-            width: 6.0,
-            valid: true,
-            slope_ok: true,
-            committed: true,
-        });
+        let state = RoadState {
+            flooded: look.state(a, b, crate::infrastructure::RoadTier::Paved).flooded,
+            blocked: look.state(a, b, crate::infrastructure::RoadTier::Paved).blocked,
+            ..Default::default()
+        };
+        requests.paths.extend(rail_stretch_lines(a, b, state));
     }
+    // RD-5 worn ground, before it becomes a track.
+    requests.zone_tiles.extend(look.wear_tiles());
 }
 
 

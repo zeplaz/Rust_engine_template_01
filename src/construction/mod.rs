@@ -46,6 +46,7 @@ mod commercial_menu;
 mod construction_pipeline;
 mod construction_queue_intent;
 mod corridor_transport;
+pub mod road_look;
 /// Road / rail span → transport edge lookup (level crossings, corridor works).
 pub use corridor_transport::find_edge_id_for_segment;
 pub mod corridor_network;

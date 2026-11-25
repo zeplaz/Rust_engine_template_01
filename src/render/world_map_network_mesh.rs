@@ -213,6 +213,27 @@ fn path_key(key: &mut u64, path: &crate::construction::PathLineRequest) {
     mix(key, q(path.end.z));
     mix(key, q(path.width));
     mix(key, (path.valid as u64) | (path.slope_ok as u64) << 1 | matches!(path.kind, VisualPathKind::Rail) as u64 * 4);
+    if let Some(c) = path.look.color {
+        mix(key, u64::from(c.r) | u64::from(c.g) << 8 | u64::from(c.b) << 16 | u64::from(c.a) << 24);
+    }
+    mix(key, q(path.look.offset) ^ u64::from(path.look.overlay) << 40);
+}
+
+/// A path's ends shifted sideways by its look offset (tile units, + = left of start → end).
+#[must_use]
+pub(crate) fn offset_ends(path: &crate::construction::PathLineRequest) -> (Vec3, Vec3) {
+    if path.look.offset == 0.0 {
+        return (path.start, path.end);
+    }
+    let d = Vec2::new(path.end.x - path.start.x, path.end.z - path.start.z);
+    let n = Vec2::new(-d.y, d.x).normalize_or_zero() * path.look.offset;
+    (path.start + Vec3::new(n.x, 0.0, n.y), path.end + Vec3::new(n.x, 0.0, n.y))
+}
+
+/// Colour a path draws in: its look colour, else the kind / validity colour.
+#[must_use]
+pub(crate) fn path_draw_color(path: &crate::construction::PathLineRequest) -> Color {
+    path.look.color.map_or_else(|| path_color(path.kind, path.valid, path.slope_ok, path.committed), color32)
 }
 
 pub(crate) fn sync_world_map_path_meshes(
@@ -290,9 +311,10 @@ pub(crate) fn sync_world_map_path_meshes(
     cache.preview_key = preview_key;
     let unit = unit_mesh(&mut meshes, &mut cache.unit);
     for path in req.paths.iter().filter(|p| if p.committed { static_changed } else { true }) {
-        let color = path_color(path.kind, path.valid, path.slope_ok, path.committed);
+        let color = path_draw_color(path);
         let mat = material_for(&mut mat_cache, &mut materials, color);
-        let mut e = commands.spawn((Mesh2d(unit.clone()), MeshMaterial2d(mat), ribbon_transform(path.start, path.end, path.width)));
+        let (start, end) = offset_ends(path);
+        let mut e = commands.spawn((Mesh2d(unit.clone()), MeshMaterial2d(mat), ribbon_transform(start, end, path.width)));
         match path.kind {
             VisualPathKind::Road => e.insert(WorldMapRoadSeg),
             VisualPathKind::Rail => e.insert(WorldMapRailSeg),
@@ -1091,6 +1113,7 @@ mod tests {
                     valid: true,
                     slope_ok: true,
                     committed: true,
+                    look: Default::default(),
                 },
                 PathLineRequest {
                     kind: VisualPathKind::Rail,
@@ -1100,6 +1123,7 @@ mod tests {
                     valid: true,
                     slope_ok: true,
                     committed: false,
+                    look: Default::default(),
                 },
             ],
             zone_tiles: vec![crate::construction::ZoneTileRequest {

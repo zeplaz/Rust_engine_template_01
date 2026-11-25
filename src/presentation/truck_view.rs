@@ -11,6 +11,9 @@ use crate::entities::components::Waypoints;
 use crate::presentation::visual_asm::{VisualActionPhase, VisualActionState};
 use crate::systems::navigation::{point_along_polyline, truck_leg_key, RoadVehicleKinematics, TruckMotionLeg};
 
+/// Sideways distance (metres) of a moving truck from its route centre line: right-hand lane.
+const TRUCK_LANE_OFFSET_M: f32 = 2.8;
+
 /// Marks a presentation proxy for one order-sim vehicle.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TruckPresentation {
@@ -120,6 +123,10 @@ pub fn sync_truck_presentation(
                     .filter(|_| leg.leg_key == truck_leg_key(v) && wp.points.len() >= 2)
                     .and_then(|f| point_along_polyline(&wp.points, f));
                 let (pos, heading) = driven.unwrap_or((xz, Vec2::ZERO));
+                // RD-9: a moving truck keeps to the right-hand lane of its road (trains stay on
+                // the track centre); 2D and 3D both read this transform.
+                let lane = if v.mode.is_rail() { Vec2::ZERO } else { Vec2::new(heading.y, -heading.x) * TRUCK_LANE_OFFSET_M };
+                let pos = pos + lane;
                 tf.translation.x = pos.x;
                 tf.translation.y = pos.y;
                 if heading != Vec2::ZERO {

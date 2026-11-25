@@ -1399,6 +1399,10 @@ pub(crate) fn sync_pixel_world_paths(
     for p in &req.paths {
         key = mix64(key ^ q(p.start.x) ^ q(p.start.z) << 16 ^ q(p.end.x) << 32 ^ q(p.end.z) << 48);
         key = mix64(key ^ u64::from(p.committed) ^ u64::from(p.valid) << 1 ^ u64::from(p.slope_ok) << 2 ^ (p.kind as u64) << 3);
+        if let Some(c) = p.look.color {
+            key = mix64(key ^ u64::from(c.r) << 8 ^ u64::from(c.g) << 16 ^ u64::from(c.b) << 24 ^ u64::from(c.a) << 32);
+        }
+        key = mix64(key ^ q(p.look.offset) << 5 ^ u64::from(p.look.overlay) << 60 ^ q(p.width) << 44);
     }
     if state.key == Some(key) {
         return;
@@ -1407,18 +1411,24 @@ pub(crate) fn sync_pixel_world_paths(
     let (mut positions, mut colors, mut indices) = (Vec::new(), Vec::new(), Vec::new());
     let mut decks = MeshBuf::default();
     for p in &req.paths {
-        let a = crate::gui::tactical::map_camera::map_plane_horizontal_xy(p.start);
-        let b = crate::gui::tactical::map_camera::map_plane_horizontal_xy(p.end);
+        let (start, end) = crate::render::world_map_network_mesh::offset_ends(p);
+        let a = crate::gui::tactical::map_camera::map_plane_horizontal_xy(start);
+        let b = crate::gui::tactical::map_camera::map_plane_horizontal_xy(end);
         let d = b - a;
         if d.length_squared() < 1e-6 {
             continue;
         }
         let n = Vec2::new(-d.y, d.x).normalize() * (crate::render::world_map_network_mesh::world_ribbon_width(p.width) * 0.5);
-        let c = LinearRgba::from(crate::render::world_map_network_mesh::path_color(p.kind, p.valid, p.slope_ok, p.committed));
+        let c = LinearRgba::from(crate::render::world_map_network_mesh::path_draw_color(p));
         let col = [c.red, c.green, c.blue, c.alpha.max(0.85)];
         // OP-7: a path that crosses water is a bridge — a straight deck between its bank ends,
         // not a ribbon draped down the banks and across the riverbed. Built bridges get the
         // placeholder model (concrete deck, piers, railings) in their sim condition.
+        // RD-9 detail lines (rails, sleepers, median) are not drawn on a bridge: its deck model
+        // stands in for them.
+        if p.look.overlay && committed_deck_heights(field.as_ref(), bridges.as_deref(), a, b).is_some() {
+            continue;
+        }
         if p.committed {
             if let Some((ha, hb)) = committed_deck_heights(field.as_ref(), bridges.as_deref(), a, b) {
                 let rec = bridges.as_deref().and_then(|bk| bk.on_stretch(a, b));
