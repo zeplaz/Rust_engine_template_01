@@ -75,6 +75,8 @@ pub struct ConstructionPlan {
     pub bridge: Option<crate::infrastructure::bridge_types::BridgeType>,
     /// Ordered by a player / AI: the line's material bill is taken from stock.
     pub charged: bool,
+    /// Faction slot that ordered it (0 = the player).
+    pub owner_slot: u8,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -112,6 +114,7 @@ impl ConstructionPlanQueue {
             group,
             bridge: None,
             charged: false,
+            owner_slot: 0,
         });
         id
     }
@@ -308,7 +311,7 @@ pub fn execute_construction_plans_system(
                 roads.set_bridge_pref(segment_id, t);
             }
             if let (Some(segment_id), true) = (apply.segment_id, plan.charged) {
-                roads.mark_charged(segment_id);
+                roads.mark_charged(segment_id, plan.owner_slot);
             }
             if let Some(segment_id) = apply.segment_id {
                 super::history::record_road_execution(

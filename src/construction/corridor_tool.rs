@@ -450,6 +450,11 @@ fn tile_of(p: Vec2) -> BuildSiteTile {
 /// Queue every buildable stretch (one network line each) into the construction funnel. Returns
 /// how many were queued.
 pub fn commit_corridor_path(checks: &[StretchCheck], kind: CorridorToolKind, queue: &mut ConstructionPlanQueue) -> usize {
+    commit_corridor_path_for(checks, kind, queue, 0)
+}
+
+/// [`commit_corridor_path`] ordered by faction `owner_slot` (an AI faction pays its own bill).
+pub fn commit_corridor_path_for(checks: &[StretchCheck], kind: CorridorToolKind, queue: &mut ConstructionPlanQueue, owner_slot: u8) -> usize {
     let mut n = 0;
     // The whole path undoes as one step.
     let group = queue.begin_group();
@@ -468,6 +473,7 @@ pub fn commit_corridor_path(checks: &[StretchCheck], kind: CorridorToolKind, que
         if let Some(plan) = queue.plans.last_mut() {
             plan.bridge = c.bridge.map(|b| b.kind);
             plan.charged = kind != CorridorToolKind::Firebreak;
+            plan.owner_slot = owner_slot;
         }
         n += 1;
     }

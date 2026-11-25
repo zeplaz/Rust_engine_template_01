@@ -78,6 +78,8 @@ pub struct CorridorSegment {
     pub bridge_pref: Option<crate::infrastructure::bridge_types::BridgeType>,
     /// Built by a player / AI order: its material bill is taken from stock (`corridor_works`).
     pub charged: bool,
+    /// Faction slot that ordered it (0 = the player): whose stock the bill comes from (RD-8).
+    pub owner_slot: u8,
 }
 
 impl CorridorSegment {
@@ -226,7 +228,7 @@ impl CorridorNetwork {
         nodes.push(tail);
         let id = self.next_id;
         self.next_id = self.next_id.wrapping_add(1);
-        self.segments.push(CorridorSegment { id, kind, nodes, bridge_pref: None, charged: false });
+        self.segments.push(CorridorSegment { id, kind, nodes, bridge_pref: None, charged: false, owner_slot: 0 });
         self.revision = self.revision.wrapping_add(1);
         Some(id)
     }
@@ -238,10 +240,11 @@ impl CorridorNetwork {
         }
     }
 
-    /// Marks a line as built to order (its works bill is charged).
-    pub fn mark_charged(&mut self, id: u32) {
+    /// Marks a line as built to order by faction `owner_slot` (its works bill is charged to it).
+    pub fn mark_charged(&mut self, id: u32, owner_slot: u8) {
         if let Some(s) = self.segments.iter_mut().find(|s| s.id == id) {
             s.charged = true;
+            s.owner_slot = owner_slot;
         }
     }
 

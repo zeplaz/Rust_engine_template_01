@@ -16,6 +16,7 @@
 
 pub mod decide;
 pub mod economy;
+pub mod infrastructure;
 pub mod log;
 pub mod logistics;
 pub mod military;
@@ -689,6 +690,7 @@ impl Plugin for FactionAiPlugin {
                     seed_faction_ai_controllers_system,
                     ensure_controller_faction_slot_system,
                     faction_ai_tick_system,
+                    infrastructure::ai_infrastructure_system,
                 )
                     .chain()
                     .in_set(FactionAiSet::Tick),

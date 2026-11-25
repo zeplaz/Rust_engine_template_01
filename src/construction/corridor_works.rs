@@ -163,7 +163,7 @@ pub fn register_corridor_works_system(
             seg.id,
             CorridorWorks {
                 segment_id: seg.id,
-                owner: OwnerId::PLAYER,
+                owner: OwnerId(seg.owner_slot),
                 mid,
                 length_m,
                 bill: bill

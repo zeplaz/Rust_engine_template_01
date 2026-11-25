@@ -287,7 +287,7 @@ pub use tile_visual::{
     build_site_tiles_between, toggle_construction_tile_info_labels, ConstructionTileVisualSettings,
 };
 pub use tool_hints::TOOL_HINTS_DRAW_IN_SIM;
-pub use upgrade::enqueue_road_upgrade;
+pub use upgrade::{enqueue_road_upgrade, next_road_tier};
 pub use utilities_menu::{
     draw_utilities_submenu, utilities_submenu_power_icons_wired, UtilitiesSubmenuIconUi,
 };

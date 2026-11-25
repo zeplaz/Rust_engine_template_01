@@ -110,6 +110,9 @@ pub struct RoadTierTable {
     /// RD-7 rail freight (trains, yards, intermodal).
     #[serde(default)]
     pub rail: RailTuning,
+    /// RD-8 AI faction road and rail building.
+    #[serde(default)]
+    pub ai: AiRoadTuning,
     pub tiers: Vec<RoadTierSpec>,
     /// Materials per metre of railway (ballast, rails, sleepers).
     #[serde(default = "default_rail_materials")]
@@ -184,6 +187,30 @@ impl Default for RailTuning {
             crossing_base_s: 12.0,
             crossing_per_train_s: 25.0,
         }
+    }
+}
+
+/// RD-8: when an AI faction builds, upgrades or clears its roads and rail.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(default)]
+pub struct AiRoadTuning {
+    /// Sim seconds between two infrastructure decisions of one faction.
+    pub interval_s: u64,
+    /// Roads within this many tiles of the faction's sites are its concern.
+    pub near_tiles: f32,
+    /// Upgrade a road at this volume / capacity or more.
+    pub upgrade_vc: f32,
+    /// Pave a leg with at least this many metres off-road ...
+    pub pave_min_offroad_m: f32,
+    /// ... and at most this share of it on roads.
+    pub pave_max_road_share: f32,
+    /// Rail-link a long haul moving at least this many units per hour.
+    pub rail_min_units_h: f32,
+}
+
+impl Default for AiRoadTuning {
+    fn default() -> Self {
+        Self { interval_s: 120, near_tiles: 40.0, upgrade_vc: 0.6, pave_min_offroad_m: 600.0, pave_max_road_share: 0.3, rail_min_units_h: 200.0 }
     }
 }
 
@@ -290,6 +317,7 @@ fn default_table() -> &'static RoadTierTable {
         offroad: OffroadTuning::default(),
         worn_tracks: WornTrackTuning::default(),
         rail: RailTuning::default(),
+        ai: AiRoadTuning::default(),
         rail_materials_per_m: default_rail_materials(),
         tiers: vec![
             row(RoadTier::Track, 25.0, 1, 40.0, 0.4, 0.3),
