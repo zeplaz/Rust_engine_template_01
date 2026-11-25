@@ -155,7 +155,7 @@ Use this table; `@coder` picks slice from [`vfx_coder_phase2_queue_v1.md`](../..
 |:---|:---|
 | **Reviewer** | Design pass (Auto) |
 | **Date** | 2026-05-24 |
-| **Build / commit** | `b2341a6` |
+| **Build / commit** | `c9ffef9` |
 | **Captures** | Pending — `fire_tactical_*`, `river_tactical_*`, `water_lake_or_ocean_*` |
 | **Fire verdict** | ☑ **TUNE** · ☐ PASS · ☐ FAIL |
 | **Water verdict** | ☑ **TUNE** · ☐ PASS · ☐ FAIL |

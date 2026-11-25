@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-TOWN-GROWTH-v1** |
-| **Status** | **PCG-07 RE-CLOSED 2026-11-24** — `enqueue_settlement_roads_once_system` registered (`strategic/settlement/mod.rs:222`, CQ-57g). Other TWN slices were not re-reviewed. Was: **REOPENED 2026-11-16 (PCG07 only)** — road skeleton is a pure function with no production caller. **PCG-07 → UNWIRED** · cleanup **CQ-57g**. Other TWN slices were not re-reviewed. |
+| **Status** | **CLOSED 2026-11-24** — all five phases have their proof tests in code: `twn_ov_polygon_membership` (admin_ink.rs), `twn_ov_draw_commit` (world_map_network_mesh.rs), `twn_gen_places_on_dry_land` (town.rs), `twn_pcg07` (road_skeleton.rs; roads enqueued in play, `settlement/mod.rs:222`), `twn_ai_one_growth_site` (faction_step.rs). **Open question (not this plan):** nothing writes `FactionStanceBook` in play, so live faction pairs stay Neutral. Was: **REOPENED 2026-11-16 (PCG07 only)** — road skeleton is a pure function with no production caller. **PCG-07 → UNWIRED** · cleanup **CQ-57g**. Other TWN slices were not re-reviewed. |
 | **Books unlock** | **TWN-PCG07** → **PCG-07** ([`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W2) |
 | **Date** | 2026-09-27 |
 | **Owner** | `@planner` → `@coder` |

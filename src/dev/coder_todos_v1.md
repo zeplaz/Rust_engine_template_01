@@ -1,6 +1,6 @@
 # Open work board
 
-**Updated:** 2026-11-24 · **Branch:** `master` · **Bevy 0.20** · **CI:** green on `7aca50c6` (all Rust and Python steps).
+**Updated:** 2026-11-24 · **Branch:** `master` · **Bevy 0.20** · **CI:** green on `d11695fe` (all Rust and Python steps).
 
 This is the one list of open work. Each item links the plan that owns it; the plan has the detail.
 How to check a run: [`AGENTS.md`](../../AGENTS.md) "Review path" (`sim_run_dump.json` → `tools/sim_review/score_dump.py`).
@@ -44,10 +44,21 @@ until OCC-P4/P5 are re-scored for turning it on in play.
 
 DF-1…9 in code. **DF-10** (lock baseline v1) blocked on a baseline capture; DF-3 capture Accept open.
 
-### 5. Parked (needs a decision or an outside trigger)
+### 5. Smaller open items
+
+| Item | Plan | Note |
+|:---|:---|:---|
+| Snapshots record `placement_rule_id` per module (APS-GRAM-P3-002) | [`plan_aps_grammar_evolution_v1.md`](plan_aps_grammar_evolution_v1.md) | grammar set already at tier G4 |
+| Split `tile_world_fallback.rs` (RPC-3-001); rename `RttDiagCameraMode::Production` → `Standard` (RPC-3-003) | [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) | rest of that plan done or overtaken |
+| Warehouse v2 burn frames 5–8; PT-6 playtest | [`plan_procedural_building_tiles_production_v1.md`](plan_procedural_building_tiles_production_v1.md) | engine side done |
+
+### 6. Parked (needs a decision or an outside trigger)
 
 | Item | Waiting on |
 |:---|:---|
+| Voxel occupation on in play | operator decision (OCC-P4/P5) |
+| Who sets faction alliances in play (`FactionStanceBook`) — live pairs stay Neutral | operator decision; town growth plan leaves it open |
+| Shopfront / bunker production tile art (only archived greybox exists) | operator: build or drop from scope |
 | Fire `smoke_volume` | ES-4 (GPU stubs plan deferred it honestly) |
 | RGR-V2-001 raster migration, Material2d VFX port | operator call on view-projection raster migration |
 | BQ-Q2 screenshot QC | operator |
@@ -59,10 +70,11 @@ DF-1…9 in code. **DF-10** (lock baseline v1) blocked on a baseline capture; DF
 
 | What | Where |
 |:---|:---|
-| CI green: `-D warnings` clean, lib tests 18 → 0 failed, Python steps fixed (jsonschema, `repo_root()` fallback) | [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) · `f87a4c1c`, `90a5b211`, `ab85af54`, `7aca50c6` |
+| CI green: `-D warnings` clean, lib tests 18 → 0 failed, Python steps fixed (jsonschema, `repo_root()` fallback) | [`plan_ci_test_triage_v1.md`](plan_ci_test_triage_v1.md) · `476ac36d`, `5d0263f2`, `cad07f75`, `d11695fe` |
 | Cursor-wave cleanup 70/70 (CQ-78/79/84 on 11-24) | [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) |
 | Bevy 0.20 migration incl. the M0 lib-test defer log | [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) |
 | GPU stubs kill A–D, mips, array, cull | [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) |
+| VSS-001, Artist Studio expansion, town growth — checked against code, closed | the three plans' status lines |
 | Nov 16 review re-grades: TAC-03 dense heat GPU, MOVE-05 formation members, MOVE-10 wildlife, TAC-05 fort, PCG-07 settlement roads, NAV-13 route cost | cleanup CQ-50/51/52/53/54/57g/58 · `adoption.tsv` |
 
 ## Retired with the witness system

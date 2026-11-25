@@ -5,7 +5,7 @@ Single map of **planning → proof → implementation** for this repo.
 ## Current status (2026-11-24) — start here
 
 **Open work board:** [`coder_todos_v1.md`](coder_todos_v1.md) — the one list of what is open, closed recently, and parked.
-CI is green on `master` (`7aca50c6`). Bevy 0.20, Bevy UI only.
+CI is green on `master` (`d11695fe`). Bevy 0.20, Bevy UI only.
 
 | Program | State | What is left |
 |:---|:---|:---|
@@ -18,9 +18,14 @@ CI is green on `master` (`7aca50c6`). Bevy 0.20, Bevy UI only.
 | GPU stubs kill · [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) | **CLOSED** 11-24 | residual in ref-books ledger |
 | Ref-books v3 · [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) | **CLOSED** (review resolved 11-24) | ledger `adoption.tsv`: 125 / 3 / 9 |
 | Bevy 0.20 migration · [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) | **CLOSED** | — |
+| Production iso tiles · [`plan_procedural_building_tiles_production_v1.md`](plan_procedural_building_tiles_production_v1.md) | **OPEN** (engine done) | shopfront/bunker production art or drop; warehouse burn frames 5–8; PT-6 playtest |
+| Render production cleanup · [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) | **OPEN** (2 items) | split `tile_world_fallback.rs`; rename `RttDiagCameraMode::Production` |
+| APS grammar evolution · [`plan_aps_grammar_evolution_v1.md`](plan_aps_grammar_evolution_v1.md) | **NEARLY DONE** (tier G4) | `placement_rule_id` per module (APS-GRAM-P3-002) |
+| VFX · spectator · scale · [`plan_vfx_spectator_scale_program_v1.md`](plan_vfx_spectator_scale_program_v1.md) | **CLOSED** 11-24 | T5 agent-process tooling retired |
+| Artist Studio expansion · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) | **CLOSED** 11-24 | — |
+| Town growth · [`plan_town_growth_v1.md`](plan_town_growth_v1.md) | **CLOSED** 11-24 | open question: who writes `FactionStanceBook` in play |
 
-**Not re-reviewed in this pass** (status is whatever their own header says; several "ACTIVE" tags below are months old):
-VSS-001, Artist Studio expansion, APS grammar evolution, production iso tiles, render production cleanup, town growth (other than PCG-07).
+Other "ACTIVE" tags in the history below were not re-checked; trust a plan's own status line over this index.
 
 **Everything below this line is the historical index.** Witness JSONs, runtime todo boards, machine queues and
 `cargo orchestrate` named there are retired (see [`AGENTS.md`](../AGENTS.md) "Review path"); treat those links as history.

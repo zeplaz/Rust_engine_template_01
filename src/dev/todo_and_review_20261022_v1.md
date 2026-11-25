@@ -1,8 +1,8 @@
 # TODO + review — 2026-10-22 (v1)
 
 Successor to [`fleet_handoff_summary_20261009_v1.md`](fleet_handoff_summary_20261009_v1.md).
-Covers the work another operator/LLM landed after `ef4e841a` (egui → Bevy UI port `51f8efb5`,
-debug_runs untracking `0e199885`, churn commit `5f0ebddc`) and the cleanup done today.
+Covers the work another operator/LLM landed after `9e0ba311` (egui → Bevy UI port `bd679150`,
+debug_runs untracking `ffc932f1`, churn commit `7267a48b`) and the cleanup done today.
 
 ## 0. State at writing
 
@@ -13,12 +13,12 @@ debug_runs untracking `0e199885`, churn commit `5f0ebddc`) and the cleanup done 
 | Lib tests | 2001 pass · **71 fail** · 3 ignored (after churn revert; was 80) — three fix lanes in flight, see §3 L0 |
 | Policy | `debug_runs/**` is local-only (gitignored); tests must not depend on pre-existing witness files and must not rewrite tracked files |
 
-Commits today: `f4a3a6a9` [effects] spark gating · `a1f3f37d` [graphics] dual-view PixelWorld3D + voxel massing + docs ·
-`74cf1e4a` [tests] FULL_APP readiness harness-only · `6fd432ce` [ui] egui-stub prune ·
-`d4509467` [hygiene] revert test/job churn from `5f0ebddc` (restored the `.blend` that had been overwritten with
+Commits today: `4710ce55` [effects] spark gating · `8bfb9e98` [graphics] dual-view PixelWorld3D + voxel massing + docs ·
+`d90f19e1` [tests] FULL_APP readiness harness-only · `19e44579` [ui] egui-stub prune ·
+`70af9b5c` [hygiene] revert test/job churn from `7267a48b` (restored the `.blend` that had been overwritten with
 `{"dry_run": true}`, style packs, staging assemblies, job/cache files, schema examples, `veg_resolver_known_keys_v1.md`).
 
-## 1. Review of `ef4e841a..0e199885` (highest severity first)
+## 1. Review of `9e0ba311..ffc932f1` (highest severity first)
 
 Source: read-only review (code reading, verified per finding; H1 and H4 re-checked by hand).
 
@@ -35,9 +35,9 @@ Source: read-only review (code reading, verified per finding; H1 and H4 re-check
 | R-M2 | M | floating Bevy panels | No scrolling, no Esc-to-close | Long panels clip; Esc cascade inconsistent |
 | R-M3 | M | road popup | Despawn/respawn every control-point change | Flicker, wasted work |
 | R-M4 | M | `landscape_grammar_sim_harness.rs:592,600` | Reads `play_scenario_live.json` / `stage5_full_app_live.json` it never writes | Fails on clean checkout |
-| R-M5 | M | `runtime_witness/exceptions_manifest.json` | Containment manifest grew instead of draining (`508bc92c`) | Gate erosion |
+| R-M5 | M | `runtime_witness/exceptions_manifest.json` | Containment manifest grew instead of draining (`e06e8994`) | Gate erosion |
 | R-M6 | M | `AGENTS.md` | Still says "attach agent-lang every session" (contradicts new lean harness) and links now-untracked `debug_runs` JSON | Agents follow stale instructions |
-| R-M7 | M | `5f0ebddc` | Committed test churn incl. a corrupted `.blend` | **Fixed** in `d4509467` |
+| R-M7 | M | `7267a48b` | Committed test churn incl. a corrupted `.blend` | **Fixed** in `70af9b5c` |
 | R-M8 | M | egui-port gaps | Dropped without replacement: agent-permissions window, F4 HUD dev overlay, most F3 diagnostics sections (strategic/doctrine, fire streaming, atmosphere, weather, recorder, ECS counts, corridors/theaters), power-overlay stroke painters, plant focus card, growth inspector, side status rail | Loss of dev/operator visibility |
 
 Looks good: `TacticalMapPickFrame` pick math unchanged; Bevy crosshair replaces egui one; no new non-test `unwrap/expect`;
@@ -82,7 +82,7 @@ the parent commits per lane as `[lane] …` after checking. Cheap model (Sonnet)
 
 ### L4 — Trees / vegetation queue (user priority)
 - [ ] Classify the 55 blocked rows in `tools/orchestrator/queues/coder_vegetation_drain_queue.json` (blocker still real? obsoleted by egui drop or dual-view?); unblock and drain; finish the 6 open rows of `landform_veg_drain_v1.json`.
-- [ ] Ensure vegetation renders in both TacticalFlat2D and PixelWorld3D (`presentation` tags from `a1f3f37d`).
+- [ ] Ensure vegetation renders in both TacticalFlat2D and PixelWorld3D (`presentation` tags from `8bfb9e98`).
 
 ### L5 — Editor & tools parity (R-H3, R-H7, R-M1..M3)
 - [ ] Map editor: brush, minimap road markers, save/load via `MapEditorMapSnapshotIoRequest`, Play/Exit, scenario Load/Save/Run/Stop.
@@ -106,7 +106,7 @@ the parent commits per lane as `[lane] …` after checking. Cheap model (Sonnet)
 ## 4. User decisions (2026-10-22)
 1. **Golden seed hashes: APPROVED** — update `GOLDEN_SEED_SET_V1` via `bq_q3_golden_bootstrap_hashes` once the drift cause is recorded (L0a).
 2. rgr_m1 `api.rs` pub-use budget (L0c): still open if the agent finds the growth legitimate.
-3. **LG-60: DONE** — stray worktree `.claude/worktrees/loving-mestorf-ab9564` (clean, `d96eccb3` already in master) removed and pruned.
+3. **LG-60: DONE** — stray worktree `.claude/worktrees/loving-mestorf-ab9564` (clean, `3a5822c4` already in master) removed and pruned.
 4. **R-M8 dev panels: keep only panels with actual use; drop everything else.** Lane L5b below.
 
 ### L5b — Dev-panel cull (from decision 4)

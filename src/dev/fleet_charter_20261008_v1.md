@@ -2,7 +2,7 @@
 
 Eleven parallel Claude Code sessions ("fleets") work in the **single canonical checkout**
 `<repo>` on **`master`** (see `single_worktree_policy_v1.md`).
-No worktrees, no side branches. Baseline checkpoint: `374b0494`.
+No worktrees, no side branches. Baseline checkpoint: `cb3aa4a3`.
 
 ## Fleets and file ownership
 

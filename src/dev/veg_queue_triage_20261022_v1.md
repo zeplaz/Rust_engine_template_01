@@ -1,15 +1,15 @@
 # Vegetation queue triage `v1` (2026-10-22)
 
 **Lane:** L4 trees/vegetation (`todo_and_review_20261022_v1.md`) · **Queues:** [`coder_vegetation_drain_queue.json`](../tools/orchestrator/queues/coder_vegetation_drain_queue.json) · [`landform_veg_drain_v1.json`](../tools/orchestrator/queues/landform_veg_drain_v1.json)
-**Method:** read each row, then the current code and the local witnesses under `debug_runs/` (written 2026-10-22; the directory is gitignored since 0e199885, so witnesses are local proof only). No code was run or edited.
+**Method:** read each row, then the current code and the local witnesses under `debug_runs/` (written 2026-10-22; the directory is gitignored since ffc932f1, so witnesses are local proof only). No code was run or edited.
 
 ## What changed since the queue was written
 
 | Change | Effect on vegetation rows |
 |:---|:---|
-| egui removed (51f8efb5) | `gui/diagnostics_ui.rs` lost the ecology program panel, the disturbance timeline and the veg extract panel. C06 and G01 regressed. `veg_diag_extract_panel_live.json` still claims the panel exists (false-green). |
-| `debug_runs/**` gitignored (0e199885) | Exit predicates on witness JSON only prove things on the machine that ran the harness. Rows below cite the code and a test as well. |
-| Dual view (a1f3f37d) | PixelWorld3D paints LG-5 atlas stamps per chunk (`render/tile_world_fallback.rs` `queue_pixel_world_landscape_atlas_stamps`). TacticalFlat2D has biome plus relief only. `VegetationExtractFrame` is read by the minimap compositor and nothing on the main sim map. |
+| egui removed (bd679150) | `gui/diagnostics_ui.rs` lost the ecology program panel, the disturbance timeline and the veg extract panel. C06 and G01 regressed. `veg_diag_extract_panel_live.json` still claims the panel exists (false-green). |
+| `debug_runs/**` gitignored (ffc932f1) | Exit predicates on witness JSON only prove things on the machine that ran the harness. Rows below cite the code and a test as well. |
+| Dual view (8bfb9e98) | PixelWorld3D paints LG-5 atlas stamps per chunk (`render/tile_world_fallback.rs` `queue_pixel_world_landscape_atlas_stamps`). TacticalFlat2D has biome plus relief only. `VegetationExtractFrame` is read by the minimap compositor and nothing on the main sim map. |
 | Bevy 0.19 migration closed | No MIG rows involved. |
 
 The 55 `blocked` rows were stamped by the 2026-06-20 intel cull for "done without witness path or exit_predicate". That is a paperwork status, not a code blocker. Most of the code and witnesses exist.

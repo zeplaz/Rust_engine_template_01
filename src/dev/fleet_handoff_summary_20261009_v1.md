@@ -3,23 +3,23 @@
 | | |
 |:---|:---|
 | **Date** | 2026-10-09 |
-| **Baseline** | `374b0494` (checkpoint of prior WIP, 2026-10-08 23:10) |
-| **HEAD at writing** | v1: `5d5c54b9`. **v1.1 update: `acfe6767`** (see §U below — supersedes stale parts of §0, §2, §3, §4) |
+| **Baseline** | `cb3aa4a3` (checkpoint of prior WIP, 2026-10-08 23:10) |
+| **HEAD at writing** | v1: `4bfff5d9`. **v1.1 update: `a4db8cd3`** (see §U below — supersedes stale parts of §0, §2, §3, §4) |
 | **Build** | `cargo check --lib` **green** (39 s, finished, 0 errors) on the **working tree as it stands**, i.e. including uncommitted work. It was not checked against a clean `HEAD` checkout, so some uncommitted files may be required for HEAD to compile (see section 3). |
 | **State** | All 11 fleets stopped by the user (confirmed idle at v1.1). Branch `master`, single canonical checkout, no side branches. |
 | **Resume** | Read, in order: [fleet charter](fleet_charter_20261008_v1.md) (ownership + commit protocol), [fleet board](fleet_board_20261008_v1.md) (asks + user priorities), then this file. Then the per-fleet logs in [`fleet_logs/`](fleet_logs/) and the plan docs in section 5. |
 
-Evidence base: `git log 374b0494..HEAD`, `git status --porcelain` (240 entries), the four existing logs, plans and ledgers, and file contents on disk. Anything not backed by a commit or a file is marked "unknown".
+Evidence base: `git log cb3aa4a3..HEAD`, `git status --porcelain` (240 entries), the four existing logs, plans and ledgers, and file contents on disk. Anything not backed by a commit or a file is marked "unknown".
 
 ## U. v1.1 update (read first — supersedes stale parts of §0, §2, §3, §4)
 
-**Build:** `cargo check --lib` green at `acfe6767`; `cargo test --lib --no-run` green; tests for
+**Build:** `cargo check --lib` green at `a4db8cd3`; `cargo test --lib --no-run` green; tests for
 `ai::faction combat:: strategic::frontline gui::input io::save infrastructure:: bevysubengines`:
 95 passed, 0 failed, 1 ignored (INT-005, below). Intermediate commits were not individually
 built; the final state was. MCP Python tests were **not** run.
 
 **Logistics kept running after the v1 summary** and landed LO-1 through LO-6-era work itself
-(17 commits, `a15f1462`…`0ff2faaf`): order sim core (one-off multi-trip runs, standing lines,
+(17 commits, `ee3db754`…`9225ce2a`): order sim core (one-off multi-trip runs, standing lines,
 draw demands), snapshot + distance travel model + Bevy adapter, orders panel
 (`src/gui/logistics_orders_panel.rs`), map overlay of routes/vehicles
 (`src/gui/logistics_orders_overlay.rs`), plant-buffer mirror-delta bridge, LG-61 topology gate,
@@ -35,12 +35,12 @@ current next step.
 
 | SHA | Tag | What |
 |:---|:---|:---|
-| `e20753ee` | ai/front | Shared prereq: `settlement` re-exports `FactionStanceBook`, `FactionPairStance` |
-| `8595c5fa` | front | FC-1: `src/combat/` + `assets/configs/combat/front_balance_v1.ron` + `frontline.rs` derivation + `CombatPlugin` registration + `pub mod combat`. **Data fix:** Bunker `anti_armor` 0.3 → 0.2 (table failed its own `cover + anti_armor <= 0.95` rule) |
-| `146d149c` | ai | FAI-1: `src/ai/faction/` + `FactionAiPlugin` registered in `SimulationPlugin` |
-| `d6a7c48c` | interaction | `input_pick.rs` (`TacticalMapPickFrame`; call sites **not yet migrated**), headless harness, ledger. **INT-005 added to ledger as open**; `int_005_first_lmb_locks_without_committing` is `#[ignore]`d (first LMB leaves `placement_mode` at `Place`, expected `Adjust`; product vs harness cause untriaged) |
-| `5b736992` | legacy | LG-01 save overlays (roads/rails/corridor rows/power lines), LG-03/04 wiring, LG-09 bevysubengines PARKED, `legacy_inventory_v1.md` |
-| `acfe6767` | tooling | MCP `cli_catalog.py` + pytest repo write guard (untested) |
+| `524321f3` | ai/front | Shared prereq: `settlement` re-exports `FactionStanceBook`, `FactionPairStance` |
+| `c185b18b` | front | FC-1: `src/combat/` + `assets/configs/combat/front_balance_v1.ron` + `frontline.rs` derivation + `CombatPlugin` registration + `pub mod combat`. **Data fix:** Bunker `anti_armor` 0.3 → 0.2 (table failed its own `cover + anti_armor <= 0.95` rule) |
+| `e5956e64` | ai | FAI-1: `src/ai/faction/` + `FactionAiPlugin` registered in `SimulationPlugin` |
+| `845a54b3` | interaction | `input_pick.rs` (`TacticalMapPickFrame`; call sites **not yet migrated**), headless harness, ledger. **INT-005 added to ledger as open**; `int_005_first_lmb_locks_without_committing` is `#[ignore]`d (first LMB leaves `placement_mode` at `Place`, expected `Adjust`; product vs harness cause untriaged) |
+| `2693f3a4` | legacy | LG-01 save overlays (roads/rails/corridor rows/power lines), LG-03/04 wiring, LG-09 bevysubengines PARKED, `legacy_inventory_v1.md` |
+| `a4db8cd3` | tooling | MCP `cli_catalog.py` + pytest repo write guard (untested) |
 
 **Still uncommitted on purpose:**
 - `src/dev/veg_resolver_known_keys_v1.md` — owner unclear; rewrite drops rows while still claiming
@@ -75,12 +75,12 @@ The run lasted about one hour and ended early (usage limit hit with 11 concurren
 
 | SHA | Tag | What |
 |:---|:---|:---|
-| `c647ddc5` | orchestrator | Fleet charter + cross-fleet board |
-| `febb2f9b` | front | `plan_front_combat_v1.md` (FC-0) |
-| `4902c69b` | logistics | `plan_logistics_orders_v1.md` (LO-0) |
-| `f6998633` | hygiene | `.gitattributes` (LF, CRLF for cmd/bat, binaries) |
-| `0e3d6458` | ai | `plan_ai_fleet_v1.md` (FAI-0) |
-| `5d5c54b9` | orchestrator | User priorities recorded on the board |
+| `6ea6ef11` | orchestrator | Fleet charter + cross-fleet board |
+| `3dfc2851` | front | `plan_front_combat_v1.md` (FC-0) |
+| `4edcaa26` | logistics | `plan_logistics_orders_v1.md` (LO-0) |
+| `596d8296` | hygiene | `.gitattributes` (LF, CRLF for cmd/bat, binaries) |
+| `a5efaaff` | ai | `plan_ai_fleet_v1.md` (FAI-0) |
+| `4bfff5d9` | orchestrator | User priorities recorded on the board |
 
 Fleet logs `ai.md`, `front.md`, `hygiene.md`, `logistics.md` were committed with those slices (the `front` and `logistics` logs say next = FC-1 / LO-1; both slices exist only as uncommitted files).
 
@@ -93,7 +93,7 @@ Fleet logs `ai.md`, `front.md`, `hygiene.md`, `logistics.md` were committed with
   - `tools/mcp/python/rust_engine_mcp/cli_catalog.py` (new, 180 lines) + `cli.py` (+72/-4): `build_parser()`, `commands` and `help` subcommands; grouped catalog derived from live argparse (also meant to back MCP `micro_tool_help`, which previously listed non-existent commands). State: looks complete, not verified by test run.
   - `tools/mcp/python/rust_engine_mcp/test_write_guard.py` (new, 205 lines), `tests/test_write_guard.py` (new, 96 lines), `__init__.py` (+8), `tests/conftest.py` (+34): pytest audit-hook guard that snapshots and rolls back any repo file written during a pytest session (including child Python processes). Purpose: stop test runs churning `debug_runs/*_live.json`, job status files, staging assemblies, style packs. Env vars `RUST_ENGINE_TEST_WRITE_GUARD`; keep-switch constant `ENV_KEEP`. Not confirmed it was ever run to completion; the churn below suggests earlier tests ran **before** the guard existed.
   - `tools/mcp/schemas/aps_suite_state_mutation_allowlist_v1.json` and four `tools/mcp/schemas/examples/*_production_run001.json`: modified; likely a side effect of tests (or EOL churn), not authored work. Unknown.
-- **NEXT:** verify `cli_catalog` + write guard with `pytest tools/mcp/python/tests/test_write_guard.py`; wire `micro_tool_help` in `server.py` to `cli_catalog` (not seen done); fix `tools/mcp/python/rust_engine_mcp/validators/mcp_schema.py` which has `\r\r\n` endings (git sees binary; hygiene ask); adopt or archive the three unreferenced examples (legacy ask LG-27); reflection-driven inspector gap G-INSPECT (`bevy-inspector-egui` commented out in `Cargo.toml`); remove stray worktree `.claude/worktrees/loving-mestorf-ab9564` (LG-60, still registered at `d96eccb3`).
+- **NEXT:** verify `cli_catalog` + write guard with `pytest tools/mcp/python/tests/test_write_guard.py`; wire `micro_tool_help` in `server.py` to `cli_catalog` (not seen done); fix `tools/mcp/python/rust_engine_mcp/validators/mcp_schema.py` which has `\r\r\n` endings (git sees binary; hygiene ask); adopt or archive the three unreferenced examples (legacy ask LG-27); reflection-driven inspector gap G-INSPECT (`bevy-inspector-egui` commented out in `Cargo.toml`); remove stray worktree `.claude/worktrees/loving-mestorf-ab9564` (LG-60, still registered at `3a5822c4`).
 - **Dependencies:** board asks from hygiene (mcp_schema.py EOL) and legacy (LG-27, LG-60, G-INSPECT).
 
 ### 3.2 `effects` (fire / sparks / embers, P0)
@@ -105,14 +105,14 @@ Fleet logs `ai.md`, `front.md`, `hygiene.md`, `logistics.md` were committed with
 
 ### 3.3 `logistics`
 - **Mission:** standing supply lines vs one-off multi-trip orders; draw demands.
-- **DONE:** `4902c69b` plan [`plan_logistics_orders_v1.md`](plan_logistics_orders_v1.md) (LO-0): research note, survey, isolation contract (sim -> snapshot -> UI), domain model, two order kinds, trip planning, draw demands with allocation/fairness, command API `LogisticsOrderCommand`, UI plan, phases LO-1..LO-6.
+- **DONE:** `4edcaa26` plan [`plan_logistics_orders_v1.md`](plan_logistics_orders_v1.md) (LO-0): research note, survey, isolation contract (sim -> snapshot -> UI), domain model, two order kinds, trip planning, draw demands with allocation/fairness, command API `LogisticsOrderCommand`, UI plan, phases LO-1..LO-6.
 - **IN PROGRESS / UNCOMMITTED:** `src/economy/logistics/orders/` (new): `mod.rs` 17, `model.rs` 474, `sim.rs` 916, `tests.rs` 651 lines; plus `pub mod orders;` in `src/economy/logistics/mod.rs`. This looks like LO-1 and probably LO-2 (pure Rust deterministic `LogisticsOrderSim`, `LogisticsOrderCommand`, `TravelModel`, tests for multi-trip etc.). Compiles in the current tree; test status unknown (run `cargo test -p proc_A_dine01 --lib economy::logistics::orders`). Log not updated (still says "next LO-1").
 - **NEXT:** run and commit LO-1/LO-2; LO-3 snapshot + command API + Bevy adapter plugin (sim tick under `economy_sim_running`, site registry, `speed_mps` to ticks); LO-4 `src/gui/logistics_orders_panel.rs` (needs an `InputBindings` hotkey; ask interaction with exact name); LO-5 map overlay + site discovery + one-way stock bridge to `ResourceFlowNode.buffer_by_tag`; LO-6 cross-fleet helpers.
 - **Dependencies:** answer the ai ask (make `owner` the overlay faction slot `u8`, expose rear depot / front supply `SiteId` lookup); tell `front` which entity/site a front supply point is (front publishes `PublishDemand{...}` upserts per tick); gate `transport_topology_tick` on `graph.is_changed()` (legacy LG-61/P5).
 
 ### 3.4 `ai`
 - **Mission:** strategic/faction AI that plays through the player's order APIs.
-- **DONE:** `0e3d6458` plan [`plan_ai_fleet_v1.md`](plan_ai_fleet_v1.md) (FAI-0): five fit/counter pairs reconciled; slices FAI-1..FAI-9.
+- **DONE:** `a5efaaff` plan [`plan_ai_fleet_v1.md`](plan_ai_fleet_v1.md) (FAI-0): five fit/counter pairs reconciled; slices FAI-1..FAI-9.
 - **IN PROGRESS / UNCOMMITTED:** `src/ai/faction/` (new): `mod.rs` 228, `decide.rs` 307, `log.rs` 121, `orders.rs` 177, `perception.rs` 295; `pub mod faction;` and `pub mod orders;` lines in `src/ai/mod.rs`; `src/strategic/settlement/mod.rs` now `pub use faction_step::{FactionPairStance, FactionStanceBook}` (needed by `front`'s `frontline.rs` too; not clearly owned by either). Looks like FAI-1 (perceive, decide with named score terms, plan, log, order sinks via `StrategicCommandQueue`). Whether the plugin is registered in `SimulationPlugin` is not confirmed: `src/strategic/simulation_plugin.rs` has a +2 diff, content not attributed. Test status unknown (`cargo test -p proc_A_dine01 --lib ai::faction`).
 - **NEXT:** FAI-2 deterministic seeding of `hybrid_resolve_and_feedback_system` (no `thread_rng`); FAI-3 headless scenario + witness; FAI-4 session seeding at `OnEnter(Simulation)`; FAI-5 explainability UI; FAI-6 per-faction growth (claimed `src/strategic/settlement/faction_step.rs`; no one objected on board); FAI-7/8 adapters to `DeploymentOrderQueue` (front) and `LogisticsOrderCommand` (logistics) once those APIs land.
 - **Dependencies:** logistics (`owner: u8`, depot ids), front (`issued_by: u8`, formation `faction_slot`, pure `enqueue(order)`).
@@ -137,7 +137,7 @@ Fleet logs `ai.md`, `front.md`, `hygiene.md`, `logistics.md` were committed with
 
 ### 3.7 `front` (frontlines, theaters, combat)
 - **Mission:** frontlines, theaters, pressure points, deployment, fortifications, symbols, balance, combat.
-- **DONE:** `febb2f9b` plan [`plan_front_combat_v1.md`](plan_front_combat_v1.md) (FC-0): slices FC-1..FC-10 (balance table + cell-level fronts, control relaxation, theaters, pressure points, formations + combat resolution, deployment orders + draw demands, fortification, insignia + APP-6-style symbols, map presentation, witness + headless scenario).
+- **DONE:** `3dfc2851` plan [`plan_front_combat_v1.md`](plan_front_combat_v1.md) (FC-0): slices FC-1..FC-10 (balance table + cell-level fronts, control relaxation, theaters, pressure points, formations + combat resolution, deployment orders + draw demands, fortification, insignia + APP-6-style symbols, map presentation, witness + headless scenario).
 - **IN PROGRESS / UNCOMMITTED:** looks like FC-1 complete or nearly: `src/combat/{mod.rs 41, balance.rs 467, front.rs 492}`; `assets/configs/combat/front_balance_v1.ron` (97 lines, compiled in via `include_str!`, disk override); `src/strategic/frontline.rs` (+148): `FrontlineState` gains `segments`, `revision`, `derived_at_tick`; `hostility_from_stances`, `control_grid_from_overlays`, cadence-gated derivation; `src/strategic/faction_plugin.rs` adds `CombatPlugin`; `src/lib.rs` adds `pub mod combat;`. Tests unknown (`cargo test -p proc_A_dine01 --lib combat::`). Log not updated.
 - **NEXT:** commit FC-1; FC-2 control relaxation (fronts move); FC-3 theaters; FC-4 pressure points (`PressurePointBook`); FC-5 formations + combat (replace `src/systems/damage` TODO stub, `src/systems/collision` is empty); FC-6 `DeploymentOrderQueue` with pure `enqueue` + `FrontDrawDemandBook`; FC-7..FC-10.
 - **Dependencies:** logistics supply-point site per front; ai asks (`issued_by: u8`, `faction_slot`); graphics for symbols/polylines; interaction placement UX.
@@ -168,7 +168,7 @@ Fleet logs `ai.md`, `front.md`, `hygiene.md`, `logistics.md` were committed with
 
 ### 3.11 `hygiene`
 - **Mission:** file management, docs sprawl, debug_runs policy, line endings, consistency in shared code.
-- **DONE:** `f6998633` `.gitattributes` and log [`fleet_logs/hygiene.md`](fleet_logs/hygiene.md): `* text=auto eol=lf`, CRLF for cmd/bat, binaries explicit. Index was already LF; the working tree had about 5,347 clean CRLF files rewritten to LF in place (only when bytes hash-matched the staged blob).
+- **DONE:** `596d8296` `.gitattributes` and log [`fleet_logs/hygiene.md`](fleet_logs/hygiene.md): `* text=auto eol=lf`, CRLF for cmd/bat, binaries explicit. Index was already LF; the working tree had about 5,347 clean CRLF files rewritten to LF in place (only when bytes hash-matched the staged blob).
 - **IN PROGRESS:** none beyond the above. Remaining CRLF warnings appear for files modified by Windows tools (e.g. `src/gui/mod.rs`, schemas); they normalize on commit.
 - **NEXT:** debug_runs policy (witness JSON should not be tracked churn: gitignore, or regenerate-on-demand, or a single rollup); docs sprawl in `src/dev` (hundreds of files); archive candidates from legacy (`buildlog.txt`, `migrate.sh`, `REORGANIZATION.md`, `model.html`: ask user first); remove stray worktree LG-60 (coordinate with tooling); R8 `legacy_transport_stubs.rs` archive (LG-10); `src/utils` consistency; clippy.
 - **Dependencies:** tooling (`mcp_schema.py` EOL), legacy (LG-60, LG-10).
@@ -229,5 +229,5 @@ Do not run a blanket commit. Use the charter protocol: `git add <new paths>`, th
 - **Witness JSON churn:** every proof/test run rewrites tracked `debug_runs/*` and asset staging files, polluting each fleet's `git status`; the tooling write guard is the fix but is itself uncommitted and unverified.
 - **Line endings:** `.gitattributes` forces LF; Windows tools writing CRLF produce warnings; `mcp_schema.py` has `\r\r\n`.
 - **Usage limit:** the run was stopped with 11 concurrent sessions (reportedly a usage limit); 5 fleets left no trace at all, so their work is unknown, not necessarily absent. Prefer fewer concurrent fleets, commit per slice immediately, and update each fleet log with every commit (the existing logs are already stale versus disk).
-- **Stray worktree:** `.claude/worktrees/loving-mestorf-ab9564` still registered (detached `d96eccb3`); violates the single-worktree policy and doubles repo-wide greps.
+- **Stray worktree:** `.claude/worktrees/loving-mestorf-ab9564` still registered (detached `3a5822c4`); violates the single-worktree policy and doubles repo-wide greps.
 - **Per-user decisions pending:** repo-root loose files (archive/delete) and whether to restore churned `debug_runs`/assets.

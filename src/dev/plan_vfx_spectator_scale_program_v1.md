@@ -10,7 +10,7 @@ Sim spine: $ref:src/dev/guide_sim_effect_spine_v1.md
 Trip registry: $ref:tools/orchestrator/queues/vss_trip_artifact_registry.json
 Tribunal: $ref:tools/orchestrator/queues/vss_tribunal_touch_registry.json
 Build encoding: $ref:prompts/guides/symbolic_build_output_encoding_v1.md
-Status: **ACTIVE** — 2026-08-28
+Status: **CLOSED 2026-11-24** (checked against code) — T1 scale contract (`plan_world_scale_contract_v1.md`, `world_scale_contract.rs`); T2 scenario ignite + pause/step (DBG-06) + capture probe; T3 single ignition funnel (`sim/effects/drain.rs` sole `EmberSpotIgnitionEvent` writer), fire save schema v2 (`io/save/fire_overlay.rs`); T4 `effect_spec_v1.schema.json`, reference effects spark/smoke/rain under `assets/effects/registry/`, APS effect browser. Exit gates were witness JSONs (retired; see AGENTS.md review path). **T5 (tribunals, Postgres witness index, Grafana) not built and retired** with the witness machinery; reopen only with a new charter. Was: ACTIVE 2026-08-28
 Owner: @orchestrator → tiered subagents
 ```
 
@@ -227,6 +227,6 @@ HANDOFF lease: § **PLAN-VFX-SPECTATOR-SCALE-001**
 
 ## @orchestrator-status
 
-`@orchestrator-status: ACTIVE`  
+`@orchestrator-status: CLOSED 2026-11-24`  
 `@orchestrator-owner: @orchestrator`  
 `@orchestrator-do-not-cleanup: trip registries, tribunal stubs, symbolic encoder until VSS exit gates green`

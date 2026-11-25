@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-ARTIST-STUDIO-EXPANSION-v1** |
-| **Status** | **ACTIVE** |
+| **Status** | **CLOSED 2026-11-24** — P0–P4 shipped. Next cuts 1–2 also landed (massing schema requires `seed`, floors 1–4; engine loads the studio massing override, `construction/mod.rs:381`); cut 3 (RND-09 instanced batches) only if column count grows. |
 | **Date** | 2026-11-15 |
 | **Parents** | [`plan_three_track_execution_v1.md`](plan_three_track_execution_v1.md) · [`plan_building_grammar_evolution_v1.md`](plan_building_grammar_evolution_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) |
 | **Voxels** | **In scope** (Studio massing/param frames + engine presentation). [`DR-VOXEL-OCCUPATION`](plan_deferral_registry_v1.md) gates **sim occupation authority replace** only — not a ban on voxel work. Upgrade program: [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md). |

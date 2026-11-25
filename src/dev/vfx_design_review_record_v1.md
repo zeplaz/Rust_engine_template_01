@@ -10,7 +10,7 @@
 | **Status** | **SIGNED — PASS** (2026-05-25 witness + interim PNGs) |
 | **Steward gate** | [`steward_spark_vfx_gate_v1.md`](steward_spark_vfx_gate_v1.md) — **STEWARD-SPARK-VFX-001** **GO (qualified)** |
 | **Capture audit** | [`assets/vfx/reference/review_captures/vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) |
-| **Build / commit** | `b2341a6` |
+| **Build / commit** | `c9ffef9` |
 | **Brief** | [`prompts/guides/ui/vfx_post_implementation_review_v1.md`](../prompts/guides/ui/vfx_post_implementation_review_v1.md) |
 | **Depends on** | **P2-FIRE-SPARK-011** (@coder **A**) · **P2-VFX-VISUAL-001** |
 | **Witness** | [`debug_runs/stage5_full_app_live.json`](../debug_runs/stage5_full_app_live.json) |

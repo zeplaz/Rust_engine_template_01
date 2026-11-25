@@ -1,6 +1,6 @@
 # PLAN-RENDER-PROD-CLEANUP-v1 — production-grade render pipeline cleanup
 
-**Status:** ACTIVE · **Priority:** P1 · **Owner:** @coder (exec) / @planner (Phase 2) / operator (Phase 1 gate)
+**Status:** OPEN — 2 items (2026-11-24): **RPC-3-001** split `tile_world_fallback.rs` (2 112 lines); **RPC-3-003** rename `RttDiagCameraMode::Production` → `Standard`. Done or overtaken: Phase 1 (GPU stubs kill), Phase 2 (pose authority), RPC-3-002 (render/mod.rs shims 46 → 8), Phase 4 (capture stub retired GS-07; `SIMULATION_MAP_RTT_RENDER_LAYER` gone). · **Priority:** P1 · **Owner:** @coder (exec) / @planner (Phase 2) / operator (Phase 1 gate)
 **Queue:** `tools/orchestrator/queues/render_production_cleanup_queue.json`
 **Origin:** operator directive 2026-07-06 ("get rid of subs, hacks and sloppy fallbacks; move forward with
 our real render pipeline") + cleanup-intelligence audit F1–F16 + VISUAL-REGRESSION-HUNT closure

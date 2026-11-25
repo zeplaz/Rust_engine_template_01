@@ -26,7 +26,7 @@
 | PCG-07 | ADOPTED | UNWIRED | road skeleton no production caller | CQ-57g |
 | TAC-05 | ADOPTED | PARTIAL | decide consumer real; fort path passes `None` (`fortification.rs:157`) | CQ-58 |
 | RND-07 | DEFER (HOLD) | DEFER (no evidence) | "profile run" was a unit test on `Stage6VirtualizationFrame::default()` (all zeros); verdict code is test-shaped | CQ-31 |
-| PCG-03 / TAC-05 "user world-look sign-off" | — | **retracted** (CQ-84, 2026-11-24) | no record exists, so no sign-off is claimed. PCG-03 stays DEFER until a sign-off is recorded in this plan; TAC-05 is ADOPTED on its production caller only. Erosion mass fixed (CQ-04, `9a26d6d5`) | CQ-04, CQ-84 |
+| PCG-03 / TAC-05 "user world-look sign-off" | — | **retracted** (CQ-84, 2026-11-24) | no record exists, so no sign-off is claimed. PCG-03 stays DEFER until a sign-off is recorded in this plan; TAC-05 is ADOPTED on its production caller only. Erosion mass fixed (CQ-04, `c54511bb`) | CQ-04, CQ-84 |
 
 **Close again only when:** each row above has a production caller `file:line` (or a real profile from a play run for RND-07). Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 

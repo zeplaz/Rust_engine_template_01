@@ -1,7 +1,7 @@
 # PLAN-CLEANUP-CURSOR-WAVE-v1 — clean up the 14–16 Nov Cursor-agent wave
 
 **Status:** **CLOSED — 70 of 70 done** (2026-11-24) · **Written:** 2026-11-16 · **Owner on pickup:** `@coder` (Rust), `@coder-mcp` (tools/mcp), `@plan-orchestrator` (docs). Run deletions past `@cleanup-intelligence` first.
-**Scope:** `git diff 8abc4326 HEAD` — 18 Cursor co-authored commits, 403 files, +46.5k / −2.5k lines. The last commit (`afdf586c`, "Ship defer-unlock board…") alone is 310 files / +30k lines, though its message names only three items.
+**Scope:** `git diff f5d569c8 HEAD` — 18 Cursor co-authored commits, 403 files, +46.5k / −2.5k lines. The last commit (`31395ba8`, "Ship defer-unlock board…") alone is 310 files / +30k lines, though its message names only three items.
 
 ---
 
@@ -19,7 +19,7 @@
    cd tools/mcp/python && python -m pytest -q
    ```
 
-### Baseline at HEAD `afdf586c` (2026-11-16)
+### Baseline at HEAD `31395ba8` (2026-11-16)
 
 | Check | Result |
 |---|---|
@@ -93,7 +93,7 @@ Treat the two transport tests as possible save-format regressions (see CQ-01) un
 - `test_build_worker_p0::test_style_pack_resolves_industrial_corner_production_not_victorian`
 - `test_material_library_filter::{test_flat_category_filter_does_not_nameerror, test_studio_tree_category_filter_branch}`
 
-The test files are unchanged in range, but `art_pipeline_suite/app.py` and the panels changed. First run the suite at `8abc4326` (a throwaway worktree) to split regressions from pre-existing failures.
+The test files are unchanged in range, but `art_pipeline_suite/app.py` and the panels changed. First run the suite at `f5d569c8` (a throwaway worktree) to split regressions from pre-existing failures.
 
 **CQ-22 — racy env-var tests.** `src/systems/sim_control.rs:362`, `render/core/terrain_render_authority.rs` (`env_rollback_forces_cpu`), and others call `std::env::set_var` while lib tests run in parallel. Refactor to test a pure `parse(Option<&str>)` function.
 
@@ -157,7 +157,7 @@ The test files are unchanged in range, but `art_pipeline_suite/app.py` and the p
 | CQ-52 | **DH-03b / MOVE-10 nav costs** — `NavFieldFrame.heat_cost_samples`, `mean_heat_cost`, `wildlife_soft_samples` | Written, never read. | Make them inputs to the CQ-53 route cost. No separate reader. | CPU | (in CQ-53) |
 | CQ-53 | **NAV-13 / NAV-04 routing + MOVE-03/04/08 steering** — `logistics_floodfill.rs:350-640`, `path_concerns.rs:155`, `combat/supply.rs:30`, `potental_feild_nav.rs`, `road_vehicles_motion.rs` · `plan_ref_books_nav_13_v1.md` (reopened) | The Dijkstra variants (scratch array, forecast-aware) are test-only. The path-concerns loader is never scheduled. The forecast wrapper passes `None, 0`. **`potential_field_navigation_system` is never scheduled**, so separation, avoidance and arbitration never run. `smooth_vehicle_tile_path` / `filter_vehicle_steering_output` are test-only. | **Do CQ-02 first**, or wiring makes routing slower.<br>**Routing:** one route cost function used by `refresh_resource_flow_routes_system` = base + path concerns + forecast + heat (CQ-52) + wildlife (CQ-51). Schedule `load_logistics_path_concerns_on_startup` and wire `front_haul_path_concern`. Keep one Dijkstra (the NAV-04 scratch-array version) and delete the other variants once folded.<br>**Steering:** schedule the steering system for trucks (depot-queue separation). Smooth truck tile paths and cap accel/turn in `road_vehicles_motion`. This is the spacing layer for trucks, members (CQ-54) and wildlife. | CPU | M + M |
 | CQ-54 | **MOVE-05 / UM-05..10 formation members** — `combat/formation_members.rs`, `combat/mod.rs:230-233` · `plan_unit_member_v1.md` (reopened) | Four systems tick on zero entities: `spawn_formation_with_members` is test-only. `OverwatchRole` flips every tick and nothing reads it. | Spawn members in the formation spawn path. Add a phase timer to the overwatch role. Use CQ-53 separation for spacing. Draw members with GPU-instanced sprites so the work is visible. **Operator choice pending:** if individual soldiers aren't wanted on the map, unschedule instead. | CPU sim · GPU instanced draw | M |
-| CQ-55 | **PHYS-04 projectile hits** (wire) + **PHYS-11 pair pipeline** (delete) — `terrain/material/registry.rs:411` `probe_hits_solid`, `combat/ballistics.rs` `step_ballistic_flights`, `systems/collision/mod.rs` | `probe_hits_solid` is only called by its test, and missiles fly straight to the target cell through hills and buildings. The pair pipeline (300 lines added in `afdf586c`; the module was a 3-line stub before) pairs moving bodies, but nothing creates a body. Its "spatial hash" is O(n²), and `warm_revalidate` never re-checks the cell. | **Wire:** sample each flight's swept segment against heightfield + structure material via `probe_hits_solid`; impact early where it hits.<br>**Delete:** the coherent pair pipeline (`CoherentPairCache`, the broad/mid/narrow/warm functions). Keep `CollisionPlugin` minimal and keep the PHYS-04 material filter table. Spacing comes from CQ-53 steering. If thousands of hard-non-overlap movers ever exist, design a uniform grid then; that is where a GPU broad phase could pay off. | CPU | S–M |
+| CQ-55 | **PHYS-04 projectile hits** (wire) + **PHYS-11 pair pipeline** (delete) — `terrain/material/registry.rs:411` `probe_hits_solid`, `combat/ballistics.rs` `step_ballistic_flights`, `systems/collision/mod.rs` | `probe_hits_solid` is only called by its test, and missiles fly straight to the target cell through hills and buildings. The pair pipeline (300 lines added in `31395ba8`; the module was a 3-line stub before) pairs moving bodies, but nothing creates a body. Its "spatial hash" is O(n²), and `warm_revalidate` never re-checks the cell. | **Wire:** sample each flight's swept segment against heightfield + structure material via `probe_hits_solid`; impact early where it hits.<br>**Delete:** the coherent pair pipeline (`CoherentPairCache`, the broad/mid/narrow/warm functions). Keep `CollisionPlugin` minimal and keep the PHYS-04 material filter table. Spacing comes from CQ-53 steering. If thousands of hard-non-overlap movers ever exist, design a uniform grid then; that is where a GPU broad phase could pay off. | CPU | S–M |
 | CQ-56 | **MOVE-09 missile wind** — `combat/ballistics.rs:280`, `drone_missions.rs:716` | `launch` always passes `wind: None`, so `wind_drift_tiles` / `refine_missile_aim` never run in play. | Pass the station wind from `pulse_missile_sorties`. | CPU | S |
 | CQ-58 | **TAC-05 fort + chokepoints** — `orders.rs:346 → plan_fortification_rows` (`fortification.rs:157`), `TerrainAnalysisBook::chokepoint_at` | The fort path passes `None`, and `chokepoint_at` is unused. | Pass `TerrainAnalysisBook`; give fort placement and faction AI the chokepoints. | CPU | S |
 | CQ-59 | **Build-readability harness** — `construction/build_readability_harness.rs`, `mod.rs:349-352` | Registered unconditionally in production `Update`. | Move it under `engine/test_harness` / scene-gated. | — | S |
@@ -187,7 +187,7 @@ Audio low-pass/duck wiring is in CQ-10.
 
 | ID | Where | Fix | Effort |
 |---|---|---|---|
-| CQ-60 | `systems/fire/chunk_fire_overlay.rs:336-352` | Each tick deep-clones every chunk's `heat/fuel/burn_hold` (sleeping chunks included), then clones the whole HashMap plus `sleep_wake`. Snapshot only active chunks plus their edges, and borrow instead. Also remove the per-neighbour Vec in `source_edge_cell_indices`. Re-measure against `c5d6b5c0`'s 1.66 ms/frame. | M |
+| CQ-60 | `systems/fire/chunk_fire_overlay.rs:336-352` | Each tick deep-clones every chunk's `heat/fuel/burn_hold` (sleeping chunks included), then clones the whole HashMap plus `sleep_wake`. Snapshot only active chunks plus their edges, and borrow instead. Also remove the per-neighbour Vec in `source_edge_cell_indices`. Re-measure against `b99f916f`'s 1.66 ms/frame. | M |
 | CQ-61 | `atmosphere/update.rs:113,177`, `advect.rs:79`, `frame.rs:396` | `bump_revision()` runs unconditionally every tick, and `sim_micros` is in the key, so the AtmosphereFrame rebuild gate never skips. Bump only on real mutation. Also fix `substrate/atmosphere/mod.rs:81`, whose doc says revision is "never read". | S |
 | CQ-62 | `coupling_terms.rs:248-301`, `frame.rs:545` | `detect_firestorm_plumes` runs twice per frame and allocates each time. Compute it once in the frame and expose the mask. | S |
 | CQ-63 | `compute/heat_diffusion_gpu.rs:67`, `sim_attention.rs:219-225` | The ROI grows to the bounding box of all fires, never shrinks, and on expand replaces the old box instead of unioning it (heat is lost). The attention pass scans the full grid every frame with one focus per hot cell. Bound or tile the ROI, union on expand, cap the foci, and throttle. | M |
@@ -200,7 +200,7 @@ Audio low-pass/duck wiring is in CQ-10.
 
 ## 7. Phase P6 — test hygiene
 
-- **CQ-70 — delete source-grep tests.** There are ~50 new `include_str!("*.rs")` / `read_to_string(...rs)` tests in range that assert doc comments contain citation strings (`"gea_v2_e4"`, `"RND-04"`, `"11.3.12"`) or that literal code text exists. Biggest offenders: `construction/blast.rs` (9), `construction/demolish.rs` (8), `combat/ballistics.rs` (6), `render/probes/vfx_capture_env.rs` (5), `weather_vfx/mod.rs`, `fire_light_emission.rs`, `present.rs`, `tonemap_hdr.rs`, `voxel_massing.rs`, `core2d_overlay_order.rs`, `vegetation_species.rs`, `terrain/material/registry.rs`, `gui/hud/*`. The `repo_src` / `production_src` helpers are copy-pasted at least four times. **Keep** only genuine architecture lints, e.g. the RND-10 PSO scan; collect those in one `tests/arch_lints.rs`. Find them with: `git diff 8abc4326 HEAD -- src | grep -n '^+.*include_str!(".*\.rs")'`.
+- **CQ-70 — delete source-grep tests.** There are ~50 new `include_str!("*.rs")` / `read_to_string(...rs)` tests in range that assert doc comments contain citation strings (`"gea_v2_e4"`, `"RND-04"`, `"11.3.12"`) or that literal code text exists. Biggest offenders: `construction/blast.rs` (9), `construction/demolish.rs` (8), `combat/ballistics.rs` (6), `render/probes/vfx_capture_env.rs` (5), `weather_vfx/mod.rs`, `fire_light_emission.rs`, `present.rs`, `tonemap_hdr.rs`, `voxel_massing.rs`, `core2d_overlay_order.rs`, `vegetation_species.rs`, `terrain/material/registry.rs`, `gui/hud/*`. The `repo_src` / `production_src` helpers are copy-pasted at least four times. **Keep** only genuine architecture lints, e.g. the RND-10 PSO scan; collect those in one `tests/arch_lints.rs`. Find them with: `git diff f5d569c8 HEAD -- src | grep -n '^+.*include_str!(".*\.rs")'`.
 - **CQ-71 — replace tautological tests.**
   - `combat/front_stock_pool.rs:176` re-implements the decrement inline; call `try_consume_bom_unit` instead.
   - `toe_demand.rs` contains `assert!(true)`.
@@ -253,16 +253,16 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 
 | ID | Status | Commit | Note |
 |---|---|---|---|
-| CQ-01 | DONE | `c32eaf17` | Fire overlay schema v2: per-cell heat/fuel/burn_hold + chunk smoke/toxic; write/hydrate wired in `WorldSaveSpinePlugin`; v1 still loads means-only; round-trip test green. Production callers: `pipeline.rs` `write_fire_overlay_on_save_flush` / `try_hydrate_fire_overlay_on_bundle_dir`. |
-| CQ-07 | DONE | `efe818b8` | Flags default **off**; `by_site` → `BTreeMap` + lowest-id primary; re-commit appends; overlay write/hydrate wired + round-trip; docs aligned. |
-| CQ-30 | DONE | `efe818b8` | Deleted `VoxelOccupationAuthorityWitness` / stub / `write_authority_witness_json` / live-json tests. Dump counts remain in `sim_run_dump_occupation`. |
-| CQ-02 | DONE | `b0001258` | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
-| CQ-35 | DONE | `b0001258` | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
-| CQ-03 | DONE | `17566e47` | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
-| CQ-04 | DONE | `9a26d6d5` | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
-| CQ-05 | DONE | `0144002c` | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
-| CQ-06 | DONE | `f8367a42` | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
-| CQ-08 | DONE | `f22b6630` | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
+| CQ-01 | DONE | `e4c4cf0b` | Fire overlay schema v2: per-cell heat/fuel/burn_hold + chunk smoke/toxic; write/hydrate wired in `WorldSaveSpinePlugin`; v1 still loads means-only; round-trip test green. Production callers: `pipeline.rs` `write_fire_overlay_on_save_flush` / `try_hydrate_fire_overlay_on_bundle_dir`. |
+| CQ-07 | DONE | `b6f8e130` | Flags default **off**; `by_site` → `BTreeMap` + lowest-id primary; re-commit appends; overlay write/hydrate wired + round-trip; docs aligned. |
+| CQ-30 | DONE | `b6f8e130` | Deleted `VoxelOccupationAuthorityWitness` / stub / `write_authority_witness_json` / live-json tests. Dump counts remain in `sim_run_dump_occupation`. |
+| CQ-02 | DONE | `28833727` | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
+| CQ-35 | DONE | `28833727` | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
+| CQ-03 | DONE | `6d1f60b9` | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
+| CQ-04 | DONE | `c54511bb` | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
+| CQ-05 | DONE | `aa261566` | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
+| CQ-06 | DONE | `8c6d3c9a` | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
+| CQ-08 | DONE | `1f89ddb8` | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
 | CQ-20 | DONE | committed 11-16/17 | Weather reads → `Option<Res>` (forecast/haul/renewable); heatmap blend vs sample assert; transport hydrate/g4 treat nodes as derived; ecs12 lint no longer bans `.push(`. All 15 named failures green. |
 | CQ-21 | DONE | committed 11-16/17 | APS default archetype → IndustrialWarehouse; material filter passes category string + PhotoImage `master=`; tests retarget production example / style-pack resolve / shared Tk root. Six named pytest cases green. |
 | CQ-57h | DONE | committed 11-16/17 | Real IO-08 rebuild: clear portal map, mark route dirty + clear RouteCache; deleted `POST_LOAD_DERIVED_STEPS` string list; utility (power/water) hydrate joins the same rebuild. |
@@ -297,23 +297,23 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-65 | DONE | committed 11-16/17 | Combat cap + alert-bark priority return early when pending has no matching class. |
 | CQ-66 | DONE | committed 11-16/17 | Pixel-world rain/cloud layers cache mesh upload key (30/20 Hz quant) + skip redundant CPU upload. |
 | CQ-67 | DONE | committed 11-16/17 | Dropped quantum `reserve_chunks` on insert; optional `reserve_chunk_capacity` uses `HashMap::reserve`. |
-| CQ-09 | DONE | `90012715`+ | Env massing load cfg-gated (`debug_assertions` / `sim_dump`); PixelWorld-scoped apply. |
-| CQ-10 | DONE | `90012715`+ | Warning duck hold (`WARNING_DUCK_HOLD_SECS`); playback consumes low-pass as ambient/spatial gain. |
-| CQ-11 | DONE | `90012715`+ | `validate_veg_species_path` / `brief_veg_species_table` honor `path`; bad-file pytest. |
-| CQ-12 | DONE | `90012715`+ | Dashboard Blender handoff uses Treeview StudioTask selection. |
-| CQ-13 | DONE | `90012715`+ | Throughput attention tier: Full iff player theater else Aggregate. |
-| CQ-31 | DONE | `90012715`+ | Deleted RND-07 atlas-memory verdict writers / tests. |
-| CQ-32 | DONE | `90012715`+ | PCG-08 no longer blocks param-frame enqueue; refresh writes plain JSON (no BLANG ritual). Golden-seed fail triage deferred. |
-| CQ-33 | DONE | `90012715`+ | Removed marker constants (`GPU_FIELD_UPLOAD_PATHS`, `CHUNK_SMOKE_WRITERS`, DEBT/SMOKE/LGT03/PIXEL tokens). |
-| CQ-34 | DONE | `90012715`+ | Deleted `heat_consumers.rs`. |
-| CQ-36 | DONE | `90012715`+ | Terms hold proposed moisture; `pyro_moisture_applied` + diag from weather solve only. |
-| CQ-37 | DONE | `90012715`+ | Dense heat weather RO reads `AtmosphereWeatherMeans` (not render climate). |
-| CQ-40 | DONE | `90012715`+ | `TopUpPackage` / `refill_packages_sink` kernel; drone/missile sinks are adapters. |
-| CQ-39 | DONE | `4761b21a`+ | Chunk weather / polling / L0 advect read AtmosphereFrame; only frame builder samples WeatherField. |
-| CQ-41 | DONE | `143d9ecd`+ | `run(kind,payload)` + `_QUEUED_RUNNERS` dispatch; handoff status files retained for Blender async. |
-| CQ-70 | DONE | `143d9ecd`+ | Citation/doc `include_str` greps removed; authority lints kept (~37). |
-| CQ-71 | DONE | `143d9ecd`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
-| CQ-72 | DONE | `143d9ecd`+ | `_theaters` rename; ATMO_GRID noise already gone. |
+| CQ-09 | DONE | `22d929a5`+ | Env massing load cfg-gated (`debug_assertions` / `sim_dump`); PixelWorld-scoped apply. |
+| CQ-10 | DONE | `22d929a5`+ | Warning duck hold (`WARNING_DUCK_HOLD_SECS`); playback consumes low-pass as ambient/spatial gain. |
+| CQ-11 | DONE | `22d929a5`+ | `validate_veg_species_path` / `brief_veg_species_table` honor `path`; bad-file pytest. |
+| CQ-12 | DONE | `22d929a5`+ | Dashboard Blender handoff uses Treeview StudioTask selection. |
+| CQ-13 | DONE | `22d929a5`+ | Throughput attention tier: Full iff player theater else Aggregate. |
+| CQ-31 | DONE | `22d929a5`+ | Deleted RND-07 atlas-memory verdict writers / tests. |
+| CQ-32 | DONE | `22d929a5`+ | PCG-08 no longer blocks param-frame enqueue; refresh writes plain JSON (no BLANG ritual). Golden-seed fail triage deferred. |
+| CQ-33 | DONE | `22d929a5`+ | Removed marker constants (`GPU_FIELD_UPLOAD_PATHS`, `CHUNK_SMOKE_WRITERS`, DEBT/SMOKE/LGT03/PIXEL tokens). |
+| CQ-34 | DONE | `22d929a5`+ | Deleted `heat_consumers.rs`. |
+| CQ-36 | DONE | `22d929a5`+ | Terms hold proposed moisture; `pyro_moisture_applied` + diag from weather solve only. |
+| CQ-37 | DONE | `22d929a5`+ | Dense heat weather RO reads `AtmosphereWeatherMeans` (not render climate). |
+| CQ-40 | DONE | `22d929a5`+ | `TopUpPackage` / `refill_packages_sink` kernel; drone/missile sinks are adapters. |
+| CQ-39 | DONE | `05cdb142`+ | Chunk weather / polling / L0 advect read AtmosphereFrame; only frame builder samples WeatherField. |
+| CQ-41 | DONE | `20aa0235`+ | `run(kind,payload)` + `_QUEUED_RUNNERS` dispatch; handoff status files retained for Blender async. |
+| CQ-70 | DONE | `20aa0235`+ | Citation/doc `include_str` greps removed; authority lints kept (~37). |
+| CQ-71 | DONE | `20aa0235`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
+| CQ-72 | DONE | `20aa0235`+ | `_theaters` rename; ATMO_GRID noise already gone. |
 | CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
 | CQ-75 | DONE | committed 11-16/17 | sim_review vs studio_dash ownership; thin mission_adapter. |
 | CQ-76 | DONE | committed 11-16/17 | massing_qc sole in rust_engine_mcp. |
@@ -328,7 +328,7 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-84 | DONE | 2026-11-24 | Voxel-occupation plan cites tests, not gitignored JSON; PCG-03/TAC-05 "world-look sign-off" retracted (no record); RND-07 JSON evidence removed; AGENTS.md no longer cites the gitignored migration gate. DF-10 Accept already commits its baseline into `tools/sim_review/expected/`. |
 | CQ-68 / 68b / 68c | DONE | committed 11-16 | Dump reporters per domain; world-gen shell split; tile fallback reads split (detail in the P-table rows). |
 | CQ-79 | DONE | 2026-11-24 | `lookup.py` / `build_toc.py` read `REF_BOOKS_DIR` (no machine default). `studio_task.list_tasks` catches only read/parse/schema errors. `playcheck.py` aborts if the stale dump cannot be removed. CLI: no commands left uncategorised (new `studio` and `books` groups; none were unused). `ref_books_dual_cite` removed from payloads, schemas, QC and dashboards; tests assert it stays out. |
-| CQ-85 | DONE | `4761b21a`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
+| CQ-85 | DONE | `05cdb142`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking
@@ -336,6 +336,6 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 - no `*_live.json` / witness / verdict-string producers in `src/` or `tools/mcp/`
 - every ADOPTED row cites a production caller
 - `cargo check` ≤ 50 warnings
-- `playcheck.py` matrix no worse than at `afdf586c`
+- `playcheck.py` matrix no worse than at `31395ba8`
 
-**Ledger note (2026-11-24):** rows marked "committed 11-16/17" were written as `(pending commit)` / `(working tree)`; the work landed in the `[cleanup]` commits `56f32594`, `90012715`, `4761b21a`, `152505a0` (see `git log --grep CQ-`).
+**Ledger note (2026-11-24):** rows marked "committed 11-16/17" were written as `(pending commit)` / `(working tree)`; the work landed in the `[cleanup]` commits `1edee848`, `22d929a5`, `05cdb142`, `7a5b47ec` (see `git log --grep CQ-`).

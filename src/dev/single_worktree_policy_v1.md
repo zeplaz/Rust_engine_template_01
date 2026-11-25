@@ -22,7 +22,7 @@ All agents, stewards, coders, and visual runs use **this path** only.
 
 | Path | Branch | Status |
 |------|--------|--------|
-| `%USERPROFILE%\.cursor\worktrees\Rust_engine_template_01\ds5i` | `cursor/aa7b9353` @ `c91d4f4` | **Retire** — scaffold witness writer at base; gate infra on **master** WIP |
+| `%USERPROFILE%\.cursor\worktrees\Rust_engine_template_01\ds5i` | `cursor/aa7b9353` @ `060d0d3` | **Retire** — scaffold witness writer at base; gate infra on **master** WIP |
 
 Witness JSON was briefly copied **from master → ds5i** for visibility only. That is **not** consolidation.  
 **Never** merge `master` into `ds5i` as the primary fix — **master absorbs everything; ds5i is deleted.**

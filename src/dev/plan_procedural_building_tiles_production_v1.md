@@ -5,7 +5,7 @@
 | **Program ID** | **PLAN-PROC-TILE-PROD-001** |
 | **Owner** | `@planner` → `@designer-mcp` (bar + matrix) → `@coder-mcp` (bake) → `@coder` (runtime) |
 | **Date** | 2026-06-03 |
-| **Status** | **ACTIVE** (PT-0 **SIGNED** 2026-06-03) |
+| **Status** | **OPEN — engine done, art partial (2026-11-24).** Engine: `VariantCatalog` + resolver (`tile_variant_resolver.rs`), `stamp_request_for_site`, PG-2 mesh suppression, damage input (PT-4-005), burn-frame keys. Art: production atlases for rowhouse (8 burn frames) and warehouse v2 (4 of 8 burn frames) + rail-warehouse pilot; shopfront and bunker production exist only in `assets/archive/greybox_tile_production_v1_frozen_2026-06`. **Open:** shopfront/bunker production art (or drop from scope), warehouse burn frames 5–8, PT-6 playtest. PT-0 SIGNED 2026-06-03. |
 | **North star** | **Iso map tiles are the authoritative building read** at strategic/tactical zoom; **production-tier** assembled bakes; sim drives **variant_key** (lights, damage, construction, fire frames). |
 | **Parents** | [`design_assembly_to_tile_coupling_v1.md`](design_assembly_to_tile_coupling_v1.md) · [`design_art_pipeline_suite_v1.md`](design_art_pipeline_suite_v1.md) · [`plan_tile_pipeline_automation_exec_v1.md`](plan_tile_pipeline_automation_exec_v1.md) · [`construction_procedural_growth_index_v1.md`](construction_procedural_growth_index_v1.md) |
 | **Supersedes (scope)** | Treat **lod0 pilot tiles** as **spine proof only** — not ship art. PG-2 GLB extract is **witness/staging**, not product facade. |

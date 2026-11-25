@@ -3,7 +3,7 @@
 | Field | Value |
 |------|------|
 | **Status** | Lane V DONE (2026-11-19); lane W in progress |
-| **Context** | Cursor agents halted mid-wave; all their work is in commit `09cda60b` ("mid work run problems", 276 files). Crate compiles (`cargo check` clean). |
+| **Context** | Cursor agents halted mid-wave; all their work is in commit `ad33eb1b` ("mid work run problems", 276 files). Crate compiles (`cargo check` clean). |
 | **Order** | **V (voxel ground) first, then W (water).** W depends on V: voxel water reads the same `PixelWorldTerrainField`. Do not run them in parallel — both touch `src/render/pixel_world/`. |
 | **Out of scope** | Destruction/undo (lane C), dam ops UI, combat matrix reds. Leave for a later plan. |
 | **Parent plans** | `plan_final_gpu_presentation_v1.md`, `plan_dam_flood_benchmark_v1.md` (DF-3), `plan_destroy_t2_mask_v1.md`, notes `playtest_dam_flood_notes_v1.md` |
@@ -99,7 +99,7 @@ Bounded fix at that link only. Typical shapes: keep `wired` sticky when the ROI 
 
 ### W2 — fallback switch (only if W1 can't land in one slice)
 
-Restore visible water behind **one** switch rather than leaving it blank: e.g. env `WATER_GPU_FIELD=0` → previous CPU MeshBuf path from `09cda60b^` for the voxel view only. Register it as a `ScaffoldContract` (`src/gui/representation_governance.rs`) with an exit row in this plan. Do not keep both paths drawing at once.
+Restore visible water behind **one** switch rather than leaving it blank: e.g. env `WATER_GPU_FIELD=0` → previous CPU MeshBuf path from `ad33eb1b^` for the voxel view only. Register it as a `ScaffoldContract` (`src/gui/representation_governance.rs`) with an exit row in this plan. Do not keep both paths drawing at once.
 
 ### W3 — verify lane W
 
@@ -137,7 +137,7 @@ Then, after V is accepted:
 
 | Row | State |
 |-----|-------|
-| W1 voxel water render fixes | DONE `77e685b4` — no frustum cull on displaced grid; bed range matches texture; wet count matches shader discard |
+| W1 voxel water render fixes | DONE `fcac92fa` — no frustum cull on displaced grid; bed range matches texture; wet count matches shader discard |
 | W2a solver mass balance | IN PROGRESS (uncommitted) — inflow only into wet north cells (was smeared over whole edge → fed banks); south edge free-drains (was dam-outlet sink ≈40 vs 220 m³/s inflow → runaway flood); barrier east-branch `continue` skipped north flux; conservation uses applied boundary volume |
 | W2b buildings stretch with flood | IN PROGRESS — `build_site` top used `ground.max(water)`; now ground only |
 | G1 grey ground | IN PROGRESS — A/B: `TERRAIN_GPU_BAKE_SPIKE=0` textures whole map; bake only fills part of the world image. Bake now **opt-in**. Fix the bake coverage later, then re-default ON |
@@ -154,8 +154,8 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 
 | Change | Plan basis |
 |:---|:---|
-| WESL port, `ground_revision`, swap-on-ready (`fe3c6f27`) | FINAL-GPU: ground columns textured from the bake/raster image; Bevy 0.20 contract |
-| Voxel water no-cull / bed encode / wet threshold (`77e685b4`) | FINAL-GPU: water only via the GPU field shader |
+| WESL port, `ground_revision`, swap-on-ready (`8db93ae3`) | FINAL-GPU: ground columns textured from the bake/raster image; Bevy 0.20 contract |
+| Voxel water no-cull / bed encode / wet threshold (`fcac92fa`) | FINAL-GPU: water only via the GPU field shader |
 | Solver: barrier east-branch `continue` skipped z-flux | DF-2 correctness (barrier must leak/overtop along the river) |
 | Solver: inflow into the wet channel; open (free-drain) downstream boundary; conservation from applied boundary volume | DF-2 "inflow/outflow boundaries", §4 "mass conservation is a hard invariant" |
 | ROI starts from `WorldStaticWaterDepth`; no synthetic carve over a covered DEM | WATER-DEPTH-TRUTH "one physical water: bed+depth"; W4 authored bed+depth corridor is already in the world DEM |
@@ -182,27 +182,27 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 
 | Area | Item | State | Commit / evidence |
 |:---|:---|:---|:---|
-| Voxel ground | Shaders compile on Bevy 0.20 (WESL) | DONE | `fe3c6f27` |
-| Voxel ground | No per-tick full remesh; swap-on-ready | DONE | `fe3c6f27` |
-| Heights | One vertical contract (`WorldGenParams::elevation_range_m`) | DONE | `124d55de` |
-| Ground look | Bake covers whole world; one material resolution; sand bed under water | DONE (valley) | `7f7e3fb6`, `d644c2f6` |
+| Voxel ground | Shaders compile on Bevy 0.20 (WESL) | DONE | `8db93ae3` |
+| Voxel ground | No per-tick full remesh; swap-on-ready | DONE | `8db93ae3` |
+| Heights | One vertical contract (`WorldGenParams::elevation_range_m`) | DONE | `753173d4` |
+| Ground look | Bake covers whole world; one material resolution; sand bed under water | DONE (valley) | `81fa77a8`, `89925565` |
 | Ground look | Plateau still grey (family default material is grey) | **OPEN** | r7 capture |
-| Water sim | One water (ROI seeded from static depth, real bed) | DONE | `124d55de` |
-| Water sim | Mass conservation on real terrain (donor cap + limiter) | DONE — mass err ~1e-7 | `b4c405c0` |
+| Water sim | One water (ROI seeded from static depth, real bed) | DONE | `753173d4` |
+| Water sim | Mass conservation on real terrain (donor cap + limiter) | DONE — mass err ~1e-7 | `24daba4d` |
 | Water sim | S0 gauge balance < 0.02 | FLAKY — 0.0016 in one run, 0.21 in the long run | r6 / r7 |
 | Water sim | Reservoir fill in test time (solver dt fixed 1 s; time skip doesn't speed water) | **OPEN** | |
-| Water look | One blue semi-transparent ramp, flat + voxel | DONE — but river reads pale over sand | `b4c405c0` |
-| Dam | Barrier = dam footprint; crest = height above bed | DONE | `b4c405c0`, `3a4434fe` |
-| Dam | Body solid (no water inside); no erosion before crest | DONE | `a82c1495` |
-| Dam | Erosion from real face velocity per DamKind | DONE | `3a4434fe` |
-| Dam | Flood proxy never demolishes dams / water-legal sites | DONE | `82715e4f` |
-| Dam | Built for real (S1 commit + logistics, no forced Operational) | PARTIAL — still UnderConstruction at tick 4208 | `5cc4bb65` |
-| Dam scene | Strike failsafe / breach-on-impact / fake book values removed | DONE | `d9d0db62` |
+| Water look | One blue semi-transparent ramp, flat + voxel | DONE — but river reads pale over sand | `24daba4d` |
+| Dam | Barrier = dam footprint; crest = height above bed | DONE | `24daba4d`, `8f03a02c` |
+| Dam | Body solid (no water inside); no erosion before crest | DONE | `efc5b347` |
+| Dam | Erosion from real face velocity per DamKind | DONE | `8f03a02c` |
+| Dam | Flood proxy never demolishes dams / water-legal sites | DONE | `cdd78ecc` |
+| Dam | Built for real (S1 commit + logistics, no forced Operational) | PARTIAL — still UnderConstruction at tick 4208 | `943aecdc` |
+| Dam scene | Strike failsafe / breach-on-impact / fake book values removed | DONE | `955cddc4` |
 | Dam scene | Strike → blast → DamBody → breach end to end | **UNVERIFIED** (script never reached S5: dam unbuilt) | |
-| Vegetation | Live stands no longer all Grass | DONE (shrubs) | `2be652c8` |
+| Vegetation | Live stands no longer all Grass | DONE (shrubs) | `917b69e1` |
 | Vegetation | Young/old forest stages appear | **OPEN** | r6/r7: no codes 3/4 |
-| Fire | Tree flicker near fire | DONE | `605776ab` |
-| Fire | Voxel flames/embers/smoke layer | PARTIAL — layer landed, particle frame has 0 rows in voxel view | `605776ab` |
+| Fire | Tree flicker near fire | DONE | `6e7539ce` |
+| Fire | Voxel flames/embers/smoke layer | PARTIAL — layer landed, particle frame has 0 rows in voxel view | `6e7539ce` |
 | Fire | "Burns slower" | EXPLAINED — timber/shrub burn longer than grass by config, spread speed unchanged | agent measurement |
 | Tests | Pre-existing failures (also fail on clean HEAD) | OPEN | dam_ops_card "Presets"; scenario wave1/wave3 + ecs12 (CommitConstructionSiteEvent not registered in test app); ai_faction_builds_supplies; voxel_massing; 2 construction integration (fuel_breaks resource) |
 
@@ -210,14 +210,14 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 
 | Area | Item | State | Commit / evidence |
 |:---|:---|:---|:---|
-| Dam | Built for real: S1 commit → logistics → Operational | **DONE** | `5cc4bb65`, `a94c0ec8`, auto-supply `…S3` — capture: Operational, 7000 concrete delivered, script reached S5 |
+| Dam | Built for real: S1 commit → logistics → Operational | **DONE** | `943aecdc`, `b9f0d359`, auto-supply `…S3` — capture: Operational, 7000 concrete delivered, script reached S5 |
 | Dam | Crest holds reservoir (stage 302 m, head 56 m) | DONE | r12_late |
 | Dam ops card | "Crest" shows max cell crest (bank height under dam ends, 578 m) — misleading | OPEN (display) | r12_late |
 | Dam scene | Strike → blast → DamBody → breach | IN RUN: integrity 0.80, breach flow 49 m³/s after strike — not yet checked visually | r12_late |
-| Fire | Particles in voxel view | DONE (seen in r10) — fire_heat overlay + 3D footprint | `164cbbe5` |
-| Culling | Voxel trees + fire culling off by default, `PIXEL_WORLD_CULL` switch | DONE | `e296c3f9` |
-| Vegetation | Mature start + forest floodplain | LANDED — forest codes (3/4) still not seen in dumps | `7ee2e280` |
-| Ground look | Plateau grey with bake on (green with bake off) | **OPEN** — two bake fixes landed (`74f53b65` bind group, `196e912c` re-arm union), still grey | r12_late |
+| Fire | Particles in voxel view | DONE (seen in r10) — fire_heat overlay + 3D footprint | `f2a67798` |
+| Culling | Voxel trees + fire culling off by default, `PIXEL_WORLD_CULL` switch | DONE | `d216d055` |
+| Vegetation | Mature start + forest floodplain | LANDED — forest codes (3/4) still not seen in dumps | `b94bfd2f` |
+| Ground look | Plateau grey with bake on (green with bake off) | **OPEN** — two bake fixes landed (`25810034` bind group, `a99f6f8c` re-arm union), still grey | r12_late |
 
 ## Operator report (2026-11-19, late) — queued after grey bake + forest
 
@@ -251,7 +251,7 @@ Background agents stopped. Work in this order, one at a time, each verified in o
 | T-2 | Water rework (OP-10/11/12) uncommitted: valley terrain, level pool from depth, ghost south boundary, time-skip on sim clock | review after T-1; not committed |
 | T-3 | Missile crater: craters set MASK_DAMAGED, ground shader only reacts to DESTROYED → no bowl / no scorch | open — shallow bowl + scorch for damaged tiles |
 | T-4 | Land not rendering cleanly: voxel terrain outline hard to see, high ground reads as flat solid green | fix in progress — ground shader was unlit (bake albedo only, mesh normals + wall shade ignored); add face shading |
-| T-5 | Trees stopped drawing (REGRESSION — worked after d99e89d7 OP-5) — floodplain is a bare dark-green rectangle | agent bisecting; prime suspect uncommitted ValleyProfile rework |
+| T-5 | Trees stopped drawing (REGRESSION — worked after 7671a431 OP-5) — floodplain is a bare dark-green rectangle | agent bisecting; prime suspect uncommitted ValleyProfile rework |
 | T-9 | Fire broken / unfinished: S9 burn 0 (was 34%), OP-6 sync never visually confirmed mid-burn | likely same root as T-5 (no stands = no fuel); then verify flames/smoke/stage sync in a mid-burn capture |
 | T-10 | Day/night: voxel sun on the tactical day clock (8 min sim day), lit ground + shadow maps | done in tree, verify in capture |
 | T-11 | Dam removed (demolish funnel despawn) kept blocking water — crest stayed in the field | fixed: `release_barrier_of_removed_dams_system` (test `removed_dam_releases_its_barrier`) |

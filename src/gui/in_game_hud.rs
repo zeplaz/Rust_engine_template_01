@@ -887,7 +887,7 @@ fn spawn_simulation_command_shell(
                         .with_children(|img| {
                             // MINIMAP-BOX-001: gold tactical-viewport frame. The marker +
                             // positioning system (sync_minimap_viewport_frame_overlay_system)
-                            // landed in 77228215 without any spawn — the frame never rendered.
+                            // landed in 88fc0420 without any spawn — the frame never rendered.
                             // Position/size/visibility are driven per-frame by that system.
                             img.spawn((
                                 Node {

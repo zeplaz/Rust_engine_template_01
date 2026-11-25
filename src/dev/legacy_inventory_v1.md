@@ -61,7 +61,7 @@ Status column: ● done in a `[legacy]` checkpoint · ◐ in progress / partiall
 
 | ID | Item | Owner |
 |----|------|-------|
-| LG-60 | Stray git worktree `.claude/worktrees/loving-mestorf-ab9564` (detached `d96eccb3`) — violates `single_worktree_policy_v1.md`; duplicates every grep hit | hygiene / tooling |
+| LG-60 | Stray git worktree `.claude/worktrees/loving-mestorf-ab9564` (detached `3a5822c4`) — violates `single_worktree_policy_v1.md`; duplicates every grep hit | hygiene / tooling |
 | LG-61 | P5: `transport_topology_tick` clears + rebuilds `TransportFieldStore` from the graph each frame (would wipe congestion/damage once LG-02 populates the graph) | logistics |
 
 Plugin / dead-code sweep results (repo-wide) are appended in §E when the sweep lands.

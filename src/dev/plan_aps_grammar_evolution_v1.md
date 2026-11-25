@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Program ID** | **PLAN-APS-GRAMMAR-EVOLUTION-001** |
-| **Status** | **ACTIVE — drain queue issued** |
+| **Status** | **NEARLY DONE 2026-11-24** — grammar set reports tier **G4** (`grammar_set_tier()`); tier chrome (`apply_grammar_tier`), registry-driven archetypes, FactoryCluster/RailEdge/CivicBlock grammars, DNA panel, stale-sweep warning and inspector→footprint highlight are in. **Open:** APS-GRAM-P3-002 — snapshots do not record `placement_rule_id` per module. |
 | **Machine queue** | [`aps_grammar_evolution_queue.json`](../tools/orchestrator/queues/aps_grammar_evolution_queue.json) (15 rows) |
 | **Agent board** | [`aps_grammar_evolution_agent_todos_v1.md`](aps_grammar_evolution_agent_todos_v1.md) |
 | **Dispatch** | [`aps_grammar_evolution_dispatch_orders_v1.md`](../tools/orchestrator/queues/aps_grammar_evolution_dispatch_orders_v1.md) |
