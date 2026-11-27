@@ -2,6 +2,8 @@
 
 One dump. One matrix. One dashboard.
 
+**Operator command catalog (all scenes, DamFlood first):** [`docs/TESTING.md`](../../docs/TESTING.md).
+
 ```powershell
 # Debug (or release built with the non-default `sim_dump` feature). Shipped release never writes a dump.
 $env:RUST_ENGINE_SIM_DUMP="1"
@@ -11,6 +13,7 @@ python tools/sim_review/score_dump.py
 # writes debug_runs/sim_review/matrix.json + dashboard.html
 
 python tools/sim_review/playcheck.py            # debug: build + run + capture + score
+python tools/sim_review/playcheck.py --scene dam  # DamFlood benchmark (dam.* matrix rows)
 python tools/sim_review/playcheck.py --release  # release built with `--features sim_dump`
 python tools/sim_review/playcheck.py --seeds 3  # T6: build once, N seeds → dump_<seed>.json (prefer N=3)
 python tools/sim_review/score_dump.py --multi tools/sim_review/fixtures

@@ -1,5 +1,7 @@
 # DamFlood playtest notes (operator)
 
+**Commands:** [`docs/TESTING.md`](../../docs/TESTING.md) § DamFlood · plan: [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md).
+
 Captured from live playcheck + eye notes. Track fixes against this list.
 
 ## UX / panel

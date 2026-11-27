@@ -12,6 +12,8 @@ Closed **0.19** MIG-* rows stay closed. **Open work (one board):** [src/dev/code
 
 ## Review path (how to check a run)
 
+**Full command catalog:** [`docs/TESTING.md`](docs/TESTING.md) (DamFlood, PlayQuad, unit tests, env vars).
+
 There are no witness gates, live-proof JSONs, readiness profiles, queues or `cargo orchestrate`.
 One debug-only dump, one scored matrix, one dashboard — see [`tools/sim_review/README.md`](tools/sim_review/README.md):
 
@@ -19,9 +21,10 @@ One debug-only dump, one scored matrix, one dashboard — see [`tools/sim_review
 $env:RUST_ENGINE_SIM_DUMP="1"; cargo run -p proc_A_dine01    # debug only -> sim_run_dump.json (counts, no verdicts)
 python tools/sim_review/score_dump.py                        # -> debug_runs/sim_review/matrix.json + dashboard.html
 python tools/sim_review/playcheck.py                         # build + game + capture + score in one go
+python tools/sim_review/playcheck.py --scene dam             # DamFlood benchmark
 ```
 
-Unit tests: `cargo test -p proc_A_dine01 --lib` (filter by module, e.g. `construction::`).
+Unit tests: `cargo test -p proc_A_dine01 --lib` (filter by module, e.g. `construction::`, `dam_flood`).
 
 ## Rules that still apply
 

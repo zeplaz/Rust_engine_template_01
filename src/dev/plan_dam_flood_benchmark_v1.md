@@ -7,7 +7,7 @@
 | **Date** | 2026-11-16 |
 | **Purpose** | One scripted **example** scene that proves the **general** water / structure / damage / ecology / fire / power stack works together. The scene is the acceptance harness — not a parallel dam-only simulation. The first fully scored run becomes **baseline v1**. |
 | **Supersedes** | `plan_wss_hydro_runtime_exec_001_v1.md` **HY-005 / HY-006** (deep solve + visual extract; witness-era exits) → replaced by **DF-2 / DF-3** here |
-| **Review path** | `sim_run_dump.json` counters → `tools/sim_review/score_dump.py` matrix + dashboard (AGENTS.md). Counts only in the dump; verdicts only in the matrix. No witness JSON, no `*_green`. |
+| **Review path** | Commands: [`docs/TESTING.md`](../../docs/TESTING.md). Dump counters → `score_dump.py` matrix + dashboard. Counts only in the dump; verdicts only in the matrix. No witness JSON, no `*_green`. Preferred: `python tools/sim_review/playcheck.py --scene dam`. |
 | **Units** | Metric throughout: m, m³/s, MW, °C, game seconds/days. `1 tile = 16 m` (`terrain/world_scale_contract.rs:18`), sim step = 1 game second (`SIM_STEP_MICROS`, `systems/sim_control.rs:127`). |
 
 ---

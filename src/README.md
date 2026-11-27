@@ -1,6 +1,8 @@
-# Processor Alpha Dine
+# Processor Alpha Dine (`src/`)
 
 A game engine written in Rust using Bevy for simulation with production, vehicles, and terrain systems.
+
+**Repo entry + testing commands:** [`../README.md`](../README.md) · [`../docs/TESTING.md`](../docs/TESTING.md).
 
 ## Project Structure
 
